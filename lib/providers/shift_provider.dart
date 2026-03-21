@@ -1,43 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:k_gamingxcafe/repository/shift_repository.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
 
-class ShiftProvider with ChangeNotifier {
-  int? _activeShiftId;
-  String? _activeShiftName;
+class ShiftProvider extends ChangeNotifier {
+  final _repo = ShiftRepository();
+  Map<String, dynamic>? activeShift;
 
-  int? get activeShiftId => _activeShiftId;
-  String? get activeShiftName => _activeShiftName;
+  // Getter untuk memudahkan akses
+  String? get activeShiftName => activeShift?['shift_name'];
 
-  // Cek apakah ada shift yang belum ditutup (end_time is NULL)
-  Future<bool> checkActiveShift(int userId) async {
-    final db = await DatabaseService.instance.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'shifts',
-      where: 'user_id = ? AND end_time IS NULL',
-      whereArgs: [userId],
-      limit: 1,
-    );
+  Future<void> startShift(int userId, String shiftName) async {
+    final shiftId = await _repo.startShift(userId, shiftName);
 
-    if (maps.isNotEmpty) {
-      _activeShiftId = maps.first['id'];
-      _activeShiftName = maps.first['shift_name'];
-      notifyListeners();
-      return true; // Ada shift aktif
-    }
-    return false; // Tidak ada shift aktif
+    activeShift = {'id': shiftId, 'user_id': userId, 'shift_name': shiftName};
+
+    // SIMPAN DATA SHIFT KE MEMORI FISIK
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('active_shift_id', shiftId);
+    await prefs.setString('active_shift_name', shiftName);
+
+    notifyListeners();
   }
 
-  // Mulai shift baru
-  Future<void> startShift(int userId, String shiftName) async {
-    final db = await DatabaseService.instance.database;
-    final id = await db.insert('shifts', {
-      'user_id': userId,
-      'shift_name': shiftName,
-      'start_time': DateTime.now().toIso8601String(),
-      'created_at': DateTime.now().toIso8601String(),
-    });
-    _activeShiftId = id;
-    _activeShiftName = shiftName;
-    notifyListeners();
+  // FUNGSI BARU: Memuat ulang shift yang sedang berjalan saat aplikasi dibuka
+  Future<void> loadActiveShift() async {
+    final prefs = await SharedPreferences.getInstance();
+    final int? shiftId = prefs.getInt('active_shift_id');
+    final String? shiftName = prefs.getString('active_shift_name');
+
+    if (shiftId != null && shiftName != null) {
+      activeShift = {'id': shiftId, 'shift_name': shiftName};
+      notifyListeners();
+    }
+  }
+
+  Future<void> stopShift() async {
+    if (activeShift != null) {
+      final db = await DatabaseService.instance.database;
+      await db.update(
+        'shifts',
+        {'end_time': DateTime.now().toIso8601String()},
+        where: 'id = ?',
+        whereArgs: [activeShift!['id']],
+      );
+
+      // HAPUS DATA SHIFT DARI MEMORI FISIK
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('active_shift_id');
+      await prefs.remove('active_shift_name');
+
+      activeShift = null;
+      notifyListeners();
+    }
   }
 }
