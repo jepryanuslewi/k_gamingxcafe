@@ -25,20 +25,18 @@ class _LaporanScreenState extends State<LaporanScreen> {
   bool isTableVisible = false;
 
   List<String> listKaryawan = ["Semua"];
-
   Future<void> _loadKaryawan() async {
-    final names = await DatabaseService.instance.getAllStaffNames();
-    if (mounted) {
-      setState(() {
-        listKaryawan = names;
-      });
-    }
+    final names = await DatabaseService.instance
+        .getAllStaffNames(); // Pakai instance
+    setState(() {
+      listKaryawan = names;
+    });
   }
 
   @override
   void initState() {
     super.initState();
-    _loadKaryawan();
+    _loadKaryawan(); // Panggil fungsi saat screen dibuka
   }
 
   final List<String> listKategori = ["Jadwal", "Stock", "Transaksi"];
@@ -60,6 +58,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2024),
       lastDate: DateTime(2030),
+      // Tema kalender agar sesuai dark mode
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -80,7 +79,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
         } else {
           tanggalAkhir = picked;
         }
-        isTableVisible = false; // Sembunyikan tabel jika filter berubah
+        isTableVisible = false; // Sembunyikan tabel jika tanggal diubah
       });
     }
   }
@@ -102,25 +101,17 @@ class _LaporanScreenState extends State<LaporanScreen> {
               const SizedBox(height: 30),
               _buildMainForm(tanggal),
 
-              // PERBAIKAN: Menggunakan nama variabel yang benar (tanggalAwal & tanggalAkhir)
+              // Tampilkan widget tabel yang dipisah jika tombol sudah ditekan
               if (isTableVisible && selectedKategori != null)
-                TabelLaporanWidget(
-                  kategori: selectedKategori!,
-                  subKategori: selectedSubKategori,
-                  tanggalAwal: tanggalAwal,
-                  tanggalAkhir: tanggalAkhir,
-                  karyawan: selectedKaryawan,
-                ),
+                TabelLaporanWidget(kategori: selectedKategori!),
 
-              const SizedBox(height: 50),
+              const SizedBox(height: 50), // Padding bawah agar tidak mepet
             ],
           ),
         ),
       ),
     );
   }
-
-  // --- Widget Builders ---
 
   Widget _buildHeader(String username) {
     return SizedBox(
@@ -316,6 +307,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
                 ),
               ),
               onPressed: () {
+                // Validasi input sebelum menampilkan
                 if (tanggalAwal == null ||
                     tanggalAkhir == null ||
                     selectedKategori == null) {
