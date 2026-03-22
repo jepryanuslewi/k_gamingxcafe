@@ -64,6 +64,12 @@ class DatabaseService {
           'role': 'staff',
           'created_at': DateTime.now().toIso8601String(),
         });
+        await db.insert('users', {
+          'username': 'pegawai2',
+          'password': '1234',
+          'role': 'staff',
+          'created_at': DateTime.now().toIso8601String(),
+        });
 
         /// PS UNITS ====================================================================
         /// PS UNITS ====================================================================
@@ -103,7 +109,7 @@ class DatabaseService {
             duration_hours INTEGER NOT NULL,
             end_time TEXT NOT NULL,     
             total_price INTEGER NOT NULL,
-            status TEXT DEFAULT 'active', 
+            status TEXT, -- booking/walkin 
             created_at TEXT,
             FOREIGN KEY(unit_id) REFERENCES ps_units(id),
             FOREIGN KEY(shift_id) REFERENCES shifts(id)
@@ -185,5 +191,92 @@ class DatabaseService {
         ''');
       },
     );
+  }
+
+  /// --- UNTUK LAPORAN --------------------------------------------------------------------------------------------------
+
+  // 1. Ambil daftar karyawan secara dinamis
+  Future<List<String>> getAllStaffNames() async {
+    try {
+      final db = await instance.database;
+
+      final List<Map<String, dynamic>> result = await db.query(
+        'users',
+        columns: ['username'],
+        // Filter hanya untuk role staff
+        where: 'role = ?',
+        whereArgs: ['staff'],
+        orderBy: 'username ASC',
+      );
+
+      List<String> names = result
+          .map((row) => row['username'].toString())
+          .toList();
+
+      // Tetap kembalikan "Semua" di awal list untuk kebutuhan filter laporan
+      return ["Semua", ...names];
+    } catch (e) {
+      print("Error ambil karyawan staff: $e");
+      return ["Semua"];
+    }
+  }
+
+  // 2. Query Laporan dengan Filter
+  Future<List<Map<String, dynamic>>> getJadwalLaporan({
+    DateTime? tglAwal,
+    DateTime? tglAkhir,
+    String? subKategori,
+    String? namaKaryawan, // Parameter nama staff
+  }) async {
+    try {
+      final db = await instance.database;
+      List<String> whereClauses = [];
+      List<dynamic> whereArgs = [];
+
+      // 1. Filter Tanggal
+      if (tglAwal != null && tglAkhir != null) {
+        String start = tglAwal.toIso8601String().split('T')[0];
+        String end = tglAkhir.toIso8601String().split('T')[0];
+        whereClauses.add("date(j.created_at) BETWEEN ? AND ?");
+        whereArgs.addAll([start, end]);
+      }
+
+      // 2. Filter Sub Kategori (Walk-In / Booking)
+      // Di dalam DatabaseService.getJadwalLaporan
+      if (subKategori != null && subKategori != "Semua") {
+        whereClauses.add("j.status = ?"); // Pakai kolom status, bukan category
+        whereArgs.add(subKategori);
+      }
+
+      // 3. Filter Nama Staff (Berdasarkan Username di tabel Users)
+      if (namaKaryawan != null && namaKaryawan != "Semua") {
+        whereClauses.add("u.username = ?");
+        whereArgs.add(namaKaryawan);
+      }
+
+      String whereString = whereClauses.isNotEmpty
+          ? "WHERE ${whereClauses.join(' AND ')}"
+          : "";
+
+      // Gunakan JOIN untuk menghubungkan Jadwal -> Shifts -> Users
+      return await db.rawQuery('''
+      SELECT 
+        j.customer_name, 
+        s.shift_name, 
+        u.username,
+        j.created_at, 
+        j.package_name, 
+        j.duration_hours, 
+        j.total_price 
+      FROM jadwal j
+      INNER JOIN shifts s ON j.shift_id = s.id
+      INNER JOIN users u ON s.user_id = u.id
+      $whereString
+      ORDER BY j.created_at DESC
+    ''', whereArgs);
+    } catch (e) {
+      print("Error Query Laporan: $e");
+      return [];
+    }
   }
 }

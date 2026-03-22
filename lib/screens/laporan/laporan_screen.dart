@@ -1,203 +1,435 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
-import 'package:k_gamingxcafe/widgets/stock/input_stock.dart';
+import 'package:k_gamingxcafe/services/database_service.dart';
+import 'package:k_gamingxcafe/widgets/laporan/tabel_laporan_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
-class LaporanScreen extends StatelessWidget {
+class LaporanScreen extends StatefulWidget {
   final String shiftName;
   const LaporanScreen({super.key, required this.shiftName});
+
+  @override
+  State<LaporanScreen> createState() => _LaporanScreenState();
+}
+
+class _LaporanScreenState extends State<LaporanScreen> {
+  DateTime? tanggalAwal;
+  DateTime? tanggalAkhir;
+
+  String? selectedKategori; // Jadwal, Stock, Transaksi
+  String? selectedSubKategori;
+  String? selectedKaryawan = "Semua";
+
+  // State untuk mengontrol tampilan tabel
+  bool isTableVisible = false;
+
+  List<String> listKaryawan = ["Semua"];
+
+  Future<void> _loadKaryawan() async {
+    final names = await DatabaseService.instance.getAllStaffNames();
+    if (mounted) {
+      setState(() {
+        listKaryawan = names;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadKaryawan();
+  }
+
+  final List<String> listKategori = ["Jadwal", "Stock", "Transaksi"];
+
+  List<String> getSubKategori() {
+    if (selectedKategori == "Jadwal") {
+      return ["Walk-In", "Booking", "Semua"];
+    } else if (selectedKategori == "Stock") {
+      return ["Stock Masuk", "Stock Keluar", "Semua"];
+    } else if (selectedKategori == "Transaksi") {
+      return ["Makanan", "Minuman", "Semua"];
+    }
+    return [];
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isAwal) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2024),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF00E0C6),
+              onPrimary: Color(0xFF0B1220),
+              surface: Color(0xFF141C2F),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        if (isAwal) {
+          tanggalAwal = picked;
+        } else {
+          tanggalAkhir = picked;
+        }
+        isTableVisible = false; // Sembunyikan tabel jika filter berubah
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final tanggal = DateTime.now();
     final authprovider = context.watch<AuthProvider>();
-    final String username = authprovider.user?.username ?? "";
+    final String username = authprovider.user?.username ?? "User";
+
     return Scaffold(
-      backgroundColor: Color.fromRGBO(11, 18, 32, 100),
+      backgroundColor: const Color.fromRGBO(11, 18, 32, 1),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 50),
-              child: Column(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+          child: Column(
+            children: [
+              _buildHeader(username),
+              const SizedBox(height: 30),
+              _buildMainForm(tanggal),
+
+              // PERBAIKAN: Menggunakan nama variabel yang benar (tanggalAwal & tanggalAkhir)
+              if (isTableVisible && selectedKategori != null)
+                TabelLaporanWidget(
+                  kategori: selectedKategori!,
+                  subKategori: selectedSubKategori,
+                  tanggalAwal: tanggalAwal,
+                  tanggalAkhir: tanggalAkhir,
+                  karyawan: selectedKaryawan,
+                ),
+
+              const SizedBox(height: 50),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Widget Builders ---
+
+  Widget _buildHeader(String username) {
+    return SizedBox(
+      height: 90,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Image.asset("assets/images/bgLoginScreen.png", height: 60),
+              const SizedBox(width: 15),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    color: Colors.transparent,
-                    width: double.infinity,
-                    height: 90,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  RichText(
+                    text: const TextSpan(
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "Poppins",
+                      ),
                       children: [
-                        Row(
-                          children: [
-                            Image.asset("assets/images/bgLoginScreen.png"),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Text(
-                                      "GAMING",
-                                      style: TextStyle(
-                                        color: Color.fromRGBO(
-                                          226,
-                                          19,
-                                          136,
-                                          100,
-                                        ),
-                                        fontSize: 35,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: "Poppins",
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    const Text(
-                                      "X",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 35,
-                                        fontWeight: FontWeight.normal,
-                                        fontFamily: "Poppins",
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    const Text(
-                                      "CAFE",
-                                      style: TextStyle(
-                                        color: Color.fromRGBO(0, 224, 198, 100),
-                                        fontSize: 35,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: "Poppins",
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  "Booking & Transaction App",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        // Profile===========================================================
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
+                        TextSpan(
+                          text: "GAMING ",
+                          style: TextStyle(
+                            color: Color.fromRGBO(226, 19, 136, 1),
                           ),
-                          onPressed: () {},
-                          child: Row(
-                            children: [
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    username,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(shiftName),
-                                ],
-                              ),
-                              Icon(
-                                Icons.person_2_outlined,
-                                size: 70,
-                                color: Color.fromRGBO(0, 224, 198, 100),
-                              ),
-                            ],
+                        ),
+                        TextSpan(
+                          text: "X ",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                        TextSpan(
+                          text: "CAFE",
+                          style: TextStyle(
+                            color: Color.fromRGBO(0, 224, 198, 1),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 30),
-
-                  // menu===================================================
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromRGBO(20, 28, 47, 100),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Color.fromRGBO(0, 224, 198, 100),
-                      ),
+                  const Text(
+                    "Booking & Transaction App",
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    username,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                    padding: EdgeInsets.only(left: 50, right: 50, top: 10),
-                    height: 440,
-                    width: double.infinity,
-                    child: Column(
-                      children: [
-                        // 1
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // username
-                            Text(
-                              'STOCK MASUK',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            // tanggal
-                            Text(
-                              '${tanggal.day}/${tanggal.month}/${tanggal.year}',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 5),
-                        // Divider
-                        Divider(color: Colors.white, thickness: 1),
-                        SizedBox(height: 10),
-                        // Input
-                        Row(
-                          children: [
-                            Expanded(child: InputStock(text: "NAMA")),
-                            SizedBox(width: 10),
-                            Expanded(child: InputStock(text: "QTY")),
-                            SizedBox(width: 10),
-                            Expanded(child: InputStock(text: "DESKRIPSI")),
-                            SizedBox(width: 10),
-                            Expanded(child: InputStock(text: "KATEGORI")),
-                          ],
-                        ),
-                        SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color.fromRGBO(26, 37, 64, 100),
-                              shadowColor: Colors.white,
-                            ),
-                            onPressed: () {},
-                            child: Text(
-                              "Add Item",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
+                  ),
+                  Text(
+                    widget.shiftName,
+                    style: const TextStyle(
+                      color: Color(0xFF00E0C6),
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 10),
+              const Icon(Icons.person_pin, size: 60, color: Color(0xFF00E0C6)),
+            ],
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildMainForm(DateTime tanggal) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(20, 28, 47, 1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color.fromRGBO(0, 224, 198, 1)),
+      ),
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'LAPORAN LENGKAP',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '${tanggal.day}/${tanggal.month}/${tanggal.year}',
+                style: const TextStyle(color: Colors.white70, fontSize: 18),
+              ),
+            ],
+          ),
+          const Divider(color: Colors.white10, height: 40),
+
+          Row(
+            children: [
+              Expanded(
+                child: _buildDateTile(
+                  "Tanggal Awal",
+                  tanggalAwal,
+                  () => _selectDate(context, true),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: _buildDateTile(
+                  "Tanggal Akhir",
+                  tanggalAkhir,
+                  () => _selectDate(context, false),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 25),
+
+          Row(
+            children: [
+              Expanded(
+                child: _buildDropdown(
+                  "Pilih Kategori",
+                  selectedKategori,
+                  listKategori,
+                  (val) {
+                    setState(() {
+                      selectedKategori = val;
+                      selectedSubKategori = null;
+                      isTableVisible = false;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: _buildDropdown(
+                  "Sub Kategori",
+                  selectedSubKategori,
+                  getSubKategori(),
+                  (val) {
+                    setState(() {
+                      selectedSubKategori = val;
+                      isTableVisible = false;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 25),
+
+          _buildDropdown(
+            "Pilih Nama Karyawan",
+            selectedKaryawan,
+            listKaryawan,
+            (val) {
+              setState(() {
+                selectedKaryawan = val;
+                isTableVisible = false;
+              });
+            },
+          ),
+
+          const SizedBox(height: 40),
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00E0C6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                if (tanggalAwal == null ||
+                    tanggalAkhir == null ||
+                    selectedKategori == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Lengkapi semua filter terlebih dahulu"),
+                    ),
+                  );
+                  return;
+                }
+                setState(() {
+                  isTableVisible = true;
+                });
+              },
+              child: const Text(
+                "TAMPILKAN LAPORAN",
+                style: TextStyle(
+                  color: Color(0xFF0B1220),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateTile(String label, DateTime? date, VoidCallback onTap) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  date == null
+                      ? "Pilih Tanggal"
+                      : DateFormat('dd/MM/yyyy').format(date),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const Icon(
+                  Icons.calendar_month,
+                  color: Color(0xFF00E0C6),
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdown(
+    String label,
+    String? value,
+    List<String> items,
+    Function(String?) onChanged,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              dropdownColor: const Color(0xFF141C2F),
+              hint: const Text(
+                "Pilih",
+                style: TextStyle(color: Colors.white38),
+              ),
+              icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF00E0C6)),
+              items: items.map((String item) {
+                return DropdownMenuItem<String>(
+                  value: item,
+                  child: Text(
+                    item,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              }).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

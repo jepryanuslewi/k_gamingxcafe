@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
 import 'package:k_gamingxcafe/screens/jadwal_screen.dart';
+import 'package:k_gamingxcafe/screens/laporan/laporan_screen.dart';
 import 'package:k_gamingxcafe/screens/login_screen.dart';
 import 'package:k_gamingxcafe/screens/stock/stock_screen.dart';
 import 'package:k_gamingxcafe/screens/transaksi_screen.dart';
@@ -274,7 +275,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                   CardButton(
                                     text: "LAPORAN",
                                     icon: Icons.bar_chart_sharp,
-                                    onTap: () {},
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => LaporanScreen(
+                                            shiftName: widget.shiftName,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
