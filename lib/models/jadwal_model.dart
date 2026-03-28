@@ -11,11 +11,12 @@ class JadwalModel {
   final String endTime;
   final int totalPrice;
   final String status;
+  final String? createdAt; // ✅ tambah ini
 
   JadwalModel({
     this.id,
     this.unitId,
-    required this.shiftId, // Pastikan ini 'shiftId'
+    required this.shiftId,
     this.customerName,
     this.customerPhone,
     required this.category,
@@ -25,6 +26,7 @@ class JadwalModel {
     required this.endTime,
     required this.totalPrice,
     this.status = 'active',
+    this.createdAt, // ✅ tambah ini
   });
 
   Map<String, dynamic> toMap() => {
@@ -39,20 +41,22 @@ class JadwalModel {
     'end_time': endTime,
     'total_price': totalPrice,
     'status': status,
+    'created_at': createdAt, // ✅ tambah ini
   };
 
   factory JadwalModel.fromMap(Map<String, dynamic> map) => JadwalModel(
     id: map['id'],
     unitId: map['unit_id'],
-    shiftId: map['shift_id'], // PERBAIKAN: Gunakan shiftId, bukan shift_id
+    shiftId: map['shift_id'],
     customerName: map['customer_name'],
     customerPhone: map['customer_phone'],
-    category: map['category'] ?? 'Reguler', // Beri default jika null
+    category: map['category'] ?? 'Reguler',
     packageName: map['package_name'],
     startTime: map['start_time'] ?? '',
     durationHours: map['duration_hours'] ?? 0,
     endTime: map['end_time'] ?? '',
     totalPrice: map['total_price'] ?? 0,
     status: map['status'] ?? 'active',
+    createdAt: map['created_at'], // ✅ tambah ini
   );
 }

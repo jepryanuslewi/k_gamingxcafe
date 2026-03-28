@@ -46,22 +46,15 @@ class JadwalProvider with ChangeNotifier {
 
   Future<void> loadJadwalByView(String viewType) async {
     final db = await DatabaseService.instance.database;
-    final now = DateTime.now().toIso8601String();
 
-    List<Map<String, dynamic>> res;
-    if (viewType == "WALK IN") {
-      res = await db.query(
-        'jadwal',
-        where: 'start_time <= ? AND end_time >= ? AND status = "active"',
-        whereArgs: [now, now],
-      );
-    } else {
-      res = await db.query(
-        'jadwal',
-        where: 'start_time > ? AND status = "active"',
-        whereArgs: [now],
-      );
-    }
+    // ✅ Filter langsung dari kolom status di DB
+    final statusFilter = viewType == "WALK IN" ? 'walkin' : 'booking';
+
+    final res = await db.query(
+      'jadwal',
+      where: 'status = ?',
+      whereArgs: [statusFilter],
+    );
 
     _filteredJadwal = res.map((e) => JadwalModel.fromMap(e)).toList();
     notifyListeners();

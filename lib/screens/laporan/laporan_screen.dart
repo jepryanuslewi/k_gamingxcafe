@@ -58,7 +58,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2024),
       lastDate: DateTime(2030),
-      // Tema kalender agar sesuai dark mode
+      
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -79,7 +79,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
         } else {
           tanggalAkhir = picked;
         }
-        isTableVisible = false; // Sembunyikan tabel jika tanggal diubah
+        isTableVisible = false; 
       });
     }
   }
@@ -103,7 +103,13 @@ class _LaporanScreenState extends State<LaporanScreen> {
 
               // Tampilkan widget tabel yang dipisah jika tombol sudah ditekan
               if (isTableVisible && selectedKategori != null)
-                TabelLaporanWidget(kategori: selectedKategori!),
+                TabelLaporanWidget(
+                  kategori: selectedKategori!,
+                  subKategori: selectedSubKategori, // Tambahkan ini
+                  tanggalAwal: tanggalAwal, // Tambahkan ini
+                  tanggalAkhir: tanggalAkhir, // Tambahkan ini
+                  karyawan: selectedKaryawan, // INI YANG PALING PENTING
+                ),
 
               const SizedBox(height: 50), // Padding bawah agar tidak mepet
             ],

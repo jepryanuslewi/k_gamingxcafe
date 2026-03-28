@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -72,7 +73,6 @@ class DatabaseService {
         });
 
         /// PS UNITS ====================================================================
-        /// PS UNITS ====================================================================
         await db.execute('''
           CREATE TABLE ps_units(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,7 +95,7 @@ class DatabaseService {
           )
         ''');
 
-        /// TABEL JADWAL (Pengganti Reservations) =======================================
+        /// TABEL JADWAL =======================================
         await db.execute('''
           CREATE TABLE jadwal (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -221,12 +221,12 @@ class DatabaseService {
     }
   }
 
-  // 2. Query Laporan dengan Filter
   Future<List<Map<String, dynamic>>> getJadwalLaporan({
     DateTime? tglAwal,
     DateTime? tglAkhir,
     String? subKategori,
-    String? namaKaryawan, // Parameter nama staff
+    String? namaKaryawan,
+    String? kategori, // ✅ tambah parameter kategori
   }) async {
     try {
       final db = await instance.database;
@@ -235,20 +235,23 @@ class DatabaseService {
 
       // 1. Filter Tanggal
       if (tglAwal != null && tglAkhir != null) {
-        String start = tglAwal.toIso8601String().split('T')[0];
-        String end = tglAkhir.toIso8601String().split('T')[0];
-        whereClauses.add("date(j.created_at) BETWEEN ? AND ?");
+        String start = DateFormat('yyyy-MM-dd').format(tglAwal.toLocal());
+        String end = DateFormat('yyyy-MM-dd').format(tglAkhir.toLocal());
+        whereClauses.add("j.created_at BETWEEN ? AND ?");
         whereArgs.addAll([start, end]);
       }
 
       // 2. Filter Sub Kategori (Walk-In / Booking)
-      // Di dalam DatabaseService.getJadwalLaporan
       if (subKategori != null && subKategori != "Semua") {
-        whereClauses.add("j.status = ?"); // Pakai kolom status, bukan category
-        whereArgs.add(subKategori);
+        // ✅ Konversi nilai UI ke nilai DB
+        final statusDB = subKategori.toLowerCase() == "booking"
+            ? "booking"
+            : "walkin";
+        whereClauses.add("j.status = ?");
+        whereArgs.add(statusDB);
       }
 
-      // 3. Filter Nama Staff (Berdasarkan Username di tabel Users)
+      // 3. Filter Nama Staff
       if (namaKaryawan != null && namaKaryawan != "Semua") {
         whereClauses.add("u.username = ?");
         whereArgs.add(namaKaryawan);
@@ -258,19 +261,21 @@ class DatabaseService {
           ? "WHERE ${whereClauses.join(' AND ')}"
           : "";
 
-      // Gunakan JOIN untuk menghubungkan Jadwal -> Shifts -> Users
       return await db.rawQuery('''
       SELECT 
-        j.customer_name, 
+        j.customer_name,
         s.shift_name, 
-        u.username,
+        u.username AS operator,
         j.created_at, 
-        j.package_name, 
+        j.package_name,
         j.duration_hours, 
-        j.total_price 
+        j.total_price,
+        j.status,
+        p.name AS unit_name
       FROM jadwal j
       INNER JOIN shifts s ON j.shift_id = s.id
       INNER JOIN users u ON s.user_id = u.id
+      LEFT JOIN ps_units p ON j.unit_id = p.id
       $whereString
       ORDER BY j.created_at DESC
     ''', whereArgs);

@@ -33,21 +33,53 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     _loadDataFromDatabase();
   }
 
+  @override
+  void didUpdateWidget(covariant TabelLaporanWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Cek apakah ada parameter yang berubah
+    if (oldWidget.karyawan != widget.karyawan ||
+        oldWidget.tanggalAwal != widget.tanggalAwal ||
+        oldWidget.tanggalAkhir != widget.tanggalAkhir ||
+        oldWidget.subKategori != widget.subKategori ||
+        oldWidget.kategori != widget.kategori) {
+      // Jika berubah, panggil ulang data dari database
+      _loadDataFromDatabase();
+    }
+  }
+
+  // ✅ Tambah fungsi ini
+  String _formatTanggal(String? raw) {
+    if (raw == null || raw.isEmpty) return "-";
+    try {
+      final datePart = raw.split(RegExp(r'[ T]'))[0];
+      final parts = datePart.split('-');
+      if (parts.length != 3) return raw;
+      return "${parts[2]}/${parts[1]}/${parts[0]}";
+    } catch (e) {
+      return raw;
+    }
+  }
+
+  String _formatRibuan(int angka) {
+    return angka.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+  }
+
   Future<void> _loadDataFromDatabase() async {
     try {
-      setState(() => _isLoading = true); // Pastikan loading aktif saat mulai
+      setState(() => _isLoading = true);
 
-      // PERBAIKAN: Panggil DatabaseHelper dan fungsi getJadwalLaporan
       final rawData = await DatabaseService.instance.getJadwalLaporan(
         tglAwal: widget.tanggalAwal,
         tglAkhir: widget.tanggalAkhir,
         subKategori: widget.subKategori,
-        namaKaryawan: widget.karyawan, // Kirim ke database
+        namaKaryawan: widget.karyawan,
       );
 
       int total = 0;
       List<List<String>> formattedData = rawData.map((row) {
-        // Ambil total_price sebagai int
         int harga = row['total_price'] is int
             ? row['total_price']
             : int.tryParse(row['total_price'].toString()) ?? 0;
@@ -56,17 +88,15 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
 
         return [
           row['operator']?.toString() ?? "-",
-          row['shift_name']?.toString() ?? "N/A",
-          // Handle format ISO (T) atau format SQL biasa (spasi)
-          row['created_at']?.toString().split(RegExp(r'[ T]'))[0] ?? "-",
-          row['package_name']?.toString() ?? "-",
+          row['shift_name']?.toString() ?? "-",
+          _formatTanggal(row['created_at']?.toString()), // ✅ format dd/MM/yy
+          "${row['unit_name'] ?? row['package_name'] ?? '-'} | ${row['status'] == 'booking' ? 'BOOKING' : 'WALK IN'}",
           row['duration_hours']?.toString() ?? "0",
           _formatRibuan(harga),
         ];
       }).toList();
 
       if (mounted) {
-        // Cek apakah widget masih ada di layar
         setState(() {
           _dataJadwal = formattedData;
           _totalPendapatan = _formatRibuan(total);
@@ -79,13 +109,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  String _formatRibuan(int angka) {
-    return angka.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    );
   }
 
   @override
@@ -177,9 +200,47 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                           ),
                         ),
                         DataCell(
-                          Text(
-                            item[3],
-                            style: const TextStyle(color: Colors.white),
+                          Row(
+                            children: [
+                              Text(
+                                // Ambil nama unit/paket
+                                item[3].split(' | ')[0],
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: item[3].contains('BOOKING')
+                                      ? Colors.orange.withOpacity(0.2)
+                                      : const Color(
+                                          0xFF00E0C6,
+                                        ).withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: item[3].contains('BOOKING')
+                                        ? Colors.orange
+                                        : const Color(0xFF00E0C6),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Text(
+                                  item[3].contains('BOOKING')
+                                      ? 'BOOKING'
+                                      : 'WALK IN',
+                                  style: TextStyle(
+                                    color: item[3].contains('BOOKING')
+                                        ? Colors.orange
+                                        : const Color(0xFF00E0C6),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         DataCell(

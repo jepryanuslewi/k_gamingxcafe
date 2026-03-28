@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/ps_unit_model.dart';
-import '../../models/package_model.dart'; // Pastikan Anda sudah membuat model ini
+import '../../models/package_model.dart';
 
 class AddScheduleDialog extends StatefulWidget {
   final List<PsUnitModel> allUnits;
@@ -18,12 +18,11 @@ class AddScheduleDialog extends StatefulWidget {
 }
 
 class _AddScheduleDialogState extends State<AddScheduleDialog> {
-  // Controller
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  // State Form
   String _selectedCategory = 'REGULAR';
+  String _selectedStatus = 'walkin'; // ✅ tambah ini
   int? _selectedUnitId;
   PackageModel? _selectedPackage;
 
@@ -38,14 +37,11 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
     _calculatePrice();
   }
 
-  // Fungsi Hitung Harga Otomatis
   void _calculatePrice() {
     setState(() {
       if (_selectedCategory == 'Event') {
-        // Jika Event, harga diambil dari paket yang dipilih
         _totalPrice = _selectedPackage?.price ?? 0;
       } else {
-        // Jika Reguler/VIP, harga = harga unit * durasi
         final unit = widget.allUnits.firstWhere(
           (u) => u.id == _selectedUnitId,
           orElse: () => PsUnitModel(
@@ -66,12 +62,9 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
     List<PsUnitModel> filteredUnits = widget.allUnits.where((u) {
       String typeFromDb = u.type.trim().toLowerCase();
       String selectedCat = _selectedCategory.trim().toLowerCase();
-
-      // Hanya filter berdasarkan tipe (Reguler/VIP), abaikan status 'occupied'
       return typeFromDb == selectedCat;
     }).toList();
 
-    // Filter Paket berdasarkan Kategori (Event)
     List<PackageModel> filteredPackages = widget.availablePackages
         .where((p) => p.category == _selectedCategory)
         .toList();
@@ -92,7 +85,52 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- 1. KATEGORI ---
+              // --- 1. TIPE RESERVASI (WALK IN / BOOKING) ---
+              _buildLabel("Tipe Reservasi"),
+              Row(
+                children:
+                    [
+                      {'label': 'WALK IN', 'value': 'walkin'},
+                      {'label': 'BOOKING', 'value': 'booking'},
+                    ].map((item) {
+                      final isSelected = _selectedStatus == item['value'];
+                      return GestureDetector(
+                        onTap: () =>
+                            setState(() => _selectedStatus = item['value']!),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF00E0C6)
+                                : Colors.white10,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF00E0C6)
+                                  : Colors.white24,
+                            ),
+                          ),
+                          child: Text(
+                            item['label']!,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? const Color(0xFF0B1220)
+                                  : Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+              ),
+              const SizedBox(height: 15),
+
+              // --- 2. KATEGORI ---
               _buildLabel("Kategori"),
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
@@ -113,7 +151,7 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
               ),
               const SizedBox(height: 15),
 
-              // --- 2. UNIT (Hanya jika BUKAN Event) ---
+              // --- 3. UNIT (Hanya jika BUKAN Event) ---
               if (_selectedCategory != 'Event') ...[
                 _buildLabel("Pilih Unit PS"),
                 DropdownButtonFormField<int>(
@@ -136,9 +174,10 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
                     _calculatePrice();
                   },
                 ),
+                const SizedBox(height: 15),
               ],
 
-              // --- 3. PAKETAN (Hanya jika Kategori EVENT) ---
+              // --- 4. PAKETAN (Hanya jika Kategori EVENT) ---
               if (_selectedCategory == 'Event') ...[
                 _buildLabel("Pilih Paket Event"),
                 filteredPackages.isEmpty
@@ -176,10 +215,10 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
                           _calculatePrice();
                         },
                       ),
+                const SizedBox(height: 15),
               ],
-              const SizedBox(height: 15),
 
-              // --- 4. DATA CUSTOMER ---
+              // --- 5. DATA CUSTOMER ---
               Row(
                 children: [
                   Expanded(
@@ -214,7 +253,7 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
               ),
               const SizedBox(height: 15),
 
-              // --- 5. TANGGAL & JAM ---
+              // --- 6. TANGGAL & JAM ---
               Row(
                 children: [
                   Expanded(
@@ -264,7 +303,7 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
               ),
               const SizedBox(height: 15),
 
-              // --- 6. DURASI (Hanya jika BUKAN Event) ---
+              // --- 7. DURASI (Hanya jika BUKAN Event) ---
               if (_selectedCategory != 'Event') ...[
                 _buildLabel("Durasi Bermain"),
                 Row(
@@ -293,7 +332,7 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
 
               const Divider(color: Colors.white24, height: 40),
 
-              // --- 7. TOTAL PEMBAYARAN ---
+              // --- 8. TOTAL PEMBAYARAN ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -325,7 +364,6 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
             backgroundColor: const Color(0xFF00E0C6),
           ),
           onPressed: () {
-            // 1. Validasi: Jika bukan Event, pastikan Unit sudah dipilih
             if (_selectedCategory != 'Event' && _selectedUnitId == null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -335,7 +373,6 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
               return;
             }
 
-            // 2. Gabungkan Tanggal & Jam
             final startDT = DateTime(
               _selectedDate.year,
               _selectedDate.month,
@@ -344,8 +381,7 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
               _selectedTime.minute,
             );
 
-            // 3. Cari Nama Unit dengan aman (Cegah error unit_name)
-            String unitName = "Event/Paket"; // Default jika Event
+            String unitName = "Event/Paket";
             if (_selectedCategory != 'Event') {
               try {
                 unitName = widget.allUnits
@@ -356,22 +392,21 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
               }
             }
 
-            // 4. Kirim Data kembali ke Screen Utama
             Navigator.pop(context, {
-              'unit_id':
-                  _selectedUnitId, // Akan null jika Event, pastikan DB Anda mengizinkan null
+              'unit_id': _selectedUnitId,
               'unit_name': unitName,
               'customer_name': _nameController.text.trim().isEmpty
-                  ? "Walk-In"
+                  ? "Guest"
                   : _nameController.text.trim(),
-              'customer_phone': _phoneController.text
-                  .trim(), // Pastikan di trim
+              'customer_phone': _phoneController.text.trim(),
               'category': _selectedCategory,
               'package_name': _selectedPackage?.name,
+              'created_at': DateFormat('yyyy-MM-dd').format(_selectedDate),
               'start_time': startDT.toIso8601String(),
               'duration': _selectedDuration,
               'total_price': _totalPrice,
               'is_paketan': _selectedCategory == 'Event',
+              'status': _selectedStatus, // ✅ 'walkin' atau 'booking'
             });
           },
           child: const Text(
@@ -386,7 +421,6 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
     );
   }
 
-  // Widget Pembantu
   Widget _buildLabel(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 5),
     child: Text(
