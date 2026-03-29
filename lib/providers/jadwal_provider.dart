@@ -46,14 +46,13 @@ class JadwalProvider with ChangeNotifier {
 
   Future<void> loadJadwalByView(String viewType) async {
     final db = await DatabaseService.instance.database;
-
-    // ✅ Filter langsung dari kolom status di DB
     final statusFilter = viewType == "WALK IN" ? 'walkin' : 'booking';
 
+    // ✅ Hanya tampilkan yang belum selesai/dihapus
     final res = await db.query(
       'jadwal',
-      where: 'status = ?',
-      whereArgs: [statusFilter],
+      where: 'status = ? AND status_completed = ?',
+      whereArgs: [statusFilter, 'active'],
     );
 
     _filteredJadwal = res.map((e) => JadwalModel.fromMap(e)).toList();
@@ -80,13 +79,37 @@ class JadwalProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Hapus — tandai deleted, data tetap ada di laporan
   Future<void> deleteJadwal(int jadwalId, int? unitId) async {
     final db = await DatabaseService.instance.database;
     await db.transaction((txn) async {
-      // 1. Hapus jadwal
-      await txn.delete('jadwal', where: 'id = ?', whereArgs: [jadwalId]);
+      await txn.update(
+        'jadwal',
+        {'status_completed': 'deleted'}, // ✅ hanya update status_completed
+        where: 'id = ?',
+        whereArgs: [jadwalId],
+      );
+      if (unitId != null) {
+        await txn.update(
+          'ps_units',
+          {'status': 'idle'},
+          where: 'id = ?',
+          whereArgs: [unitId],
+        );
+      }
+    });
+  }
 
-      // 2. Kembalikan status unit menjadi idle jika ada unit_id
+  // Selesaikan — tandai done
+  Future<void> completeJadwal(int jadwalId, int? unitId) async {
+    final db = await DatabaseService.instance.database;
+    await db.transaction((txn) async {
+      await txn.update(
+        'jadwal',
+        {'status_completed': 'done'}, // ✅ hanya update status_completed
+        where: 'id = ?',
+        whereArgs: [jadwalId],
+      );
       if (unitId != null) {
         await txn.update(
           'ps_units',

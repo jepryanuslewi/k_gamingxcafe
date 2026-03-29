@@ -67,6 +67,30 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     );
   }
 
+  String _formatStatus(String? status) {
+    switch (status) {
+      case 'booking':
+        return 'BOOKING';
+      case 'walkin':
+        return 'WALK IN';
+      default:
+        return '-';
+    }
+  }
+
+  String _formatStatusCompleted(String? status) {
+    switch (status) {
+      case 'active':
+        return 'AKTIF';
+      case 'done':
+        return 'SELESAI';
+      case 'deleted':
+        return 'DIHAPUS';
+      default:
+        return '-';
+    }
+  }
+
   Future<void> _loadDataFromDatabase() async {
     try {
       setState(() => _isLoading = true);
@@ -90,9 +114,11 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
           row['operator']?.toString() ?? "-",
           row['shift_name']?.toString() ?? "-",
           _formatTanggal(row['created_at']?.toString()), // ✅ format dd/MM/yy
-          "${row['unit_name'] ?? row['package_name'] ?? '-'} | ${row['status'] == 'booking' ? 'BOOKING' : 'WALK IN'}",
+          // Di _loadDataFromDatabase
+          "${row['unit_name'] ?? row['package_name'] ?? '-'} | ${_formatStatus(row['status']?.toString())}",
           row['duration_hours']?.toString() ?? "0",
           _formatRibuan(harga),
+          _formatStatusCompleted(row['status_completed']?.toString()),
         ];
       }).toList();
 
@@ -108,6 +134,27 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Color _badgeColor(String detail) {
+    if (detail.contains('BOOKING')) return Colors.orange;
+    if (detail.contains('WALK IN')) return const Color(0xFF00E0C6);
+    if (detail.contains('SELESAI')) return Colors.greenAccent;
+    if (detail.contains('DIHAPUS')) return Colors.redAccent;
+    return Colors.white54;
+  }
+
+  Color _statusCompletedColor(String status) {
+    switch (status) {
+      case 'AKTIF':
+        return const Color(0xFF00E0C6);
+      case 'SELESAI':
+        return Colors.greenAccent;
+      case 'DIHAPUS':
+        return Colors.redAccent;
+      default:
+        return Colors.white54;
     }
   }
 
@@ -176,6 +223,12 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                 DataColumn(
                   label: Text('HARGA', style: TextStyle(color: Colors.white70)),
                 ),
+                DataColumn(
+                  label: Text(
+                    'STATUS',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
               ],
               rows: _dataJadwal
                   .map(
@@ -203,7 +256,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                           Row(
                             children: [
                               Text(
-                                // Ambil nama unit/paket
                                 item[3].split(' | ')[0],
                                 style: const TextStyle(color: Colors.white),
                               ),
@@ -214,27 +266,19 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: item[3].contains('BOOKING')
-                                      ? Colors.orange.withOpacity(0.2)
-                                      : const Color(
-                                          0xFF00E0C6,
-                                        ).withOpacity(0.15),
+                                  color: _badgeColor(item[3]).withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color: item[3].contains('BOOKING')
-                                        ? Colors.orange
-                                        : const Color(0xFF00E0C6),
+                                    color: _badgeColor(item[3]),
                                     width: 0.5,
                                   ),
                                 ),
                                 child: Text(
-                                  item[3].contains('BOOKING')
-                                      ? 'BOOKING'
-                                      : 'WALK IN',
+                                  item[3].contains(' | ')
+                                      ? item[3].split(' | ')[1]
+                                      : '-',
                                   style: TextStyle(
-                                    color: item[3].contains('BOOKING')
-                                        ? Colors.orange
-                                        : const Color(0xFF00E0C6),
+                                    color: _badgeColor(item[3]),
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -253,6 +297,32 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                           Text(
                             "Rp ${item[5]}",
                             style: const TextStyle(color: Colors.greenAccent),
+                          ),
+                        ),
+                        DataCell(
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _statusCompletedColor(
+                                item[6],
+                              ).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: _statusCompletedColor(item[6]),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Text(
+                              item[6],
+                              style: TextStyle(
+                                color: _statusCompletedColor(item[6]),
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ],

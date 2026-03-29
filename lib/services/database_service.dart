@@ -111,6 +111,7 @@ class DatabaseService {
             total_price INTEGER NOT NULL,
             status TEXT, -- booking/walkin 
             created_at TEXT,
+            status_completed TEXT DEFAULT 'active',
             FOREIGN KEY(unit_id) REFERENCES ps_units(id),
             FOREIGN KEY(shift_id) REFERENCES shifts(id)
           )
@@ -193,7 +194,7 @@ class DatabaseService {
     );
   }
 
-  /// --- UNTUK LAPORAN --------------------------------------------------------------------------------------------------
+  /// --- UNTUK LAPORAN JADWAL --------------------------------------------------------------------------------------------------
 
   // 1. Ambil daftar karyawan secara dinamis
   Future<List<String>> getAllStaffNames() async {
@@ -226,7 +227,7 @@ class DatabaseService {
     DateTime? tglAkhir,
     String? subKategori,
     String? namaKaryawan,
-    String? kategori, // ✅ tambah parameter kategori
+    String? kategori,
   }) async {
     try {
       final db = await instance.database;
@@ -271,6 +272,7 @@ class DatabaseService {
         j.duration_hours, 
         j.total_price,
         j.status,
+        COALESCE(j.status_completed, 'active') AS status_completed,
         p.name AS unit_name
       FROM jadwal j
       INNER JOIN shifts s ON j.shift_id = s.id

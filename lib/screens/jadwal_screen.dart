@@ -189,6 +189,78 @@ class _JadwalScreenState extends State<JadwalScreen> {
     );
   }
 
+  void _showConfirmSelesai(BuildContext context, JadwalModel item) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF141C2F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFF00E0C6), width: 1),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Color(0xFF00E0C6)),
+              SizedBox(width: 10),
+              Text(
+                "SELESAIKAN JADWAL?",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            "Apakah jadwal untuk ${item.customerName ?? 'Guest'} sudah selesai?\n\nStatus unit PS akan dikembalikan menjadi IDLE.",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "BATAL",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00E0C6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () async {
+                final provider = context.read<JadwalProvider>();
+                await provider.completeJadwal(
+                  item.id!,
+                  item.unitId,
+                ); // ✅ bukan deleteJadwal
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  provider.loadJadwalByView(currentView);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Jadwal berhasil diselesaikan"),
+                    ),
+                  );
+                }
+              },
+              child: const Text(
+                "SELESAI",
+                style: TextStyle(
+                  color: Color(0xFF0B1220),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showAddDialog(BuildContext context) async {
     final shiftId = context.read<ShiftProvider>().activeShift?['id'];
     if (shiftId == null) {
@@ -322,6 +394,9 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 onSelected: (value) {
                   if (value == 'delete') {
                     _showConfirmDelete(context, item);
+                  } else if (value == 'done') {
+                    // ✅ tambah ini
+                    _showConfirmSelesai(context, item);
                   }
                 },
                 itemBuilder: (BuildContext context) => [
