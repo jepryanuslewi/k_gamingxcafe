@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:k_gamingxcafe/models/ps_unit_model.dart';
+import 'package:k_gamingxcafe/models/gaming/ps_unit_model.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:k_gamingxcafe/providers/jadwal_provider.dart';
-import 'package:k_gamingxcafe/models/jadwal_model.dart';
+import 'package:k_gamingxcafe/providers/gaming/jadwal_provider.dart';
+import 'package:k_gamingxcafe/models/gaming/jadwal_model.dart';
 import 'package:k_gamingxcafe/widgets/gaming/add_schedule_dialog.dart';
 import 'package:k_gamingxcafe/widgets/gaming/button_widget.dart';
 

@@ -1,4 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:k_gamingxcafe/models/cafe/bahan_model.dart';
+import 'package:k_gamingxcafe/models/cafe/menu_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -118,80 +121,245 @@ class DatabaseService {
         ''');
 
         // Database Khusus CAFE==============================================================
-        /// PRODUCTS (CAFE STOK)
         await db.execute('''
-        CREATE TABLE products (
+        CREATE TABLE menu (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          price INTEGER NOT NULL,
-          stock INTEGER NOT NULL,
-          category TEXT -- Makanan / Minuman
+          nama TEXT NOT NULL,
+          harga INTEGER NOT NULL,
+          stok INTEGER NOT NULL DEFAULT 0,
+          kategori TEXT                   -- Makanan / Minuman
         )
         ''');
 
-        /// CAFE TRANSACTIONS
+        /// TRANSAKSI CAFE
         await db.execute('''
         CREATE TABLE cafe_transactions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           shift_id INTEGER NOT NULL,
-          product_id INTEGER NOT NULL,
-          quantity INTEGER NOT NULL,
-          total_price INTEGER NOT NULL,
+          product_id INTEGER,               -- ✅ nullable, jika produk dihapus tetap aman
+          nama_produk TEXT NOT NULL,        -- ✅ snapshot nama saat transaksi
+          jumlah INTEGER NOT NULL,
+          harga_satuan INTEGER NOT NULL,    -- ✅ snapshot harga saat transaksi
+          total_harga INTEGER NOT NULL,
           created_at TEXT,
+          status TEXT DEFAULT 'active',
           FOREIGN KEY(shift_id) REFERENCES shifts(id),
-          FOREIGN KEY(product_id) REFERENCES products(id)
-        )
-        ''');
-
-        // Di dalam onCreate DatabaseService, tambahkan:
-        await db.execute('''
-        CREATE TABLE stock_logs (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          product_name TEXT NOT NULL,
-          category TEXT NOT NULL,
-          qty INTEGER NOT NULL,
-          username TEXT NOT NULL,
-          shift_name TEXT NOT NULL,
-          timestamp TEXT NOT NULL
+          FOREIGN KEY(product_id) REFERENCES menu(id)
         )
       ''');
 
-        /// 1. TABEL BAHAN (STOK MENTAH)
+        /// LOG STOK (RIWAYAT MASUK/KELUAR)
         await db.execute('''
-          CREATE TABLE bahan (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            category TEXT NOT NULL, 
-            current_qty INTEGER NOT NULL DEFAULT 0
-          )
+        CREATE TABLE log_stok (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nama_menu TEXT NOT NULL,
+          kategori TEXT NOT NULL,
+          jumlah REAL NOT NULL,
+          tipe TEXT NOT NULL DEFAULT 'keluar', -- masuk (restock) / keluar (terjual)
+          username TEXT NOT NULL,
+          nama_shift TEXT NOT NULL,
+          waktu TEXT NOT NULL
+        )
         ''');
 
-        /// 2. TABEL RIWAYAT BAHAN (LOG INPUT)
+        /// BAHAN BAKU
         await db.execute('''
-          CREATE TABLE riwayat_bahan (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            bahan_id INTEGER NOT NULL,
-            qty_added INTEGER NOT NULL,
-            username TEXT NOT NULL,
-            shift_name TEXT NOT NULL,
-            timestamp TEXT NOT NULL,
-            FOREIGN KEY(bahan_id) REFERENCES bahan(id) -- SUDAH DIPERBAIKI
-          )
-        ''');
+        CREATE TABLE bahan (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nama TEXT NOT NULL,
+          kategori TEXT NOT NULL,
+          satuan TEXT NOT NULL,               -- ✅ gram / ml / pcs / liter / kg
+          stok_saat_ini REAL NOT NULL DEFAULT 0 -- ✅ REAL agar bisa desimal (misal 0.5 kg)
+        )
+      ''');
 
-        /// 3. TABEL DETAIL BAHAN (RESEP/RECIPE)
+        /// RIWAYAT BAHAN BAKU
         await db.execute('''
-          CREATE TABLE detail_bahan (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_id INTEGER NOT NULL,
-            bahan_id INTEGER NOT NULL,
-            usage_qty INTEGER NOT NULL,
-            FOREIGN KEY(product_id) REFERENCES products(id),
-            FOREIGN KEY(bahan_id) REFERENCES bahan(id) -- SUDAH DIPERBAIKI
-          )
-        ''');
+        CREATE TABLE riwayat_bahan (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          bahan_id INTEGER NOT NULL,
+          jumlah REAL NOT NULL,               -- ✅ REAL agar bisa desimal
+          tipe TEXT NOT NULL DEFAULT 'masuk',
+          username TEXT NOT NULL,
+          nama_shift TEXT NOT NULL,
+          waktu TEXT NOT NULL,
+          FOREIGN KEY(bahan_id) REFERENCES bahan(id)
+        )
+      ''');
+
+        /// RESEP PRODUK
+        await db.execute('''
+        CREATE TABLE resep_menu (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          product_id INTEGER NOT NULL,
+          bahan_id INTEGER NOT NULL,
+          jumlah_pakai REAL NOT NULL,
+          -- Tambahkan ON DELETE CASCADE di sini
+          FOREIGN KEY(product_id) REFERENCES menu(id) ON DELETE CASCADE,
+          FOREIGN KEY(bahan_id) REFERENCES bahan(id) ON DELETE CASCADE
+        )
+      ''');
       },
     );
+  }
+
+  // fungi untuk stok masuk dan keluar
+  Future<List<Map<String, dynamic>>> getBahanSemua() async {
+    final db = await instance.database;
+    return await db.query('bahan', orderBy: 'nama ASC');
+  }
+
+  Future<int> tambahBahan(Bahan bahan) async {
+    final db = await instance.database;
+    return await db.insert('bahan', bahan.toMap());
+  }
+
+  // Fungsi untuk Update Bahan Baku
+  Future<int> updateBahan(Bahan bahan) async {
+    final db = await instance.database;
+    return await db.update(
+      'bahan_baku', // Pastikan nama tabel sesuai dengan yang Anda buat di onCreate
+      bahan.toMap(),
+      where: 'id = ?',
+      whereArgs: [bahan.id],
+    );
+  }
+
+  // Fungsi untuk Delete Bahan Baku
+  Future<int> deleteBahan(int id) async {
+    final db = await instance.database;
+    return await db.delete('bahan_baku', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Fungsi pengurangan stok bahan secara otomatis saat produk terjual
+  Future<void> kurangiStokBahanOtomatis(int productId, int qtyPesanan) async {
+    final db = await instance.database;
+
+    // Cari di resep_menu
+    final List<Map<String, dynamic>> resep = await db.query(
+      'resep_menu',
+      where: 'product_id = ?',
+      whereArgs: [productId],
+    );
+
+    for (var item in resep) {
+      int bahanId = item['bahan_id'];
+      double totalPotong =
+          (item['jumlah_pakai'] as num).toDouble() * qtyPesanan;
+
+      await db.transaction((txn) async {
+        await txn.rawUpdate(
+          'UPDATE bahan SET stok_saat_ini = stok_saat_ini - ? WHERE id = ?',
+          [totalPotong, bahanId],
+        );
+
+        await txn.insert('riwayat_bahan', {
+          'bahan_id': bahanId,
+          'jumlah': totalPotong,
+          'tipe': 'keluar',
+          'username': 'System',
+          'nama_shift': 'Auto-Cut',
+          'waktu': DateTime.now().toIso8601String(),
+        });
+      });
+    }
+  }
+
+  Future<void> addMenuWithResep(
+    MenuModel menu,
+    List<Map<String, dynamic>> resep,
+  ) async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      // Simpan menu
+      int productId = await txn.insert('menu', menu.toMap());
+
+      // Simpan resep
+      for (var item in resep) {
+        if (item['bahan_id'] != null) {
+          // Ambil text dari controller
+          final controller = item['jumlah'] as TextEditingController;
+          double qty = double.tryParse(controller.text) ?? 0.0;
+
+          if (qty > 0) {
+            await txn.insert('resep_menu', {
+              'product_id': productId,
+              'bahan_id': item['bahan_id'],
+              'jumlah_pakai': qty,
+            });
+          }
+        }
+      }
+    });
+  }
+
+  // Fungsi Untuk Kelola Menu Cafe
+  Future<int> createMenu(MenuModel menu) async {
+    final db = await instance.database;
+    return await db.insert('menu', menu.toMap());
+  }
+
+  Future<List<MenuModel>> readAllMenu() async {
+    final db = await instance.database;
+    // Pastikan nama tabel adalah 'menu'
+    final result = await db.query('menu', orderBy: 'nama ASC');
+    return result.map((json) => MenuModel.fromMap(json)).toList();
+  }
+
+  Future<void> updateMenuWithResep(
+    MenuModel menu,
+    List<Map<String, dynamic>> resep,
+  ) async {
+    final db = await instance.database;
+
+    await db.transaction((txn) async {
+      // 1. Update info utama menu
+      await txn.update(
+        'menu',
+        menu.toMap(),
+        where: 'id = ?',
+        whereArgs: [menu.id],
+      );
+
+      await txn.delete(
+        'resep_menu',
+        where: 'product_id = ?',
+        whereArgs: [menu.id],
+      );
+
+      // 3. Masukkan resep baru hasil editan
+      for (var item in resep) {
+        if (item['bahan_id'] != null) {
+          final controller = item['jumlah'] as TextEditingController;
+          double qty = double.tryParse(controller.text) ?? 0.0;
+
+          if (qty > 0) {
+            await txn.insert('resep_menu', {
+              'product_id': menu.id,
+              'bahan_id': item['bahan_id'],
+              'jumlah_pakai': qty,
+            });
+          }
+        }
+      }
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getResepByProductId(int productId) async {
+    final db = await instance.database;
+    return await db.query(
+      'resep_menu',
+      where: 'product_id = ?',
+      whereArgs: [productId],
+    );
+  }
+
+  Future<int> deleteMenu(int id) async {
+    final db = await instance.database;
+    // Menghapus menu otomatis akan menghapus resep jika Anda menggunakan ON DELETE CASCADE,
+    // Jika tidak, sebaiknya hapus resepnya dulu secara manual atau tambahkan CASCADE di create table.
+    return await db.delete('menu', where: 'id = ?', whereArgs: [id]);
   }
 
   /// --- UNTUK LAPORAN JADWAL --------------------------------------------------------------------------------------------------

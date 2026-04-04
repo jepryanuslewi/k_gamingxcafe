@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:k_gamingxcafe/screens/dashboard/cafe/cafe_management_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/dashboard_home_screen.dart';
-import 'package:k_gamingxcafe/screens/dashboard/unit_screen.dart';
+import 'package:k_gamingxcafe/screens/dashboard/gaming/unit_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -12,7 +13,11 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int selectedIndex = 0;
 
-  final List<Widget> pages = const [DashboardHomeScreen(), UnitsScreen()];
+  final List<Widget> pages = const [
+    DashboardHomeScreen(),
+    UnitsScreen(),
+    CafeManagementScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +79,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           _buildMenuItem(Icons.dashboard, "Dashboard", 0, isCollapsed),
           _buildMenuItem(Icons.tv, "PS Units", 1, isCollapsed),
+          _buildMenuItem(Icons.store, "CAFE MANAGEMENT", 2, isCollapsed),
         ],
       ),
     );

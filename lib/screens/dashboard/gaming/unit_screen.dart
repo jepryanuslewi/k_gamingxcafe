@@ -243,7 +243,10 @@ class _UnitsScreenState extends State<UnitsScreen>
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
       appBar: AppBar(
-        title: const Text("Manajemen Cafe"),
+        title: const Text(
+          "Manajemen PS UNIT & PAKET",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.transparent,
         bottom: TabBar(
           controller: _tabController,

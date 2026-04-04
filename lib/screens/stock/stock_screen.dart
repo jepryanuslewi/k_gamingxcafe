@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
-import 'package:k_gamingxcafe/providers/cafe_provider.dart';
-import 'package:k_gamingxcafe/providers/shift_provider.dart';
 import 'package:k_gamingxcafe/screens/stock/stock_masuk_screen.dart';
-import 'package:k_gamingxcafe/widgets/dialog/add_product_dialog.dart';
 import 'package:k_gamingxcafe/widgets/stock/button_stock.dart';
 import 'package:k_gamingxcafe/widgets/search_widget.dart';
-import 'package:k_gamingxcafe/widgets/stock/stock_table.dart';
 import 'package:provider/provider.dart';
 
 class StockScreen extends StatelessWidget {
@@ -244,7 +240,6 @@ class StockScreen extends StatelessWidget {
                                   fontSize: 24,
                                 ),
                               ),
-                              StockTable(),
                             ],
                           ),
                         ),

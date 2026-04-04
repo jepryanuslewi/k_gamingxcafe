@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
-import 'package:k_gamingxcafe/providers/jadwal_provider.dart';
+import 'package:k_gamingxcafe/providers/cafe/bahan_provider.dart';
+import 'package:k_gamingxcafe/providers/cafe/menu_provider.dart';
+import 'package:k_gamingxcafe/providers/gaming/jadwal_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
 import 'package:k_gamingxcafe/screens/login_screen.dart';
 import 'package:k_gamingxcafe/screens/main_menu_screen.dart';
@@ -25,7 +27,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ShiftProvider()),
         ChangeNotifierProvider(create: (_) => JadwalProvider()),
-        // Tambahkan ShiftProvider jika sudah dibuat
+        ChangeNotifierProvider(create: (_) => BahanProvider()),
+        ChangeNotifierProvider(create: (_) => MenuProvider()),
       ],
       child: const MyApp(),
     ),

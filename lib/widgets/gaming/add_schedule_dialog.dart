@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../models/ps_unit_model.dart';
-import '../../models/package_model.dart';
+import '../../models/gaming/ps_unit_model.dart';
+import '../../models/gaming/package_model.dart';
 
 class AddScheduleDialog extends StatefulWidget {
   final List<PsUnitModel> allUnits;

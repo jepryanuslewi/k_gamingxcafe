@@ -165,13 +165,12 @@ class StockMasukScreen extends StatelessWidget {
                         // Input
                         Row(
                           children: [
-                            Expanded(child: InputStock(text: "NAMA")),
+                            Expanded(child: InputStock(text: "BAHAN")),
                             SizedBox(width: 10),
-                            Expanded(child: InputStock(text: "QTY")),
+                            Expanded(child: InputStock(text: "STOK")),
                             SizedBox(width: 10),
                             Expanded(child: InputStock(text: "DESKRIPSI")),
                             SizedBox(width: 10),
-                            Expanded(child: InputStock(text: "KATEGORI")),
                           ],
                         ),
                         SizedBox(height: 10),

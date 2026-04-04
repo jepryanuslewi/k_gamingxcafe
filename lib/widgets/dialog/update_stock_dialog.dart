@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
-import 'package:k_gamingxcafe/providers/cafe_provider.dart';
+import 'package:k_gamingxcafe/providers/cafe/cafe_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
 import 'package:k_gamingxcafe/widgets/dialog/add_product_dialog.dart';
 import 'package:provider/provider.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:k_gamingxcafe/models/jadwal_model.dart';
-import 'package:k_gamingxcafe/models/package_model.dart';
-import 'package:k_gamingxcafe/models/ps_unit_model.dart';
+import 'package:k_gamingxcafe/models/gaming/jadwal_model.dart';
+import 'package:k_gamingxcafe/models/gaming/package_model.dart';
+import 'package:k_gamingxcafe/models/gaming/ps_unit_model.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
 
 class JadwalProvider with ChangeNotifier {
