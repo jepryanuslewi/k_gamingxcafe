@@ -304,29 +304,77 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
               const SizedBox(height: 15),
 
               // --- 7. DURASI (Hanya jika BUKAN Event) ---
+              // --- 7. DURASI (Hanya jika BUKAN Event) ---
               if (_selectedCategory != 'Event') ...[
                 _buildLabel("Durasi Bermain"),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [1, 2, 3, 5]
-                      .map(
-                        (h) => ChoiceChip(
-                          label: Text("$h Jam"),
-                          selected: _selectedDuration == h,
-                          onSelected: (s) {
-                            setState(() => _selectedDuration = h);
-                            _calculatePrice();
-                          },
-                          selectedColor: const Color(0xFF00E0C6),
-                          backgroundColor: Colors.white10,
-                          labelStyle: TextStyle(
-                            color: _selectedDuration == h
-                                ? Colors.black
-                                : Colors.white,
-                          ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 5,
+                    horizontal: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white10),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Tombol Minus
+                      IconButton(
+                        icon: const Icon(
+                          Icons.remove_circle_outline,
+                          color: Color(0xFF00E0C6),
                         ),
-                      )
-                      .toList(),
+                        onPressed: () {
+                          if (_selectedDuration > 1) {
+                            setState(() {
+                              _selectedDuration--;
+                              _calculatePrice();
+                            });
+                          }
+                        },
+                      ),
+
+                      // Angka Durasi
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: Column(
+                          children: [
+                            Text(
+                              "$_selectedDuration",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Text(
+                              "JAM",
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Tombol Plus
+                      IconButton(
+                        icon: const Icon(
+                          Icons.add_circle_outline,
+                          color: Color(0xFF00E0C6),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _selectedDuration++;
+                            _calculatePrice();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
 
