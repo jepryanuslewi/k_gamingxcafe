@@ -440,6 +440,8 @@ class DatabaseService {
         j.duration_hours, 
         j.total_price,
         j.status,
+        j.start_time,
+        J.end_time,
         COALESCE(j.status_completed, 'active') AS status_completed,
         p.name AS unit_name
       FROM jadwal j

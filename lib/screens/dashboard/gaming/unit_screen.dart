@@ -23,59 +23,52 @@ class _UnitsScreenState extends State<UnitsScreen>
   }
 
   Future<void> loadData() async {
+    if (!mounted) return;
     setState(() => isLoading = true);
     final db = await DatabaseService.instance.database;
 
     final unitData = await db.query("ps_units", orderBy: "name ASC");
     final packageData = await db.query("packages", orderBy: "price ASC");
 
-    setState(() {
-      units = unitData;
-      packages = packageData;
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        units = unitData;
+        packages = packageData;
+        isLoading = false;
+      });
+    }
   }
 
-  // --- LOGIKA UNIT ---
+  // --- LOGIKA DELETE ---
   Future<void> deleteUnit(int id) async {
     final db = await DatabaseService.instance.database;
     await db.delete("ps_units", where: "id = ?", whereArgs: [id]);
     loadData();
   }
 
-  // --- LOGIKA PACKAGE ---
   Future<void> deletePackage(int id) async {
     final db = await DatabaseService.instance.database;
     await db.delete("packages", where: "id = ?", whereArgs: [id]);
     loadData();
   }
 
-  // --- UI DIALOG TAMBAH (Disesuaikan berdasarkan Tab aktif) ---
-  void showAddForm() {
-    if (_tabController.index == 0) {
-      showAddUnitForm();
-    } else {
-      showAddPackageForm();
-    }
-  }
-
-  // Form Unit (Sudah Anda miliki)
-  void showAddUnitForm() {
-    final nameController = TextEditingController();
-    final priceController = TextEditingController();
+  // --- LOGIKA EDIT UNIT ---
+  void showEditUnitForm(Map<String, dynamic> unit) {
+    final nameController = TextEditingController(text: unit["name"]);
+    final priceController = TextEditingController(
+      text: unit["price_per_hour"].toString(),
+    );
     final formKey = GlobalKey<FormState>();
-
-    // PERBAIKAN 1: Samakan dengan salah satu isi items (Case Sensitive)
-    String type = "REGULAR";
+    String type = unit["type"];
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => AlertDialog(
           backgroundColor: const Color(0xff141c2f),
-          title: const Text(
-            "Tambah Unit Baru",
-            style: TextStyle(color: Colors.white),
+          title: Text(
+            "Edit Unit: ${unit['name']}",
+            style: const TextStyle(color: Colors.white),
           ),
           content: Form(
             key: formKey,
@@ -101,21 +94,13 @@ class _UnitsScreenState extends State<UnitsScreen>
                   ),
                   validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
                 ),
-                const SizedBox(height: 15), // Tambahkan sedikit jarak
+                const SizedBox(height: 15),
                 DropdownButtonFormField<String>(
                   dropdownColor: const Color(0xff141c2f),
-                  initialValue: type,
+                  value: type,
                   style: const TextStyle(color: Colors.white),
-                  // PERBAIKAN 2: Gunakan list yang konsisten
                   items: ["REGULAR", "VIP 1", "VIP 2"]
-                      .map(
-                        (t) => DropdownMenuItem(
-                          value: t,
-                          child: Text(
-                            t,
-                          ), // Tidak perlu .toUpperCase() lagi karena sudah besar
-                        ),
-                      )
+                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                       .toList(),
                   onChanged: (val) => setModalState(() => type = val!),
                   decoration: const InputDecoration(
@@ -134,26 +119,24 @@ class _UnitsScreenState extends State<UnitsScreen>
             ElevatedButton(
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
-                  try {
-                    final db = await DatabaseService.instance.database;
-                    await db.insert("ps_units", {
+                  final db = await DatabaseService.instance.database;
+                  await db.update(
+                    "ps_units",
+                    {
                       "name": nameController.text,
                       "type": type,
                       "price_per_hour": int.parse(priceController.text),
-                      "status": "idle",
-                      "duration_seconds": 0,
-                    });
-                    if (mounted) {
-                      Navigator.pop(context);
-                      loadData();
-                    }
-                  } catch (e) {
-                    // Tangkap error jika parse angka gagal
-                    print("Error saat simpan: $e");
+                    },
+                    where: "id = ?",
+                    whereArgs: [unit["id"]],
+                  );
+                  if (mounted) {
+                    Navigator.pop(context);
+                    loadData();
                   }
                 }
               },
-              child: const Text("Simpan"),
+              child: const Text("Update"),
             ),
           ],
         ),
@@ -161,20 +144,24 @@ class _UnitsScreenState extends State<UnitsScreen>
     );
   }
 
-  // Form Package (Baru)
-  void showAddPackageForm() {
-    final nameController = TextEditingController();
-    final priceController = TextEditingController();
-    final durationController = TextEditingController();
+  // --- LOGIKA EDIT PAKET ---
+  void showEditPackageForm(Map<String, dynamic> pkg) {
+    final nameController = TextEditingController(text: pkg["name"]);
+    final priceController = TextEditingController(
+      text: pkg["price"].toString(),
+    );
+    final durationController = TextEditingController(
+      text: pkg["duration_hours"].toString(),
+    );
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xff141c2f),
-        title: const Text(
-          "Tambah Paket Event",
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          "Edit Paket: ${pkg['name']}",
+          style: const TextStyle(color: Colors.white),
         ),
         content: Form(
           key: formKey,
@@ -185,7 +172,7 @@ class _UnitsScreenState extends State<UnitsScreen>
                 controller: nameController,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: "Nama Paket Promo",
+                  labelText: "Nama Paket",
                   labelStyle: TextStyle(color: Colors.grey),
                 ),
                 validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
@@ -222,13 +209,188 @@ class _UnitsScreenState extends State<UnitsScreen>
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 final db = await DatabaseService.instance.database;
+                await db.update(
+                  "packages",
+                  {
+                    "name": nameController.text,
+                    "price": int.parse(priceController.text),
+                    "duration_hours": int.parse(durationController.text),
+                  },
+                  where: "id = ?",
+                  whereArgs: [pkg["id"]],
+                );
+                if (mounted) {
+                  Navigator.pop(context);
+                  loadData();
+                }
+              }
+            },
+            child: const Text("Update"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- UI DIALOG TAMBAH ---
+  void showAddForm() {
+    if (_tabController.index == 0) {
+      showAddUnitForm();
+    } else {
+      showAddPackageForm();
+    }
+  }
+
+  void showAddUnitForm() {
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    String type = "REGULAR";
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          backgroundColor: const Color(0xff141c2f),
+          title: const Text(
+            "Tambah Unit Baru",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: "Nama Unit",
+                    labelStyle: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                TextFormField(
+                  controller: priceController,
+                  style: const TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Harga per Jam",
+                    labelStyle: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                DropdownButtonFormField<String>(
+                  dropdownColor: const Color(0xff141c2f),
+                  value: type,
+                  style: const TextStyle(color: Colors.white),
+                  items: ["REGULAR", "VIP 1", "VIP 2"]
+                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                      .toList(),
+                  onChanged: (val) => setModalState(() => type = val!),
+                  decoration: const InputDecoration(
+                    labelText: "Tipe",
+                    labelStyle: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final db = await DatabaseService.instance.database;
+                  await db.insert("ps_units", {
+                    "name": nameController.text,
+                    "type": type,
+                    "price_per_hour": int.parse(priceController.text),
+                    "status": "idle",
+                    "duration_seconds": 0,
+                  });
+                  if (mounted) {
+                    Navigator.pop(context);
+                    loadData();
+                  }
+                }
+              },
+              child: const Text("Simpan"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void showAddPackageForm() {
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+    final durationController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xff141c2f),
+        title: const Text(
+          "Tambah Paket Event",
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: "Nama Paket",
+                  labelStyle: TextStyle(color: Colors.grey),
+                ),
+              ),
+              TextFormField(
+                controller: durationController,
+                style: const TextStyle(color: Colors.white),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "Durasi (Jam)",
+                  labelStyle: TextStyle(color: Colors.grey),
+                ),
+              ),
+              TextFormField(
+                controller: priceController,
+                style: const TextStyle(color: Colors.white),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "Harga Paket",
+                  labelStyle: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                final db = await DatabaseService.instance.database;
                 await db.insert("packages", {
                   "name": nameController.text,
                   "price": int.parse(priceController.text),
                   "duration_hours": int.parse(durationController.text),
                 });
-                Navigator.pop(context);
-                loadData();
+                if (mounted) {
+                  Navigator.pop(context);
+                  loadData();
+                }
               }
             },
             child: const Text("Simpan"),
@@ -267,27 +429,43 @@ class _UnitsScreenState extends State<UnitsScreen>
           : TabBarView(
               controller: _tabController,
               children: [
-                // TAB 1: GRID UNIT
+                // TAB 1: GRID UNIT (RESPONSIF TABLET)
                 GridView.builder(
                   padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.1,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 220,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.2,
                   ),
                   itemCount: units.length,
                   itemBuilder: (context, index) => unitCard(units[index]),
                 ),
-                // TAB 2: LIST PACKAGE
+                // TAB 2: LIST PACKAGE (TITIK 3)
                 ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: packages.length,
                   itemBuilder: (context, index) {
                     final pkg = packages[index];
                     return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
                       color: const Color(0xff1c273d),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: const BorderSide(color: Colors.white10),
+                      ),
                       child: ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xffe21388).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.confirmation_number,
+                            color: Color(0xffe21388),
+                          ),
+                        ),
                         title: Text(
                           pkg["name"],
                           style: const TextStyle(
@@ -296,15 +474,57 @@ class _UnitsScreenState extends State<UnitsScreen>
                           ),
                         ),
                         subtitle: Text(
-                          "${pkg["duration_hours"]} Jam - Rp ${pkg["price"]}",
+                          "${pkg["duration_hours"]} Jam  •  Rp ${pkg["price"]}",
                           style: const TextStyle(color: Colors.white70),
                         ),
-                        trailing: IconButton(
+                        trailing: PopupMenuButton<String>(
                           icon: const Icon(
-                            Icons.delete,
-                            color: Colors.redAccent,
+                            Icons.more_vert,
+                            color: Colors.white54,
                           ),
-                          onPressed: () => deletePackage(pkg["id"]),
+                          color: const Color(0xff1c273d),
+                          onSelected: (val) {
+                            if (val == 'edit')
+                              showEditPackageForm(pkg);
+                            else if (val == 'delete')
+                              deletePackage(pkg["id"]);
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.edit,
+                                    color: Colors.blueAccent,
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Edit",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete,
+                                    color: Colors.redAccent,
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Hapus",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -315,9 +535,7 @@ class _UnitsScreenState extends State<UnitsScreen>
     );
   }
 
-  // Widget unitCard tetap sama seperti kode Anda sebelumnya...
   Widget unitCard(Map unit) {
-    final String status = unit["status"] ?? "idle";
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xff1c273d),
@@ -331,23 +549,39 @@ class _UnitsScreenState extends State<UnitsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  unit["name"],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                Padding(
+                  padding: const EdgeInsets.only(right: 25),
+                  child: Text(
+                    unit["name"],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-                Text(
-                  unit["type"].toString().toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.cyanAccent,
-                    fontSize: 12,
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.cyanAccent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    unit["type"].toString().toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.cyanAccent,
+                      fontSize: 10,
+                    ),
                   ),
                 ),
                 const Spacer(),
-                const Divider(color: Colors.white12),
+                const Divider(color: Colors.white12, height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -355,10 +589,31 @@ class _UnitsScreenState extends State<UnitsScreen>
                       "Rp ${unit["price_per_hour"]}",
                       style: const TextStyle(
                         color: Colors.white70,
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                     ),
-                    // ... sisanya sama ...
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: unit["status"] == "idle"
+                            ? Colors.greenAccent.withOpacity(0.1)
+                            : Colors.orangeAccent.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        unit["status"].toString().toUpperCase(),
+                        style: TextStyle(
+                          color: unit["status"] == "idle"
+                              ? Colors.greenAccent
+                              : Colors.orangeAccent,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -367,9 +622,41 @@ class _UnitsScreenState extends State<UnitsScreen>
           Positioned(
             right: 0,
             top: 0,
-            child: IconButton(
-              icon: const Icon(Icons.delete, color: Colors.white24, size: 20),
-              onPressed: () => deleteUnit(unit["id"]),
+            child: PopupMenuButton<String>(
+              icon: const Icon(
+                Icons.more_vert,
+                color: Colors.white54,
+                size: 20,
+              ),
+              color: const Color(0xff1c273d),
+              onSelected: (val) {
+                if (val == 'edit')
+                  showEditUnitForm(Map<String, dynamic>.from(unit));
+                else if (val == 'delete')
+                  deleteUnit(unit["id"]);
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, color: Colors.blueAccent, size: 18),
+                      SizedBox(width: 8),
+                      Text("Edit", style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.redAccent, size: 18),
+                      SizedBox(width: 8),
+                      Text("Hapus", style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

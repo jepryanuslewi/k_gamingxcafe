@@ -36,18 +36,15 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
   @override
   void didUpdateWidget(covariant TabelLaporanWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Cek apakah ada parameter yang berubah
     if (oldWidget.karyawan != widget.karyawan ||
         oldWidget.tanggalAwal != widget.tanggalAwal ||
         oldWidget.tanggalAkhir != widget.tanggalAkhir ||
         oldWidget.subKategori != widget.subKategori ||
         oldWidget.kategori != widget.kategori) {
-      // Jika berubah, panggil ulang data dari database
       _loadDataFromDatabase();
     }
   }
 
-  // ✅ Tambah fungsi ini
   String _formatTanggal(String? raw) {
     if (raw == null || raw.isEmpty) return "-";
     try {
@@ -92,6 +89,17 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
   }
 
   Future<void> _loadDataFromDatabase() async {
+    // Fungsi bantu untuk memformat jam
+    String ambilJam(String? raw) {
+      if (raw == null || raw.isEmpty || raw == "null") return "--:--";
+      try {
+        final DateTime dateTime = DateTime.parse(raw);
+        return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+      } catch (e) {
+        return "--:--";
+      }
+    }
+
     try {
       setState(() => _isLoading = true);
 
@@ -110,15 +118,19 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
 
         total += harga;
 
+        // Gabungkan Jam Mulai - Jam Selesai
+        String rentangWaktu =
+            "${ambilJam(row['start_time']?.toString())} - ${ambilJam(row['end_time']?.toString())}";
+
         return [
-          row['operator']?.toString() ?? "-",
-          row['shift_name']?.toString() ?? "-",
-          _formatTanggal(row['created_at']?.toString()), // ✅ format dd/MM/yy
-          // Di _loadDataFromDatabase
-          "${row['unit_name'] ?? row['package_name'] ?? '-'} | ${_formatStatus(row['status']?.toString())}",
-          row['duration_hours']?.toString() ?? "0",
-          _formatRibuan(harga),
-          _formatStatusCompleted(row['status_completed']?.toString()),
+          row['operator']?.toString() ?? "-", // [0]
+          row['shift_name']?.toString() ?? "-", // [1]
+          _formatTanggal(row['created_at']?.toString()), // [2]
+          "${row['unit_name'] ?? row['package_name'] ?? '-'} | ${_formatStatus(row['status']?.toString())}", // [3]
+          rentangWaktu, // [4]
+          row['duration_hours']?.toString() ?? "0", // [5]
+          _formatRibuan(harga), // [6]
+          _formatStatusCompleted(row['status_completed']?.toString()), // [7]
         ];
       }).toList();
 
@@ -131,9 +143,7 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
       }
     } catch (e) {
       print("UI Load Error: $e");
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -221,6 +231,12 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                   label: Text('JAM', style: TextStyle(color: Colors.white70)),
                 ),
                 DataColumn(
+                  label: Text(
+                    'DURASI',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                DataColumn(
                   label: Text('HARGA', style: TextStyle(color: Colors.white70)),
                 ),
                 DataColumn(
@@ -289,13 +305,22 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                         ),
                         DataCell(
                           Text(
-                            "${item[4]} Jam",
+                            item[4],
+                            style: const TextStyle(
+                              color: Colors.orangeAccent,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            "${item[5]} Jam",
                             style: const TextStyle(color: Color(0xFF00E0C6)),
                           ),
                         ),
                         DataCell(
                           Text(
-                            "Rp ${item[5]}",
+                            "Rp ${item[6]}",
                             style: const TextStyle(color: Colors.greenAccent),
                           ),
                         ),
@@ -307,18 +332,18 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                             ),
                             decoration: BoxDecoration(
                               color: _statusCompletedColor(
-                                item[6],
+                                item[7],
                               ).withOpacity(0.15),
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
-                                color: _statusCompletedColor(item[6]),
+                                color: _statusCompletedColor(item[7]),
                                 width: 0.5,
                               ),
                             ),
                             child: Text(
-                              item[6],
+                              item[7],
                               style: TextStyle(
-                                color: _statusCompletedColor(item[6]),
+                                color: _statusCompletedColor(item[7]),
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -331,7 +356,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                   .toList(),
             ),
           ),
-          // Footer Total
           Container(
             padding: const EdgeInsets.all(20),
             child: Row(
