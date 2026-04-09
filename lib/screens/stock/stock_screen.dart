@@ -165,10 +165,7 @@ class StockScreen extends StatelessWidget {
                         // Pencarian
                         SizedBox(
                           height: 50,
-                          child: SearchWidget(
-                            text: "Cari Barang",
-                            onPressed: () {},
-                          ),
+                          child: SearchWidget(text: "Cari Barang"),
                         ),
                         SizedBox(height: 5),
                         // Button
