@@ -1,253 +1,371 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/screens/stock/stock_masuk_screen.dart';
+import 'package:k_gamingxcafe/services/database_service.dart';
 import 'package:k_gamingxcafe/widgets/stock/button_stock.dart';
-import 'package:k_gamingxcafe/widgets/search_widget.dart';
 import 'package:provider/provider.dart';
 
-class StockScreen extends StatelessWidget {
+class StockScreen extends StatefulWidget {
   final String shiftName;
   const StockScreen({super.key, required this.shiftName});
 
   @override
+  State<StockScreen> createState() => _StockScreenState();
+}
+
+class _StockScreenState extends State<StockScreen> {
+  // Controller untuk pencarian
+  final TextEditingController _searchController = TextEditingController();
+
+  List<Map<String, dynamic>> _allBahan = []; // Data asli dari DB
+  List<Map<String, dynamic>> _filteredBahan = []; // Data yang difilter untuk UI
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshBahan();
+    // Listener untuk pencarian otomatis saat mengetik
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // Fungsi filtering
+  void _onSearchChanged() {
+    String query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredBahan = _allBahan.where((bahan) {
+        final namaBahan = (bahan['nama'] ?? '').toString().toLowerCase();
+        return namaBahan.contains(query);
+      }).toList();
+    });
+  }
+
+  // Ambil data dari Database
+  Future<void> _refreshBahan() async {
+    setState(() => _isLoading = true);
+    final data = await DatabaseService.instance.getBahanSemua();
+    setState(() {
+      _allBahan = data;
+      _filteredBahan = data;
+      _isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tanggal = DateTime.now();
-    final authprovider = context.watch<AuthProvider>();
-    final String username = authprovider.user?.username ?? "";
+    final authProvider = context.watch<AuthProvider>();
+    final String username = authProvider.user?.username ?? "User";
+
     return Scaffold(
-      backgroundColor: Color.fromRGBO(11, 18, 32, 100),
+      backgroundColor: const Color.fromRGBO(11, 18, 32, 1),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 50),
-              child: Column(
-                children: [
-                  Container(
-                    color: Colors.transparent,
-                    width: double.infinity,
-                    height: 90,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Image.asset("assets/images/bgLoginScreen.png"),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Text(
-                                      "GAMING",
-                                      style: TextStyle(
-                                        color: Color.fromRGBO(
-                                          226,
-                                          19,
-                                          136,
-                                          100,
-                                        ),
-                                        fontSize: 35,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: "Poppins",
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    const Text(
-                                      "X",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 35,
-                                        fontWeight: FontWeight.normal,
-                                        fontFamily: "Poppins",
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    const Text(
-                                      "CAFE",
-                                      style: TextStyle(
-                                        color: Color.fromRGBO(0, 224, 198, 100),
-                                        fontSize: 35,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: "Poppins",
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  "Booking & Transaction App",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        // Profile===========================================================
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                          ),
-                          onPressed: () {},
-                          child: Row(
-                            children: [
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    username,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(shiftName),
-                                ],
-                              ),
-                              Icon(
-                                Icons.person_2_outlined,
-                                size: 70,
-                                color: Color.fromRGBO(0, 224, 198, 100),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 50),
+          child: Column(
+            children: [
+              _buildHeader(username, widget.shiftName),
+              const SizedBox(height: 30),
+
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 20,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(20, 28, 47, 1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color.fromRGBO(0, 224, 198, 1),
                     ),
                   ),
-                  SizedBox(height: 30),
-
-                  // menu===================================================
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromRGBO(20, 28, 47, 100),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Color.fromRGBO(0, 224, 198, 100),
+                  child: Column(
+                    children: [
+                      // Header Tabel: Judul & Tanggal
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'STOCK BAHAN',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '${tanggal.day}/${tanggal.month}/${tanggal.year}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    padding: EdgeInsets.only(left: 50, right: 50, top: 10),
-                    height: 440,
-                    width: double.infinity,
-                    child: Column(
-                      children: [
-                        // 1
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // username
-                            Text(
-                              'STOCK',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            // tanggal
-                            Text(
-                              '${tanggal.day}/${tanggal.month}/${tanggal.year}',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 10),
+                      const SizedBox(height: 15),
 
-                        // Pencarian
-                        SizedBox(
-                          height: 50,
-                          child: SearchWidget(text: "Cari Barang"),
+                      // Input Pencarian yang sudah diperbaiki
+                      Container(
+                        height: 50,
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(30, 38, 57, 1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white10),
                         ),
-                        SizedBox(height: 5),
-                        // Button
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // 1
-                            Row(
-                              children: [
-                                ButtonStock(
-                                  text: "MASUK",
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => StockMasukScreen(
-                                          shiftName: shiftName,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                SizedBox(width: 10),
-                                ButtonStock(text: "KELUAR", onPressed: () {}),
-                              ],
-                            ),
-                            // 2
-                            Row(
-                              children: [
-                                ButtonStock(
-                                  text: "ITEM",
-                                  onPressed: () {
-                                    null;
-                                  },
-                                ),
-                                SizedBox(width: 10),
-                                ButtonStock(
-                                  text: "BACK",
-                                  onPressed: () => Navigator.of(context).pop(),
-                                ),
-                              ],
-                            ),
-                          ],
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            hintText: "Cari Nama Bahan...",
+                            hintStyle: TextStyle(color: Colors.white38),
+                            border: InputBorder.none,
+                            icon: Icon(Icons.search, color: Color(0xFF00E0C6)),
+                          ),
                         ),
-                        // Daftar Barang
-                        Container(
-                          margin: EdgeInsets.only(top: 5, bottom: 5),
-                          padding: EdgeInsets.only(
-                            top: 2,
-                            left: 10,
-                            right: 10,
-                            bottom: 10,
-                          ),
-                          height: 250,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            border: Border.all(
-                              color: const Color.fromARGB(255, 113, 112, 112),
-                            ),
-                          ),
-                          child: Column(
+                      ),
+                      const SizedBox(height: 15),
+
+                      // Tombol Navigasi
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
                             children: [
-                              Text(
-                                "DATA BARANG",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24,
-                                ),
+                              ButtonStock(
+                                text: "MASUK",
+                                onPressed: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => StockMasukScreen(
+                                        shiftName: widget.shiftName,
+                                      ),
+                                    ),
+                                  );
+                                  _refreshBahan(); // Refresh setelah kembali
+                                },
                               ),
+                              const SizedBox(width: 10),
+                              ButtonStock(text: "KELUAR", onPressed: () {}),
                             ],
                           ),
+                          ButtonStock(
+                            text: "BACK",
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+
+                      // Section Data Table
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white10),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: _isLoading
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFF00E0C6),
+                                  ),
+                                )
+                              : _filteredBahan.isEmpty
+                              ? const Center(
+                                  child: Text(
+                                    "Data tidak ditemukan",
+                                    style: TextStyle(color: Colors.white54),
+                                  ),
+                                )
+                              : SingleChildScrollView(
+                                  scrollDirection: Axis.vertical,
+                                  child: DataTable(
+                                    headingRowColor: MaterialStateProperty.all(
+                                      Colors.white.withOpacity(0.05),
+                                    ),
+                                    columnSpacing: 15,
+                                    columns: const [
+                                      DataColumn(
+                                        label: Text(
+                                          "NO",
+                                          style: TextStyle(
+                                            color: Color(0xFF00E0C6),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          "NAMA",
+                                          style: TextStyle(
+                                            color: Color(0xFF00E0C6),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          "KAT",
+                                          style: TextStyle(
+                                            color: Color(0xFF00E0C6),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          "STOK",
+                                          style: TextStyle(
+                                            color: Color(0xFF00E0C6),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          "SATUAN",
+                                          style: TextStyle(
+                                            color: Color(0xFF00E0C6),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    rows: List<DataRow>.generate(
+                                      _filteredBahan.length,
+                                      (index) {
+                                        final item = _filteredBahan[index];
+                                        return DataRow(
+                                          cells: [
+                                            DataCell(
+                                              Text(
+                                                "${index + 1}",
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                item['nama'] ?? '-',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                item['kategori'] ?? '-',
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                item['stok_saat_ini']
+                                                    .toString(),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                item['satuan'] ?? '-',
+                                                style: const TextStyle(
+                                                  color: Colors.white54,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(String username, String shift) {
+    return SizedBox(
+      height: 90,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Image.asset(
+                "assets/images/bgLoginScreen.png",
+                height: 60,
+                errorBuilder: (c, e, s) =>
+                    const Icon(Icons.broken_image, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text(
+                    "GAMING X CAFE",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  Text(
+                    "Stock Management",
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          Row(
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    username,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(shift, style: const TextStyle(color: Color(0xFF00E0C6))),
+                ],
+              ),
+              const SizedBox(width: 10),
+              const Icon(Icons.person_pin, size: 50, color: Color(0xFF00E0C6)),
+            ],
+          ),
+        ],
       ),
     );
   }

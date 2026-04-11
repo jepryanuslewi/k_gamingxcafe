@@ -222,7 +222,7 @@ class _DahboardPegawaiState extends State<DahboardPegawai> {
               // Search Bar terintegrasi
               SearchWidget(
                 text: "Cari Pegawai...",
-               
+
                 onChanged: (value) {
                   setState(() {
                     _searchQuery =
@@ -390,7 +390,7 @@ class _DahboardPegawaiState extends State<DahboardPegawai> {
                   color: Colors.amber,
                   size: 20,
                 ),
-                onPressed: () {},
+                onPressed: () => _showEditUserDialog(user),
               ),
               IconButton(
                 icon: const Icon(
@@ -398,12 +398,166 @@ class _DahboardPegawaiState extends State<DahboardPegawai> {
                   color: Colors.redAccent,
                   size: 20,
                 ),
-                onPressed: () {},
+                onPressed: () => _deleteUser(
+                  user.id!,
+                  user.username,
+                ), // TERHUBUNG KE FUNGSI DELETE
               ),
             ],
           ),
         );
       },
+    );
+  }
+
+  // FUNGSI UNTUK UPDATE DATA USER
+  Future<void> _updateUser(int id, String username, String role) async {
+    try {
+      final db = await DatabaseService.instance.database;
+      await db.update(
+        'users',
+        {'username': username, 'role': role},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      _refreshUserList();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Data pegawai berhasil diperbarui")),
+        );
+      }
+    } catch (e) {
+      print("Error update user: $e");
+    }
+  }
+
+  // FUNGSI UNTUK HAPUS USER
+  Future<void> _deleteUser(int id, String username) async {
+    // Tampilkan konfirmasi sebelum hapus
+    bool confirm =
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color.fromRGBO(20, 28, 47, 1),
+            title: const Text(
+              "Konfirmasi Hapus",
+              style: TextStyle(color: Colors.white),
+            ),
+            content: Text(
+              "Apakah Anda yakin ingin menghapus $username?",
+              style: const TextStyle(color: Colors.grey),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Batal"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  "Hapus",
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (confirm) {
+      try {
+        final db = await DatabaseService.instance.database;
+        await db.delete('users', where: 'id = ?', whereArgs: [id]);
+        _refreshUserList();
+      } catch (e) {
+        print("Error delete user: $e");
+      }
+    }
+  }
+
+  void _showEditUserDialog(UserModel user) {
+    final TextEditingController userController = TextEditingController(
+      text: user.username,
+    );
+    String selectedRole = user.role;
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          backgroundColor: const Color.fromRGBO(20, 28, 47, 1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text(
+            "Edit Data Pegawai",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: userController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: "Username",
+                    labelStyle: TextStyle(color: Colors.grey),
+                    prefixIcon: Icon(Icons.person, color: Color(0xffe21388)),
+                  ),
+                  validator: (v) =>
+                      v!.isEmpty ? "Username tidak boleh kosong" : null,
+                ),
+
+                DropdownButtonFormField<String>(
+                  dropdownColor: const Color.fromRGBO(20, 28, 47, 1),
+                  value: selectedRole,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: "Role Akses",
+                    labelStyle: TextStyle(color: Colors.grey),
+                  ),
+                  items: ['admin', 'staff']
+                      .map(
+                        (role) => DropdownMenuItem(
+                          value: role,
+                          child: Text(role.toUpperCase()),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (val) => setModalState(() => selectedRole = val!),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xffe21388),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  _updateUser(user.id!, userController.text, selectedRole);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text(
+                "Simpan Perubahan",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

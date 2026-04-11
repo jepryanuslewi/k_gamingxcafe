@@ -25,6 +25,37 @@ class BahanProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> stokMasuk({
+    required int bahanId,
+    required double jumlah,
+    required String username,
+    required String namaShift,
+    String keterangan = "",
+  }) async {
+    final db = await DatabaseService.instance.database;
+
+    await db.transaction((txn) async {
+      // 1. Update stok_saat_ini di tabel bahan
+      await txn.rawUpdate(
+        'UPDATE bahan SET stok_saat_ini = stok_saat_ini + ? WHERE id = ?',
+        [jumlah, bahanId],
+      );
+
+      // 2. Insert ke riwayat_bahan
+      await txn.insert('riwayat_bahan', {
+        'bahan_id': bahanId,
+        'jumlah': jumlah,
+        'tipe': 'masuk',
+        'username': username,
+        'nama_shift': namaShift,
+        'waktu': DateTime.now().toIso8601String(),
+      });
+    });
+
+    // Refresh list bahan setelah update
+    await fetchBahan();
+  }
+
   // Fungsi Tambah Bahan
   Future<void> addBahan(Bahan bahan) async {
     await DatabaseService.instance.tambahBahan(bahan);
