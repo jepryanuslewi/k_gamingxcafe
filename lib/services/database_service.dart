@@ -136,10 +136,10 @@ class DatabaseService {
         CREATE TABLE cafe_transactions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           shift_id INTEGER NOT NULL,
-          product_id INTEGER,               -- ✅ nullable, jika produk dihapus tetap aman
-          nama_produk TEXT NOT NULL,        -- ✅ snapshot nama saat transaksi
+          product_id INTEGER,              
+          nama_produk TEXT NOT NULL,        
           jumlah INTEGER NOT NULL,
-          harga_satuan INTEGER NOT NULL,    -- ✅ snapshot harga saat transaksi
+          harga_satuan INTEGER NOT NULL,    
           total_harga INTEGER NOT NULL,
           created_at TEXT,
           status TEXT DEFAULT 'active',
@@ -183,6 +183,7 @@ class DatabaseService {
           username TEXT NOT NULL,
           nama_shift TEXT NOT NULL,
           waktu TEXT NOT NULL,
+          keterangan TEXT, 
           FOREIGN KEY(bahan_id) REFERENCES bahan(id)
         )
       ''');
@@ -203,6 +204,126 @@ class DatabaseService {
     );
   }
 
+  // Fungsi stok masuk — update stok_saat_ini + insert riwayat_bahan
+  Future<bool> stokMasuk({
+    required int bahanId,
+    required double jumlah,
+    required String username,
+    required String namaShift,
+    String? keterangan, // Tambahkan ini jika di UI ada input deskripsi
+  }) async {
+    try {
+      final db = await instance.database;
+
+      // Gunakan return di depan db.transaction untuk memastikan hasil transaksi tertangkap
+      await db.transaction((txn) async {
+        // 1. Update stok_saat_ini di tabel bahan
+        int updateCount = await txn.rawUpdate(
+          'UPDATE bahan SET stok_saat_ini = stok_saat_ini + ? WHERE id = ?',
+          [jumlah, bahanId],
+        );
+
+        // Opsional: Cek apakah ID bahan benar-benar ada
+        if (updateCount == 0) {
+          throw Exception("Bahan dengan ID $bahanId tidak ditemukan");
+        }
+
+        // 2. Insert ke riwayat_bahan
+        await txn.insert('riwayat_bahan', {
+          'bahan_id': bahanId,
+          'jumlah': jumlah,
+          'tipe': 'masuk',
+          'username': username,
+          'nama_shift': namaShift,
+          'keterangan': keterangan ?? '', // Masukkan deskripsi jika ada
+          'waktu': DateTime.now().toIso8601String(),
+        });
+      });
+
+      // Jika sampai di sini tanpa error, kembalikan true
+      return true;
+    } catch (e) {
+      // Jika ada error (DB penuh, kolom salah, dll), cetak error dan kembalikan false
+      debugPrint("Database Error: $e");
+      return false;
+    }
+  }
+
+  // Di dalam class DatabaseService
+
+  // 1. Fungsi Stok Keluar
+  Future<bool> stokKeluar({
+    required int bahanId,
+    required double jumlah,
+    required String username,
+    required String namaShift,
+    String? keterangan,
+  }) async {
+    try {
+      final db = await instance.database;
+
+      await db.transaction((txn) async {
+        // Perhatikan tanda MINUS (-) untuk mengurangi stok
+        int updateCount = await txn.rawUpdate(
+          'UPDATE bahan SET stok_saat_ini = stok_saat_ini - ? WHERE id = ?',
+          [jumlah, bahanId],
+        );
+
+        if (updateCount == 0) {
+          throw Exception("Bahan tidak ditemukan");
+        }
+
+        // Insert ke riwayat dengan tipe 'keluar'
+        await txn.insert('riwayat_bahan', {
+          'bahan_id': bahanId,
+          'jumlah': jumlah,
+          'tipe': 'keluar', // Tipe dibedakan di sini
+          'username': username,
+          'nama_shift': namaShift,
+          'keterangan': keterangan ?? '',
+          'waktu': DateTime.now().toIso8601String(),
+        });
+      });
+      return true;
+    } catch (e) {
+      debugPrint("Database Error (Stok Keluar): $e");
+      return false;
+    }
+  }
+
+  // 2. Fungsi Ambil Riwayat Keluar
+  Future<List<Map<String, dynamic>>> getRiwayatKeluar() async {
+    final db = await instance.database;
+    // Join dengan tabel bahan agar kita bisa dapat nama_bahan
+    return await db.rawQuery('''
+    SELECT riwayat_bahan.*, bahan.nama as nama_bahan, bahan.kategori 
+    FROM riwayat_bahan 
+    JOIN bahan ON riwayat_bahan.bahan_id = bahan.id
+    WHERE riwayat_bahan.tipe = 'keluar'
+    ORDER BY riwayat_bahan.waktu DESC
+  ''');
+  }
+
+  // Ambil riwayat stok masuk dengan JOIN ke tabel bahan
+  Future<List<Map<String, dynamic>>> getRiwayatMasuk() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+    SELECT 
+      r.id,
+      b.nama       AS nama_bahan,
+      b.kategori,
+      b.satuan,
+      r.jumlah,
+      r.username,
+      r.nama_shift,
+      r.waktu
+    FROM riwayat_bahan r
+    JOIN bahan b ON r.bahan_id = b.id
+    WHERE r.tipe = 'masuk'
+    ORDER BY r.waktu DESC
+  ''');
+  }
+
   // fungi untuk stok masuk dan keluar
   Future<List<Map<String, dynamic>>> getBahanSemua() async {
     final db = await instance.database;
@@ -218,7 +339,7 @@ class DatabaseService {
   Future<int> updateBahan(Bahan bahan) async {
     final db = await instance.database;
     return await db.update(
-      'bahan_baku', // Pastikan nama tabel sesuai dengan yang Anda buat di onCreate
+      'bahan', // Pastikan nama tabel sesuai dengan yang Anda buat di onCreate
       bahan.toMap(),
       where: 'id = ?',
       whereArgs: [bahan.id],
@@ -228,7 +349,7 @@ class DatabaseService {
   // Fungsi untuk Delete Bahan Baku
   Future<int> deleteBahan(int id) async {
     final db = await instance.database;
-    return await db.delete('bahan_baku', where: 'id = ?', whereArgs: [id]);
+    return await db.delete('bahan', where: 'id = ?', whereArgs: [id]);
   }
 
   // Fungsi pengurangan stok bahan secara otomatis saat produk terjual

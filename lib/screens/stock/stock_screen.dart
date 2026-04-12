@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/screens/stock/stock_masuk_screen.dart';
+import 'package:k_gamingxcafe/screens/stock/stok_keluar_screen.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
 import 'package:k_gamingxcafe/widgets/stock/button_stock.dart';
 import 'package:provider/provider.dart';
@@ -83,9 +84,7 @@ class _StockScreenState extends State<StockScreen> {
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(20, 28, 47, 1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color.fromRGBO(0, 224, 198, 1),
-                    ),
+                    border: Border.all(color: Colors.white10),
                   ),
                   child: Column(
                     children: [
@@ -156,7 +155,20 @@ class _StockScreenState extends State<StockScreen> {
                                 },
                               ),
                               const SizedBox(width: 10),
-                              ButtonStock(text: "KELUAR", onPressed: () {}),
+                              ButtonStock(
+                                text: "KELUAR",
+                                onPressed: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => StockKeluarScreen(
+                                        shiftName: widget.shiftName,
+                                      ),
+                                    ),
+                                  );
+                                  _refreshBahan(); // Refresh setelah kembali
+                                },
+                              ),
                             ],
                           ),
                           ButtonStock(

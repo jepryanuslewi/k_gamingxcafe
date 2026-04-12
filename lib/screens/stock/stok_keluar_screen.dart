@@ -5,15 +5,15 @@ import 'package:k_gamingxcafe/providers/cafe/bahan_provider.dart';
 import 'package:k_gamingxcafe/widgets/stock/dropdown_search_widget.dart';
 import 'package:provider/provider.dart';
 
-class StockMasukScreen extends StatefulWidget {
+class StockKeluarScreen extends StatefulWidget {
   final String shiftName;
-  const StockMasukScreen({super.key, required this.shiftName});
+  const StockKeluarScreen({super.key, required this.shiftName});
 
   @override
-  State<StockMasukScreen> createState() => _StockMasukScreenState();
+  State<StockKeluarScreen> createState() => _StockKeluarScreenState();
 }
 
-class _StockMasukScreenState extends State<StockMasukScreen> {
+class _StockKeluarScreenState extends State<StockKeluarScreen> {
   Bahan? selectedBahan;
   final TextEditingController _stokController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
@@ -21,10 +21,11 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
   @override
   void initState() {
     super.initState();
-    // Memastikan data di-fetch saat layar dibuka
     Future.microtask(() {
       context.read<BahanProvider>().fetchBahan();
-      context.read<BahanProvider>().fetchRiwayatMasuk();
+      context
+          .read<BahanProvider>()
+          .fetchRiwayatKeluar(); // Ambil riwayat khusus keluar
     });
   }
 
@@ -35,9 +36,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     super.dispose();
   }
 
-  // TAMBAHKAN FUNGSI INI DI DALAM _StockMasukScreenState
   Future<void> _handleSimpan() async {
-    // 1. Validasi Input
     if (selectedBahan == null || _stokController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Lengkapi data terlebih dahulu!")),
@@ -47,54 +46,53 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
 
     final double? qty = double.tryParse(_stokController.text);
     if (qty == null || qty <= 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Jumlah stok tidak valid!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Jumlah pengurangan tidak valid!")),
+      );
       return;
     }
 
-    // 2. Ambil data dari Provider
+    // Validasi tambahan: Cek apakah stok cukup sebelum dikurangi
+    if ((selectedBahan?.stokSaatIni ?? 0) < qty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text(
+            "Stok tidak cukup! Sisa stok: ${selectedBahan?.stokSaatIni}",
+          ),
+        ),
+      );
+      return;
+    }
+
     final authProv = context.read<AuthProvider>();
     final bahanProv = context.read<BahanProvider>();
-    final String username = authProv.user?.username ?? "Unknown";
 
-    // 3. Eksekusi fungsi Provider
-    final success = await bahanProv.stokMasuk(
+    final success = await bahanProv.stokKeluar(
       bahanId: selectedBahan!.id!,
       jumlah: qty,
-      username: username,
+      username: authProv.user?.username ?? "Unknown",
       namaShift: widget.shiftName,
       keterangan: _deskripsiController.text,
     );
 
-    // 4. Respon UI
     if (!mounted) return;
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.green,
-          content: Text("Stok ${selectedBahan!.nama} berhasil ditambahkan!"),
+          backgroundColor: Colors.orange,
+          content: Text("Stok ${selectedBahan!.nama} berhasil dikurangi!"),
         ),
       );
-
-      // Reset Form
       setState(() {
         selectedBahan = null;
         _stokController.clear();
         _deskripsiController.clear();
       });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.red,
-          content: Text("Gagal menambahkan stok. Coba lagi."),
-        ),
-      );
     }
   }
 
-  // --- WIDGET HELPER ---
   Widget _buildStyledTextField({
     required String label,
     required TextEditingController controller,
@@ -106,15 +104,13 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
       style: const TextStyle(color: Colors.white, fontFamily: "Poppins"),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(
-          color: Colors.white70,
-          fontFamily: "Poppins",
-          fontSize: 12,
-        ),
+        labelStyle: const TextStyle(color: Colors.white70, fontSize: 12),
         filled: true,
         fillColor: const Color.fromRGBO(26, 37, 64, 1),
         enabledBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color.fromRGBO(0, 224, 198, 1)),
+          borderSide: const BorderSide(
+            color: Colors.orangeAccent,
+          ), // Warna oranye untuk "Keluar"
           borderRadius: BorderRadius.circular(10),
         ),
         focusedBorder: OutlineInputBorder(
@@ -128,7 +124,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
   @override
   Widget build(BuildContext context) {
     final authprovider = context.watch<AuthProvider>();
-    final String username = authprovider.user?.username ?? "User";
     final prov = context.watch<BahanProvider>();
     final tanggal = DateTime.now();
 
@@ -139,14 +134,14 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Column(
             children: [
-              _buildHeader(username),
+              _buildHeader(authprovider.user?.username ?? "User"),
               const SizedBox(height: 20),
               _buildFormInput(tanggal, prov),
               const SizedBox(height: 25),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "RIWAYAT STOK MASUK HARI INI",
+                  "RIWAYAT PENGURANGAN STOK HARI INI",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -156,7 +151,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              // TABEL MENGGUNAKAN EXPANDED AGAR MENGISI SISA RUANG
               Expanded(child: _buildTableRiwayat(prov)),
               const SizedBox(height: 20),
             ],
@@ -166,7 +160,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     );
   }
 
-  // --- SUB-WIDGET: HEADER ---
   Widget _buildHeader(String username) {
     return SizedBox(
       height: 90,
@@ -178,7 +171,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
               Image.asset("assets/images/bgLoginScreen.png", height: 50),
               const SizedBox(width: 15),
               const Text(
-                "STOCK MANAGEMENT",
+                "STOCK OUT",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -205,7 +198,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                   Text(
                     widget.shiftName,
                     style: const TextStyle(
-                      color: Color.fromRGBO(0, 224, 198, 1),
+                      color: Colors.orangeAccent,
                       fontSize: 13,
                     ),
                   ),
@@ -215,7 +208,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
               const Icon(
                 Icons.person_pin,
                 size: 50,
-                color: Color.fromRGBO(0, 224, 198, 1),
+                color: Colors.orangeAccent,
               ),
             ],
           ),
@@ -224,7 +217,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     );
   }
 
-  // --- SUB-WIDGET: FORM INPUT ---
   Widget _buildFormInput(DateTime tanggal, BahanProvider prov) {
     return Container(
       padding: const EdgeInsets.all(25),
@@ -239,7 +231,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "INPUT STOK MASUK",
+                "INPUT STOK KELUAR",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -248,7 +240,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
               ),
               Text(
                 "${tanggal.day}/${tanggal.month}/${tanggal.year}",
-                style: const TextStyle(color: Colors.white70, fontSize: 16),
+                style: const TextStyle(color: Colors.white70),
               ),
             ],
           ),
@@ -258,7 +250,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
               Expanded(
                 flex: 2,
                 child: DropdownBahanWidget(
-                  label: "masuk",
+                  label: "keluar",
                   items: prov.listBahan,
                   selectedItem: selectedBahan,
                   isLoading: prov.isLoading,
@@ -276,7 +268,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: _buildStyledTextField(
-                  label: "Ket/Deskripsi",
+                  label: "Keterangan",
                   controller: _deskripsiController,
                 ),
               ),
@@ -288,16 +280,16 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
             height: 50,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromRGBO(0, 224, 198, 1),
+                backgroundColor: Colors.orangeAccent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               onPressed: prov.isLoading ? null : _handleSimpan,
               child: const Text(
-                "TAMBAH STOK",
+                "KURANGI STOK",
                 style: TextStyle(
-                  color: Color.fromRGBO(20, 28, 47, 1),
+                  color: Colors.black,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -309,16 +301,9 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     );
   }
 
-  // --- SUB-WIDGET: TABEL RIWAYAT ---
   Widget _buildTableRiwayat(BahanProvider prov) {
-    if (prov.isLoading && prov.listRiwayat.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color.fromRGBO(0, 224, 198, 1)),
-      );
-    }
-
     return Container(
-      width: double.infinity, // Memastikan container mengambil lebar penuh
+      width: double.infinity,
       decoration: BoxDecoration(
         color: const Color.fromRGBO(20, 28, 47, 1),
         borderRadius: BorderRadius.circular(15),
@@ -327,22 +312,16 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15),
         child: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: ConstrainedBox(
-              // TRICK: Memaksa lebar minimum tabel sama dengan lebar layar/container
               constraints: BoxConstraints(
-                minWidth:
-                    MediaQuery.of(context).size.width -
-                    80, // 80 adalah total padding horizontal screen (40 left + 40 right)
+                minWidth: MediaQuery.of(context).size.width - 80,
               ),
               child: DataTable(
                 headingRowColor: WidgetStateProperty.all(
                   const Color.fromRGBO(26, 37, 64, 1),
                 ),
-                // Atur spacing menjadi kecil agar muat banyak, atau besar agar melebar
-                columnSpacing: 20,
                 columns: const [
                   DataColumn(
                     label: Text(
@@ -391,15 +370,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                   ),
                   DataColumn(
                     label: Text(
-                      "SHIFT",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
                       "JAM",
                       style: TextStyle(
                         color: Colors.white,
@@ -408,20 +378,19 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                     ),
                   ),
                 ],
-                rows: prov.listRiwayat.asMap().entries.map((entry) {
-                  final index = entry.key + 1;
+                rows: prov.listRiwayatKeluar.asMap().entries.map((entry) {
                   final r = entry.value;
                   return DataRow(
                     cells: [
                       DataCell(
                         Text(
-                          "$index",
+                          "${entry.key + 1}",
                           style: const TextStyle(color: Colors.white70),
                         ),
                       ),
                       DataCell(
                         Text(
-                          r.namaBahan ?? "ID: ${r.id}",
+                          r.namaBahan ?? "-",
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
@@ -441,12 +410,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                         Text(
                           "${r.username}",
                           style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          r.namaShift ?? "-",
-                          style: const TextStyle(color: Colors.white70),
                         ),
                       ),
                       DataCell(

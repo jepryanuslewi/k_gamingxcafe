@@ -5,7 +5,7 @@ import 'package:k_gamingxcafe/screens/jadwal_screen.dart';
 import 'package:k_gamingxcafe/screens/laporan/laporan_screen.dart';
 import 'package:k_gamingxcafe/screens/login_screen.dart';
 import 'package:k_gamingxcafe/screens/stock/stock_screen.dart';
-import 'package:k_gamingxcafe/screens/transaksi_screen.dart';
+import 'package:k_gamingxcafe/screens/transaksi/transaksi_screen.dart';
 import 'package:k_gamingxcafe/widgets/card_button.dart';
 import 'package:k_gamingxcafe/widgets/card_pendapatan.dart';
 import 'package:k_gamingxcafe/widgets/dialog/dialog_singout.dart';
