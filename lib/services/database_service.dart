@@ -136,6 +136,7 @@ class DatabaseService {
         CREATE TABLE cafe_transactions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           shift_id INTEGER NOT NULL,
+          shift_name TEXT,
           product_id INTEGER,              
           nama_produk TEXT NOT NULL,        
           jumlah INTEGER NOT NULL,
@@ -248,8 +249,6 @@ class DatabaseService {
       return false;
     }
   }
-
-  // Di dalam class DatabaseService
 
   // 1. Fungsi Stok Keluar
   Future<bool> stokKeluar({
@@ -481,6 +480,78 @@ class DatabaseService {
     // Menghapus menu otomatis akan menghapus resep jika Anda menggunakan ON DELETE CASCADE,
     // Jika tidak, sebaiknya hapus resepnya dulu secara manual atau tambahkan CASCADE di create table.
     return await db.delete('menu', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Tambahkan di dalam class DatabaseService
+
+  Future<void> createTransaksi(
+    num total,
+    List<Map<String, dynamic>> items,
+    String shiftName,
+  ) async {
+    final db = await instance.database;
+
+    await db.transaction((txn) async {
+      // 1. Loop setiap item yang dibeli
+      for (var item in items) {
+        final MenuModel p = item['selectedProduk'];
+        final int qty = item['qty'];
+
+        // 2. Simpan ke tabel cafe_transactions
+        // Catatan: Saya set shift_id default ke 1 atau sesuaikan dengan sistem shift kamu
+        await txn.insert('cafe_transactions', {
+          'shift_id': 1,
+          'shift_name': shiftName,
+          'product_id': p.id,
+          'nama_produk': p.nama,
+          'jumlah': qty,
+          'harga_satuan': p.harga,
+          'total_harga': (p.harga ?? 0) * qty,
+          'created_at': DateTime.now().toIso8601String(),
+          'status': 'active',
+        });
+
+        // 3. Panggil fungsi pengurangan stok bahan baku otomatis
+        // Karena kita di dalam transaksi, kita panggil logic-nya secara berurutan
+        await _kurangiStokBahanInternal(txn, p.id!, qty);
+      }
+    });
+  }
+
+  // Fungsi pembantu untuk mengurangi stok di dalam transaksi yang sama
+  Future<void> _kurangiStokBahanInternal(
+    dynamic txn,
+    int productId,
+    int qtyPesanan,
+  ) async {
+    // Cari resep untuk produk ini
+    final List<Map<String, dynamic>> resep = await txn.query(
+      'resep_menu',
+      where: 'product_id = ?',
+      whereArgs: [productId],
+    );
+
+    for (var item in resep) {
+      int bahanId = item['bahan_id'];
+      double totalPotong =
+          (item['jumlah_pakai'] as num).toDouble() * qtyPesanan;
+
+      // Update stok bahan baku
+      await txn.rawUpdate(
+        'UPDATE bahan SET stok_saat_ini = stok_saat_ini - ? WHERE id = ?',
+        [totalPotong, bahanId],
+      );
+
+      // Catat ke riwayat bahan baku
+      await txn.insert('riwayat_bahan', {
+        'bahan_id': bahanId,
+        'jumlah': totalPotong,
+        'tipe': 'keluar',
+        'username': 'System',
+        'nama_shift': 'Auto-Cut (Sales)',
+        'waktu': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   /// --- UNTUK LAPORAN JADWAL --------------------------------------------------------------------------------------------------

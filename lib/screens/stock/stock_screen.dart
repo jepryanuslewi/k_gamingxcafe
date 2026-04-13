@@ -112,7 +112,7 @@ class _StockScreenState extends State<StockScreen> {
                       ),
                       const SizedBox(height: 15),
 
-                      // Input Pencarian yang sudah diperbaiki
+                      // Search
                       Container(
                         height: 50,
                         padding: const EdgeInsets.symmetric(horizontal: 15),

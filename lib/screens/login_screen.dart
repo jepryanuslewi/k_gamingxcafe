@@ -39,7 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
             destination = const DashboardScreen();
           } else {
             // Jika selain admin (pegawai), arahkan ke ShiftScreen
-            destination = ShiftScreen(userId: user.id!);
+            destination = ShiftScreen(
+              userId: user.id!,
+              username: user.username,
+            );
           }
 
           Navigator.pushAndRemoveUntil(

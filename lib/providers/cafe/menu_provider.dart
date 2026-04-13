@@ -9,6 +9,20 @@ class MenuProvider extends ChangeNotifier {
   List<MenuModel> get listMenu => _listMenu;
   bool get isLoading => _isLoading;
 
+  List<Map<String, dynamic>> _riwayatTransaksi = [];
+  List<Map<String, dynamic>> get riwayatTransaksi => _riwayatTransaksi;
+
+  // Fungsi untuk mengambil data dari DB
+  Future<void> fetchRiwayatTransaksi() async {
+    final db = DatabaseService.instance;
+    final data = await (await db.database).query(
+      'cafe_transactions',
+      orderBy: 'created_at DESC',
+    );
+    _riwayatTransaksi = data;
+    notifyListeners();
+  }
+
   Future<void> fetchMenu() async {
     _isLoading = true;
     notifyListeners();
@@ -18,6 +32,41 @@ class MenuProvider extends ChangeNotifier {
       _listMenu = data;
     } catch (e) {
       print("Error fetch menu: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Simpan transaksi
+  Future<bool> simpanTransaksi(
+    List<Map<String, dynamic>> items,
+    num total,
+    String shiftName,
+  ) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // Filter item valid
+      final validItems = items
+          .where((item) => item['selectedProduk'] != null && item['qty'] > 0)
+          .toList();
+
+      if (validItems.isEmpty) return false;
+
+      // Jalankan service database
+      await DatabaseService.instance.createTransaksi(
+        total,
+        validItems,
+        shiftName,
+      );
+      await fetchRiwayatTransaksi();
+      await fetchMenu();
+      return true;
+    } catch (e) {
+      debugPrint("Error simpan transaksi: $e");
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

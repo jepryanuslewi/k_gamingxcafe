@@ -5,8 +5,9 @@ import '../providers/shift_provider.dart';
 
 class ShiftScreen extends StatelessWidget {
   final int userId;
+  final String username;
 
-  const ShiftScreen({super.key, required this.userId});
+  const ShiftScreen({super.key, required this.userId, required this.username});
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +74,7 @@ class ShiftScreen extends StatelessWidget {
     return InkWell(
       onTap: () async {
         final shiftProvider = context.read<ShiftProvider>();
-        await shiftProvider.startShift(userId, label);
+        await shiftProvider.startShift(userId, username, label);
         if (context.mounted) {
           Navigator.pushAndRemoveUntil(
             context,

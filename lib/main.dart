@@ -4,6 +4,7 @@ import 'package:k_gamingxcafe/providers/cafe/bahan_provider.dart';
 import 'package:k_gamingxcafe/providers/cafe/menu_provider.dart';
 import 'package:k_gamingxcafe/providers/gaming/jadwal_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
+import 'package:k_gamingxcafe/screens/dashboard/dashboard_screen.dart';
 import 'package:k_gamingxcafe/screens/login_screen.dart';
 import 'package:k_gamingxcafe/screens/main_menu_screen.dart';
 import 'package:k_gamingxcafe/screens/shift_screen.dart';
@@ -12,20 +13,22 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Inisialisasi Provider
+  // 1. Inisialisasi Instance Tunggal
   final authProvider = AuthProvider();
   final shiftProvider = ShiftProvider();
 
-  // 2. Muat data yang tersimpan di memori (Persistent Data)
+  // 2. Muat data dari SharedPreferences
   await authProvider.checkLoginStatus();
   await shiftProvider.loadActiveShift();
+
   runApp(
     MultiProvider(
       providers: [
+        // Gunakan .value untuk provider yang sudah di-load datanya di atas
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider.value(value: shiftProvider),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => ShiftProvider()),
+        
+        // Untuk provider lainnya, tetap gunakan create biasa
         ChangeNotifierProvider(create: (_) => JadwalProvider()),
         ChangeNotifierProvider(create: (_) => BahanProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()),
@@ -40,26 +43,40 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Gunakan watch agar widget rebuild saat status login/shift berubah
     final auth = context.watch<AuthProvider>();
     final shift = context.watch<ShiftProvider>();
 
-    Widget homeWidget;
-
     if (auth.user == null) {
-      // Jika belum login -> ke halaman Login
-      homeWidget = const LoginScreen();
-    } else if (shift.activeShift == null) {
-      // Jika sudah login tapi belum pilih shift -> ke halaman Pilih Shift
-      homeWidget = ShiftScreen(userId: auth.user!.id!);
-    } else {
-      // Jika sudah login dan sudah ada shift aktif -> langsung ke Dashboard
-      homeWidget = MainMenuScreen(shiftName: shift.activeShiftName!);
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: LoginScreen(),
+      );
+    } 
+    
+    // Periksa apakah admin (Admin biasanya tidak butuh pilih shift)
+    if (auth.user?.role == 'admin') {
+       return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: DashboardScreen(), // Pastikan sudah diimport
+      );
+    }
+
+    // Alur untuk Pegawai
+    if (shift.activeShift == null) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: ShiftScreen(
+          userId: auth.user!.id!,
+          username: auth.user!.username, // SEKARANG USERNAME TERKIRIM
+        ),
+      );
     }
 
     return MaterialApp(
       theme: ThemeData(useMaterial3: true, fontFamily: "Poppins"),
       debugShowCheckedModeBanner: false,
-      home: homeWidget,
+      home: MainMenuScreen(shiftName: shift.activeShiftName!),
     );
   }
 }

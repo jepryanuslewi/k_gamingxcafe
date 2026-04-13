@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:k_gamingxcafe/providers/auth_provider.dart';
+import 'package:k_gamingxcafe/providers/cafe/menu_provider.dart';
+import 'package:k_gamingxcafe/widgets/transaksi/transaksi_dialog.dart';
+import 'package:k_gamingxcafe/widgets/stock/button_stock.dart';
+import 'package:provider/provider.dart';
 
 class TransaksiScreen extends StatefulWidget {
   final String shiftName;
@@ -9,9 +14,23 @@ class TransaksiScreen extends StatefulWidget {
 }
 
 class _TransaksiScreenState extends State<TransaksiScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MenuProvider>().fetchRiwayatTransaksi();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final menuProv = context.watch<MenuProvider>();
+    final daftarRiwayat = menuProv.riwayatTransaksi;
     final tanggal = DateTime.now();
+    final String username =
+        context.read<AuthProvider>().user?.username ?? "Pegawai";
+
     return Scaffold(
       backgroundColor: Color.fromRGBO(11, 18, 32, 100),
       body: SafeArea(
@@ -97,7 +116,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    "Pegawai",
+                                    "$username",
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 20,
@@ -159,6 +178,155 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                           ],
                         ),
                         SizedBox(height: 20),
+                        // Search
+                        Container(
+                          height: 50,
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          decoration: BoxDecoration(
+                            color: const Color.fromRGBO(30, 38, 57, 1),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.white10),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              hintText: "Cari Nama Bahan...",
+                              hintStyle: TextStyle(color: Colors.white38),
+                              border: InputBorder.none,
+                              icon: Icon(
+                                Icons.search,
+                                color: Color(0xFF00E0C6),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Add transaksi
+                        SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            ButtonStock(
+                              text: "Back",
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                            ButtonStock(
+                              text: "+ Transaksi",
+                              onPressed: () {
+                                TransactionDialog.show(
+                                  context,
+                                  shiftName: username,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        // Tabel Riwayat Transaksi(No, Nama Menu, oty, Total Harga, Pegawai, jam)
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            child: daftarRiwayat.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      "Belum ada transaksi",
+                                      style: TextStyle(color: Colors.white54),
+                                    ),
+                                  )
+                                : SingleChildScrollView(
+                                    child: DataTable(
+                                      columns: const [
+                                        DataColumn(
+                                          label: Text(
+                                            'NO',
+                                            style: _headerStyle,
+                                          ),
+                                        ),
+                                        DataColumn(
+                                          label: Text(
+                                            'NAMA MENU',
+                                            style: _headerStyle,
+                                          ),
+                                        ),
+                                        DataColumn(
+                                          label: Text(
+                                            'QTY',
+                                            style: _headerStyle,
+                                          ),
+                                        ),
+                                        DataColumn(
+                                          label: Text(
+                                            'TOTAL',
+                                            style: _headerStyle,
+                                          ),
+                                        ),
+                                        DataColumn(
+                                          label: Text(
+                                            'JAM',
+                                            style: _headerStyle,
+                                          ),
+                                        ),
+                                        DataColumn(
+                                          label: Text(
+                                            'PEGAWAI',
+                                            style: _headerStyle,
+                                          ),
+                                        ),
+                                      ],
+                                      rows: daftarRiwayat.asMap().entries.map((
+                                        entry,
+                                      ) {
+                                        int index = entry.key;
+                                        var data = entry.value;
+
+                                        // Parsing jam dari created_at (ISO8601)
+                                        DateTime dt = DateTime.parse(
+                                          data['created_at'],
+                                        );
+                                        String jam =
+                                            "${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
+
+                                        return DataRow(
+                                          cells: [
+                                            DataCell(
+                                              Text(
+                                                "${index + 1}",
+                                                style: _cellStyle,
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                "${data['nama_produk']}",
+                                                style: _cellStyle,
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                "${data['jumlah']}",
+                                                style: _cellStyle,
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                "Rp ${data['total_harga']}",
+                                                style: _cellStyle,
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(jam, style: _cellStyle),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                "${data['shift_name']}",
+                                                style: _cellStyle,
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -170,4 +338,14 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
       ),
     );
   }
+
+  // Style untuk header tabel
+  static const _headerStyle = TextStyle(
+    color: Color(0xFF00E0C6),
+    fontWeight: FontWeight.bold,
+    fontSize: 14,
+  );
+
+  // Style untuk isi tabel
+  static const _cellStyle = TextStyle(color: Colors.white, fontSize: 13);
 }
