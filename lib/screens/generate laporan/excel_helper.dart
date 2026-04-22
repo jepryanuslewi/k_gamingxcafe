@@ -6,10 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ExcelHelper {
-  // ─────────────────────────────────────────────────────────────
-  // ENTRY POINT — dipanggil dari TabelLaporanWidget
-  // ─────────────────────────────────────────────────────────────
-
   static Future<void> saveAndShareExcel({
     required String kategori,
     required List<List<String>> tableData,
@@ -19,15 +15,10 @@ class ExcelHelper {
   }) async {
     try {
       final excel = Excel.createExcel();
-
-      // Hapus sheet default yang kosong
       excel.delete('Sheet1');
 
-      // Buat sheet sesuai kategori
-      final sheetName = 'Laporan ${_capitalize(kategori)}';
-      final Sheet sheet = excel[sheetName];
+      final Sheet sheet = excel['Laporan $kategori'];
 
-      // Tulis isi sheet sesuai kategori
       switch (kategori) {
         case 'Jadwal':
           _writeSheet(
@@ -94,7 +85,6 @@ class ExcelHelper {
           break;
       }
 
-      // Simpan file ke direktori sementara
       final dir = await getTemporaryDirectory();
       final tanggalStr = DateFormat('yyyyMMdd_HHmm').format(DateTime.now());
       final filePath = '${dir.path}/Laporan_${kategori}_$tanggalStr.xlsx';
@@ -102,10 +92,8 @@ class ExcelHelper {
       final fileBytes = excel.save();
       if (fileBytes == null) throw Exception('Gagal generate Excel');
 
-      final file = File(filePath);
-      await file.writeAsBytes(fileBytes, flush: true);
+      await File(filePath).writeAsBytes(fileBytes, flush: true);
 
-      // Share file
       await Share.shareXFiles(
         [XFile(filePath)],
         subject: 'Laporan $kategori - Gaming X Cafe',
@@ -114,13 +102,9 @@ class ExcelHelper {
       );
     } catch (e) {
       debugPrint('ExcelHelper Error: $e');
-      rethrow; // Biar bisa ditangkap di UI untuk snackbar
+      rethrow;
     }
   }
-
-  // ─────────────────────────────────────────────────────────────
-  // TULIS ISI SHEET
-  // ─────────────────────────────────────────────────────────────
 
   static void _writeSheet({
     required Sheet sheet,
@@ -133,43 +117,31 @@ class ExcelHelper {
     DateTime? tanggalAkhir,
   }) {
     // ── Baris 1: Judul ──────────────────────────
+    // ── Baris 1: Judul ──────────────────────────
     final titleCell = sheet.cell(
       CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0),
     );
     titleCell.value = TextCellValue(
-      'GAMING X CAFE — LAPORAN ${kategori.toUpperCase()}',
+      'GAMING X CAFE - LAPORAN ${kategori.toUpperCase()}',
     );
-    titleCell.cellStyle = CellStyle(
-      bold: true,
-      fontSize: 14,
-      fontColorHex: ExcelColor.fromHexString('#00E0C6'),
-    );
-
-    // ── Baris 2: Periode ─────────────────────────
+    titleCell.cellStyle = CellStyle(bold: true, fontSize: 13);
+    // ── Baris 2: Periode ────────────────────────
     final periodeCell = sheet.cell(
       CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1),
     );
     periodeCell.value = TextCellValue(
       'Periode: ${_formatPeriode(tanggalAwal, tanggalAkhir)}',
     );
-    periodeCell.cellStyle = CellStyle(
-      italic: true,
-      fontColorHex: ExcelColor.fromHexString('#888888'),
-    );
 
-    // ── Baris 3: Tanggal cetak ────────────────────
+    // ── Baris 3: Tanggal cetak ──────────────────
     final cetakCell = sheet.cell(
       CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 2),
     );
     cetakCell.value = TextCellValue(
       'Dicetak: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
     );
-    cetakCell.cellStyle = CellStyle(
-      italic: true,
-      fontColorHex: ExcelColor.fromHexString('#888888'),
-    );
 
-    // ── Baris 5 (index 4): Header kolom ──────────
+    // ── Baris 5 (index 4): Header kolom ─────────
     for (int i = 0; i < headers.length; i++) {
       final cell = sheet.cell(
         CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 4),
@@ -177,33 +149,22 @@ class ExcelHelper {
       cell.value = TextCellValue(headers[i]);
       cell.cellStyle = CellStyle(
         bold: true,
-        backgroundColorHex: ExcelColor.fromHexString('#0B1220'),
-        fontColorHex: ExcelColor.fromHexString('#00E0C6'),
         horizontalAlign: HorizontalAlign.Center,
-        textWrapping: TextWrapping.WrapText,
       );
     }
 
-    // ── Baris data (mulai index 5) ────────────────
+    // ── Baris data (mulai index 5) ───────────────
     for (int rowIdx = 0; rowIdx < tableData.length; rowIdx++) {
       final row = tableData[rowIdx];
-      final isGanjil = rowIdx % 2 == 0;
-
       for (int colIdx = 0; colIdx < row.length; colIdx++) {
         final cell = sheet.cell(
           CellIndex.indexByColumnRow(columnIndex: colIdx, rowIndex: rowIdx + 5),
         );
         cell.value = TextCellValue(row[colIdx]);
-        cell.cellStyle = CellStyle(
-          backgroundColorHex: isGanjil
-              ? ExcelColor.fromHexString('#141C2F')
-              : ExcelColor.fromHexString('#0F1626'),
-          fontColorHex: ExcelColor.fromHexString('#FFFFFF'),
-        );
       }
     }
 
-    // ── Baris total (setelah data + 1 baris kosong) ──
+    // ── Baris total ──────────────────────────────
     final totalRowIdx = tableData.length + 6;
 
     final labelCell = sheet.cell(
@@ -213,11 +174,7 @@ class ExcelHelper {
       ),
     );
     labelCell.value = TextCellValue(totalLabel);
-    labelCell.cellStyle = CellStyle(
-      bold: true,
-      fontColorHex: ExcelColor.fromHexString('#FFFFFF'),
-      backgroundColorHex: ExcelColor.fromHexString('#141C2F'),
-    );
+    labelCell.cellStyle = CellStyle(bold: true);
 
     final valueCell = sheet.cell(
       CellIndex.indexByColumnRow(
@@ -226,35 +183,18 @@ class ExcelHelper {
       ),
     );
     valueCell.value = TextCellValue(totalValue);
-    valueCell.cellStyle = CellStyle(
-      bold: true,
-      fontColorHex: ExcelColor.fromHexString('#00FF7F'), // greenAccent
-      backgroundColorHex: ExcelColor.fromHexString('#141C2F'),
-    );
+    valueCell.cellStyle = CellStyle(bold: true);
 
-    // ── Atur lebar kolom ──────────────────────────
-    final colWidths = {
-      0: 18.0, // Nama/Operator
-      1: 18.0, // Shift
-      2: 14.0, // Tanggal
-      3: 24.0, // Detail/Produk/Bahan
-      4: 14.0, // Kategori/Jam
-      5: 10.0, // Durasi/Qty/Jumlah
-      6: 16.0, // Harga/Harga Satuan/Tipe
-      7: 20.0, // Status/Total/Keterangan
-    };
-
-    colWidths.forEach((col, width) {
-      sheet.setColumnWidth(col, width);
-    });
+    // ── Lebar kolom ──────────────────────────────
+    sheet.setColumnWidth(0, 18.0);
+    sheet.setColumnWidth(1, 18.0);
+    sheet.setColumnWidth(2, 14.0);
+    sheet.setColumnWidth(3, 24.0);
+    sheet.setColumnWidth(4, 14.0);
+    sheet.setColumnWidth(5, 10.0);
+    sheet.setColumnWidth(6, 16.0);
+    sheet.setColumnWidth(7, 20.0);
   }
-
-  // ─────────────────────────────────────────────────────────────
-  // HELPERS
-  // ─────────────────────────────────────────────────────────────
-
-  static String _capitalize(String s) =>
-      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1).toLowerCase();
 
   static String _formatPeriode(DateTime? awal, DateTime? akhir) {
     if (awal == null || akhir == null) return '-';
