@@ -106,7 +106,7 @@ class JadwalProvider with ChangeNotifier {
     await db.transaction((txn) async {
       await txn.update(
         'jadwal',
-        {'status_completed': 'done'}, // ✅ hanya update status_completed
+        {'status_completed': 'done'}, 
         where: 'id = ?',
         whereArgs: [jadwalId],
       );

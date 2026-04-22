@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/models/cafe/bahan_model.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/providers/cafe/bahan_provider.dart';
+import 'package:k_gamingxcafe/widgets/stock/button_stock.dart';
 import 'package:k_gamingxcafe/widgets/stock/dropdown_search_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -246,9 +247,9 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                "${tanggal.day}/${tanggal.month}/${tanggal.year}",
-                style: const TextStyle(color: Colors.white70, fontSize: 16),
+              ButtonStock(
+                text: "Kembali",
+                onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
@@ -310,6 +311,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
   }
 
   // --- SUB-WIDGET: TABEL RIWAYAT ---
+  // --- SUB-WIDGET: TABEL RIWAYAT ---
   Widget _buildTableRiwayat(BahanProvider prov) {
     if (prov.isLoading && prov.listRiwayat.isEmpty) {
       return const Center(
@@ -317,8 +319,26 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
       );
     }
 
+    // 1. Ambil waktu saat ini
+    final now = DateTime.now();
+
+    // 2. Filter listRiwayat hanya untuk hari ini
+    final riwayatHariIni = prov.listRiwayat.where((r) {
+      if (r.waktu == null) return false;
+      try {
+        // Asumsi format r.waktu bisa di-parse oleh DateTime (contoh: "2024-05-20 14:30:00")
+        final dateWaktu = DateTime.parse(r.waktu!);
+        // Cocokkan tahun, bulan, dan hari
+        return dateWaktu.year == now.year &&
+            dateWaktu.month == now.month &&
+            dateWaktu.day == now.day;
+      } catch (e) {
+        return false; // Jika format waktu salah, jangan tampilkan agar tidak error
+      }
+    }).toList();
+
     return Container(
-      width: double.infinity, // Memastikan container mengambil lebar penuh
+      width: double.infinity,
       decoration: BoxDecoration(
         color: const Color.fromRGBO(20, 28, 47, 1),
         borderRadius: BorderRadius.circular(15),
@@ -331,17 +351,13 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: ConstrainedBox(
-              // TRICK: Memaksa lebar minimum tabel sama dengan lebar layar/container
               constraints: BoxConstraints(
-                minWidth:
-                    MediaQuery.of(context).size.width -
-                    80, // 80 adalah total padding horizontal screen (40 left + 40 right)
+                minWidth: MediaQuery.of(context).size.width - 80,
               ),
               child: DataTable(
                 headingRowColor: WidgetStateProperty.all(
                   const Color.fromRGBO(26, 37, 64, 1),
                 ),
-                // Atur spacing menjadi kecil agar muat banyak, atau besar agar melebar
                 columnSpacing: 20,
                 columns: const [
                   DataColumn(
@@ -408,7 +424,8 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                     ),
                   ),
                 ],
-                rows: prov.listRiwayat.asMap().entries.map((entry) {
+                // 3. Gunakan list yang sudah di-filter: riwayatHariIni (bukan prov.listRiwayat)
+                rows: riwayatHariIni.asMap().entries.map((entry) {
                   final index = entry.key + 1;
                   final r = entry.value;
                   return DataRow(

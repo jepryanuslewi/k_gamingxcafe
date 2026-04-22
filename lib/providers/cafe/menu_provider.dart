@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:k_gamingxcafe/models/cafe/menu_model.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
 
@@ -14,11 +15,19 @@ class MenuProvider extends ChangeNotifier {
 
   // Fungsi untuk mengambil data dari DB
   Future<void> fetchRiwayatTransaksi() async {
-    final db = DatabaseService.instance;
-    final data = await (await db.database).query(
-      'cafe_transactions',
-      orderBy: 'created_at DESC',
+    final db = await DatabaseService.instance.database;
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    final data = await db.rawQuery(
+      '''
+    SELECT * FROM cafe_transactions
+    WHERE DATE(created_at) = ?
+    AND status = 'active'
+    ORDER BY created_at DESC
+  ''',
+      [today],
     );
+
     _riwayatTransaksi = data;
     notifyListeners();
   }

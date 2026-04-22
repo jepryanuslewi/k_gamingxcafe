@@ -13,7 +13,7 @@ class MenuCafe extends StatefulWidget {
 }
 
 class _MenuCafeState extends State<MenuCafe> {
-  final List<String> kategoriMenu = ["Coffee", "Non-Coffee", "Snack", "Food"];
+  final List<String> kategoriMenu = ["Minuman", "Makanan"];
   List<Map<String, dynamic>> resepInput = [];
 
   @override

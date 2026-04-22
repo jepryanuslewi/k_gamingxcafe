@@ -477,8 +477,6 @@ class DatabaseService {
 
   Future<int> deleteMenu(int id) async {
     final db = await instance.database;
-    // Menghapus menu otomatis akan menghapus resep jika Anda menggunakan ON DELETE CASCADE,
-    // Jika tidak, sebaiknya hapus resepnya dulu secara manual atau tambahkan CASCADE di create table.
     return await db.delete('menu', where: 'id = ?', whereArgs: [id]);
   }
 
@@ -506,7 +504,7 @@ class DatabaseService {
           'nama_produk': p.nama,
           'jumlah': qty,
           'harga_satuan': p.harga,
-          'total_harga': (p.harga ?? 0) * qty,
+          'total_harga': (p.harga) * qty,
           'created_at': DateTime.now().toIso8601String(),
           'status': 'active',
         });
@@ -582,6 +580,7 @@ class DatabaseService {
     }
   }
 
+  // Filter Laporan
   Future<List<Map<String, dynamic>>> getJadwalLaporan({
     DateTime? tglAwal,
     DateTime? tglAkhir,
@@ -598,7 +597,7 @@ class DatabaseService {
       if (tglAwal != null && tglAkhir != null) {
         String start = DateFormat('yyyy-MM-dd').format(tglAwal.toLocal());
         String end = DateFormat('yyyy-MM-dd').format(tglAkhir.toLocal());
-        whereClauses.add("j.created_at BETWEEN ? AND ?");
+        whereClauses.add("DATE(j.created_at) BETWEEN ? AND ?");
         whereArgs.addAll([start, end]);
       }
 
@@ -647,5 +646,151 @@ class DatabaseService {
       print("Error Query Laporan: $e");
       return [];
     }
+  }
+
+  // Untuk kategori "Stock" (dari tabel riwayat_bahan)
+  Future<List<Map<String, dynamic>>> getStockLaporan({
+    DateTime? tglAwal,
+    DateTime? tglAkhir,
+    String? subKategori, // Masuk / Keluar / Semua
+    String? namaKaryawan,
+  }) async {
+    final db = await instance.database;
+    List<String> whereClauses = [];
+    List<dynamic> whereArgs = [];
+
+    if (tglAwal != null && tglAkhir != null) {
+      String start = DateFormat('yyyy-MM-dd').format(tglAwal);
+      String end = DateFormat('yyyy-MM-dd').format(tglAkhir);
+      whereClauses.add("DATE(rb.waktu) BETWEEN ? AND ?");
+      whereArgs.addAll([start, end]);
+    }
+
+    if (subKategori != null && subKategori != "Semua") {
+      final tipeDB = subKategori.toLowerCase(); // "masuk" atau "keluar"
+      whereClauses.add("rb.tipe = ?");
+      whereArgs.add(tipeDB);
+    }
+
+    if (namaKaryawan != null && namaKaryawan != "Semua") {
+      whereClauses.add("rb.username = ?");
+      whereArgs.add(namaKaryawan);
+    }
+
+    String whereString = whereClauses.isNotEmpty
+        ? "WHERE ${whereClauses.join(' AND ')}"
+        : "";
+
+    return await db.rawQuery('''
+    SELECT 
+      b.nama AS nama_bahan,
+      b.kategori,
+      b.satuan,
+      rb.jumlah,
+      rb.tipe,
+      rb.username,
+      rb.nama_shift,
+      rb.waktu,
+      rb.keterangan
+    FROM riwayat_bahan rb
+    JOIN bahan b ON rb.bahan_id = b.id
+    $whereString
+    ORDER BY rb.waktu DESC
+  ''', whereArgs);
+  }
+
+  // Untuk kategori "Transaksi" (dari tabel cafe_transactions)
+  Future<List<Map<String, dynamic>>> getTransaksiLaporan({
+    DateTime? tglAwal,
+    DateTime? tglAkhir,
+    String? subKategori, // Makanan / Minuman / Semua
+    String? namaKaryawan,
+  }) async {
+    final db = await instance.database;
+    List<String> whereClauses = [];
+    List<dynamic> whereArgs = [];
+
+    if (tglAwal != null && tglAkhir != null) {
+      String start = DateFormat('yyyy-MM-dd').format(tglAwal);
+      String end = DateFormat('yyyy-MM-dd').format(tglAkhir);
+      whereClauses.add("DATE(ct.created_at) BETWEEN ? AND ?");
+      whereArgs.addAll([start, end]);
+    }
+
+    if (subKategori != null && subKategori != "Semua") {
+      // Join ke tabel menu untuk ambil kategori produk
+      whereClauses.add("m.kategori = ?");
+      whereArgs.add(subKategori); // "Makanan" atau "Minuman"
+    }
+
+    if (namaKaryawan != null && namaKaryawan != "Semua") {
+      whereClauses.add("u.username = ?");
+      whereArgs.add(namaKaryawan);
+    }
+
+    String whereString = whereClauses.isNotEmpty
+        ? "WHERE ${whereClauses.join(' AND ')}"
+        : "";
+
+    return await db.rawQuery('''
+    SELECT 
+      ct.nama_produk,
+      ct.jumlah,
+      ct.harga_satuan,
+      ct.total_harga,
+      ct.created_at,
+      ct.shift_name,
+      m.kategori,
+      u.username AS operator
+    FROM cafe_transactions ct
+    LEFT JOIN menu m ON ct.product_id = m.id
+    INNER JOIN shifts s ON ct.shift_id = s.id
+    INNER JOIN users u ON s.user_id = u.id
+    $whereString
+    AND ct.status = 'active'
+    ORDER BY ct.created_at DESC
+  ''', whereArgs);
+  }
+
+  // Untuk Laporan Pendapatan
+  // Tambahkan di dalam class DatabaseService
+
+  // Total pendapatan Gaming hari ini (dari tabel jadwal)
+  Future<int> getTotalGamingHariIni() async {
+    final db = await instance.database;
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final result = await db.rawQuery(
+      '''
+    SELECT COALESCE(SUM(total_price), 0) AS total
+    FROM jadwal
+    WHERE DATE(created_at) = ?
+    AND status_completed = 'done'
+  ''',
+      [today],
+    );
+    return (result.first['total'] as num?)?.toInt() ?? 0;
+  }
+
+  // Total pendapatan Cafe hari ini (dari tabel cafe_transactions)
+  Future<int> getTotalCafeHariIni() async {
+    final db = await instance.database;
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final result = await db.rawQuery(
+      '''
+    SELECT COALESCE(SUM(total_harga), 0) AS total
+    FROM cafe_transactions
+    WHERE DATE(created_at) = ?
+    AND status = 'active'
+  ''',
+      [today],
+    );
+    return (result.first['total'] as num?)?.toInt() ?? 0;
+  }
+
+  // Total gabungan Gaming + Cafe hari ini
+  Future<int> getTotalGabunganHariIni() async {
+    final gaming = await getTotalGamingHariIni();
+    final cafe = await getTotalCafeHariIni();
+    return gaming + cafe;
   }
 }

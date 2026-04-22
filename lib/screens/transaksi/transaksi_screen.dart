@@ -32,7 +32,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
         context.read<AuthProvider>().user?.username ?? "Pegawai";
 
     return Scaffold(
-      backgroundColor: Color.fromRGBO(11, 18, 32, 100),
+      backgroundColor: const Color.fromRGBO(11, 18, 32, 100),
       body: SafeArea(
         child: Stack(
           children: [
@@ -107,29 +107,41 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                         // Profile===========================================================
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
+                            backgroundColor: const Color.fromRGBO(
+                              11,
+                              18,
+                              32,
+                              100,
+                            ),
                           ),
                           onPressed: () {},
                           child: Row(
                             children: [
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    "$username",
-                                    style: TextStyle(
+                                    username,
+                                    style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 20,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  Text(widget.shiftName),
+                                  Text(
+                                    widget.shiftName,
+                                    style: const TextStyle(
+                                      color: Color(0xFF00E0C6),
+                                    ),
+                                  ),
                                 ],
                               ),
-                              Icon(
-                                Icons.person_2_outlined,
-                                size: 70,
-                                color: Color.fromRGBO(0, 224, 198, 100),
+                              const SizedBox(width: 10),
+                              const Icon(
+                                Icons.person_pin,
+                                size: 50,
+                                color: Color(0xFF00E0C6),
                               ),
                             ],
                           ),
@@ -144,9 +156,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                     decoration: BoxDecoration(
                       color: Color.fromRGBO(20, 28, 47, 100),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Color.fromRGBO(0, 224, 198, 100),
-                      ),
+                      border: Border.all(color: Colors.white10),
                     ),
                     padding: EdgeInsets.only(left: 50, right: 50, top: 20),
                     height: 420,
@@ -207,7 +217,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             ButtonStock(
-                              text: "Back",
+                              text: "Kembali",
                               onPressed: () => Navigator.pop(context),
                             ),
                             ButtonStock(

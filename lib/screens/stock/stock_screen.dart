@@ -141,7 +141,7 @@ class _StockScreenState extends State<StockScreen> {
                           Row(
                             children: [
                               ButtonStock(
-                                text: "MASUK",
+                                text: "STOK MASUK",
                                 onPressed: () async {
                                   await Navigator.push(
                                     context,
@@ -156,7 +156,7 @@ class _StockScreenState extends State<StockScreen> {
                               ),
                               const SizedBox(width: 10),
                               ButtonStock(
-                                text: "KELUAR",
+                                text: "STOK KELUAR",
                                 onPressed: () async {
                                   await Navigator.push(
                                     context,
@@ -172,7 +172,7 @@ class _StockScreenState extends State<StockScreen> {
                             ],
                           ),
                           ButtonStock(
-                            text: "BACK",
+                            text: "Kembali",
                             onPressed: () => Navigator.of(context).pop(),
                           ),
                         ],
@@ -331,7 +331,7 @@ class _StockScreenState extends State<StockScreen> {
             children: [
               Image.asset(
                 "assets/images/bgLoginScreen.png",
-                height: 60,
+                height: 100,
                 errorBuilder: (c, e, s) =>
                     const Icon(Icons.broken_image, color: Colors.white),
               ),
@@ -340,17 +340,42 @@ class _StockScreenState extends State<StockScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
-                  Text(
-                    "GAMING X CAFE",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: const [
+                      Text(
+                        "GAMING",
+                        style: TextStyle(
+                          color: Color.fromRGBO(226, 19, 136, 100),
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Poppins",
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Text(
+                        "X",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 35,
+                          fontWeight: FontWeight.normal,
+                          fontFamily: "Poppins",
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Text(
+                        "CAFE",
+                        style: TextStyle(
+                          color: Color.fromRGBO(0, 224, 198, 100),
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Poppins",
+                        ),
+                      ),
+                    ],
                   ),
                   Text(
                     "Stock Management",
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                    style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
                 ],
               ),

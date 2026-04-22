@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
+import 'package:k_gamingxcafe/providers/pendapatan_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
 import 'package:k_gamingxcafe/screens/jadwal_screen.dart';
 import 'package:k_gamingxcafe/screens/laporan/laporan_screen.dart';
@@ -21,15 +23,34 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
+  void initState() {
+    super.initState();
+    // Fetch data saat layar pertama kali dibuka
+    Future.microtask(() => context.read<PendapatanProvider>().fetchSemua());
+  }
+
+  // Format angka ke format Rupiah: 1000000 → Rp 1.000.000
+  String _formatRupiah(int nominal) {
+    return NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(nominal);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tanggal = DateTime.now();
     final authprovider = context.watch<AuthProvider>();
     final String username = authprovider.user?.username ?? "";
+
+    // Watch PendapatanProvider agar otomatis rebuild saat data berubah
+    final pendapatanProv = context.watch<PendapatanProvider>();
+
     return PopScope(
-      canPop: false, // Menghalangi tombol back
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        // Opsional: Tampilkan SnackBar jika perlu
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Center(
@@ -39,14 +60,15 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         );
       },
       child: Scaffold(
-        backgroundColor: Color.fromRGBO(11, 18, 32, 100),
+        backgroundColor: const Color.fromRGBO(11, 18, 32, 100),
         body: SafeArea(
           child: Stack(
             children: [
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 50),
+                padding: const EdgeInsets.symmetric(horizontal: 50),
                 child: Column(
                   children: [
+                    // ── HEADER ────────────────────────────────────────────
                     Container(
                       color: Colors.transparent,
                       width: double.infinity,
@@ -62,8 +84,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Row(
-                                    children: [
-                                      const Text(
+                                    children: const [
+                                      Text(
                                         "GAMING",
                                         style: TextStyle(
                                           color: Color.fromRGBO(
@@ -77,8 +99,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                           fontFamily: "Poppins",
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
-                                      const Text(
+                                      SizedBox(width: 16),
+                                      Text(
                                         "X",
                                         style: TextStyle(
                                           color: Colors.white,
@@ -87,8 +109,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                           fontFamily: "Poppins",
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
-                                      const Text(
+                                      SizedBox(width: 16),
+                                      Text(
                                         "CAFE",
                                         style: TextStyle(
                                           color: Color.fromRGBO(
@@ -104,7 +126,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                       ),
                                     ],
                                   ),
-                                  Text(
+                                  const Text(
                                     "Booking & Transaction App",
                                     style: TextStyle(
                                       color: Colors.white,
@@ -116,32 +138,43 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               ),
                             ],
                           ),
-                          // Profile===========================================================
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
+                              backgroundColor: const Color.fromRGBO(
+                                11,
+                                18,
+                                32,
+                                100,
+                              ),
                             ),
                             onPressed: () {},
                             child: Row(
                               children: [
                                 Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
                                       username,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 20,
+                                        fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(widget.shiftName),
+                                    Text(
+                                      widget.shiftName,
+                                      style: const TextStyle(
+                                        color: Color(0xFF00E0C6),
+                                      ),
+                                    ),
                                   ],
                                 ),
-                                Icon(
-                                  Icons.person_2_outlined,
-                                  size: 70,
-                                  color: Color.fromRGBO(0, 224, 198, 100),
+                                const SizedBox(width: 10),
+                                const Icon(
+                                  Icons.person_pin,
+                                  size: 50,
+                                  color: Color(0xFF00E0C6),
                                 ),
                               ],
                             ),
@@ -149,39 +182,42 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 40),
 
-                    // menu===================================================
+                    const SizedBox(height: 40),
+
+                    // ── MENU CONTAINER ────────────────────────────────────
                     Container(
                       decoration: BoxDecoration(
-                        color: Color.fromRGBO(20, 28, 47, 100),
+                        color: const Color.fromRGBO(20, 28, 47, 100),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Color.fromRGBO(0, 224, 198, 100),
+                          color: const Color.fromRGBO(0, 224, 198, 100),
                         ),
                       ),
-                      padding: EdgeInsets.only(left: 50, right: 50, top: 20),
+                      padding: const EdgeInsets.only(
+                        left: 50,
+                        right: 50,
+                        top: 20,
+                      ),
                       height: 420,
                       width: double.infinity,
                       child: Column(
                         children: [
-                          // 1
+                          // Salam & tanggal
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              // username
                               Text(
                                 'Semangat, $username',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              // tanggal
                               Text(
                                 '${tanggal.day}/${tanggal.month}/${tanggal.year}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -189,36 +225,35 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 20),
-                          // 2
+                          const SizedBox(height: 20),
+
+                          // ── CARD PENDAPATAN REALTIME ───────────────────
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               CardPendapatan(
                                 text: 'Gaming Hari Ini',
-                                total: 1000000,
+                                total: pendapatanProv.totalGaming,
                               ),
                               CardPendapatan(
                                 text: 'Cafe Hari Ini',
-                                total: 1000000,
+                                total: pendapatanProv.totalCafe,
                               ),
                               CardPendapatan(
                                 text: 'Gaming x Cafe Hari Ini',
-                                total: 1000000,
+                                total: pendapatanProv.totalGabungan,
                               ),
                             ],
                           ),
-                          // 3
+
+                          // ── TOMBOL MENU ───────────────────────────────
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // 1
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
-
                                 children: [
-                                  // 1
                                   CardButton(
                                     text: "JADWAL",
                                     icon: Icons.calendar_month,
@@ -233,12 +268,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                       );
                                     },
                                   ),
-                                  // 2
                                   CardButton(
                                     text: "TRANSAKSI",
                                     icon: Icons.payment,
-                                    onTap: () {
-                                      Navigator.push(
+                                    onTap: () async {
+                                      await Navigator.push(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => TransaksiScreen(
@@ -246,17 +280,20 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                           ),
                                         ),
                                       );
+                                      // Refresh pendapatan setelah kembali dari transaksi
+                                      if (context.mounted) {
+                                        context
+                                            .read<PendapatanProvider>()
+                                            .fetchSemua();
+                                      }
                                     },
                                   ),
                                 ],
                               ),
-
-                              // 2
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  // 1
                                   CardButton(
                                     text: "STOCK",
                                     icon: Icons.calendar_month,
@@ -271,7 +308,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                       );
                                     },
                                   ),
-                                  // 2
                                   CardButton(
                                     text: "LAPORAN",
                                     icon: Icons.bar_chart_sharp,
@@ -290,8 +326,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 10),
-                          // 4
+
+                          const SizedBox(height: 10),
+
+                          // ── TOMBOL SIGN OUT ───────────────────────────
                           SizedBox(
                             width: double.infinity,
                             height: 50,
@@ -300,7 +338,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                backgroundColor: Color.fromRGBO(
+                                backgroundColor: const Color.fromRGBO(
                                   226,
                                   19,
                                   136,
@@ -310,12 +348,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               onPressed: () {
                                 DialogSingout.showLogoutDialog(
                                   context,
-                                  onConfirm: () => _processLogout(
-                                    context,
-                                  ), // Panggil fungsi logout yang sudah Anda buat
+                                  onConfirm: () => _processLogout(context),
                                 );
                               },
-                              child: Text(
+                              child: const Text(
                                 "SIGN OUT",
                                 style: TextStyle(
                                   fontSize: 20,
@@ -339,19 +375,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   void _processLogout(BuildContext context) async {
-    // 1. Ambil instance provider tanpa mendengarkan perubahan (listen: false)
     final shiftProvider = Provider.of<ShiftProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      // 2. Jalankan fungsi stopShift untuk mengisi end_time di Database
       await shiftProvider.stopShift();
-
-      // 3. Hapus data user dari AuthProvider
       authProvider.logout();
 
-      // 4. Arahkan kembali ke Login dan hapus semua tumpukan halaman (history)
-      // Ini penting agar pegawai tidak bisa klik 'Back' setelah logout
       if (context.mounted) {
         Navigator.pushAndRemoveUntil(
           context,
@@ -360,7 +390,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         );
       }
     } catch (e) {
-      // Penanganan error jika database gagal update
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

@@ -45,7 +45,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
     if (selectedKategori == "Jadwal") {
       return ["Walk-In", "Booking", "Semua"];
     } else if (selectedKategori == "Stock") {
-      return ["Stock Masuk", "Stock Keluar", "Semua"];
+      return ["Masuk", "Keluar", "Semua"];
     } else if (selectedKategori == "Transaksi") {
       return ["Makanan", "Minuman", "Semua"];
     }
@@ -58,7 +58,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2024),
       lastDate: DateTime(2030),
-      
+
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -79,7 +79,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
         } else {
           tanggalAkhir = picked;
         }
-        isTableVisible = false; 
+        isTableVisible = false;
       });
     }
   }
@@ -208,7 +208,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
       decoration: BoxDecoration(
         color: const Color.fromRGBO(20, 28, 47, 1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color.fromRGBO(0, 224, 198, 1)),
+        border: Border.all(color: Colors.white10),
       ),
       padding: const EdgeInsets.all(40),
       child: Column(
@@ -232,72 +232,65 @@ class _LaporanScreenState extends State<LaporanScreen> {
             ],
           ),
           const Divider(color: Colors.white10, height: 40),
-
+          // Bagian filter data
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Filter tanggal
               Expanded(
-                child: _buildDateTile(
-                  "Tanggal Awal",
-                  tanggalAwal,
-                  () => _selectDate(context, true),
+                child: Row(
+                  children: [
+                    _buildDateTile(
+                      "Tanggal Awal",
+                      tanggalAwal,
+                      () => _selectDate(context, true),
+                    ),
+
+                    SizedBox(width: 20),
+
+                    _buildDateTile(
+                      "Tanggal Akhir",
+                      tanggalAkhir,
+                      () => _selectDate(context, false),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 20),
+
+              // Filter kategori
               Expanded(
-                child: _buildDateTile(
-                  "Tanggal Akhir",
-                  tanggalAkhir,
-                  () => _selectDate(context, false),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _buildDropdown(
+                      "Pilih Kategori",
+                      selectedKategori,
+                      listKategori,
+                      (val) {
+                        setState(() {
+                          selectedKategori = val;
+                          selectedSubKategori = null;
+                          isTableVisible = false;
+                        });
+                      },
+                    ),
+
+                    SizedBox(width: 10),
+                    _buildDropdown(
+                      "Sub Kategori",
+                      selectedSubKategori,
+                      getSubKategori(),
+                      (val) {
+                        setState(() {
+                          selectedSubKategori = val;
+                          isTableVisible = false;
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 25),
-
-          Row(
-            children: [
-              Expanded(
-                child: _buildDropdown(
-                  "Pilih Kategori",
-                  selectedKategori,
-                  listKategori,
-                  (val) {
-                    setState(() {
-                      selectedKategori = val;
-                      selectedSubKategori = null;
-                      isTableVisible = false;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: _buildDropdown(
-                  "Sub Kategori",
-                  selectedSubKategori,
-                  getSubKategori(),
-                  (val) {
-                    setState(() {
-                      selectedSubKategori = val;
-                      isTableVisible = false;
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 25),
-
-          _buildDropdown(
-            "Pilih Nama Karyawan",
-            selectedKaryawan,
-            listKaryawan,
-            (val) {
-              setState(() {
-                selectedKaryawan = val;
-                isTableVisible = false;
-              });
-            },
           ),
 
           const SizedBox(height: 40),
@@ -355,7 +348,9 @@ class _LaporanScreenState extends State<LaporanScreen> {
         InkWell(
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            width: 150,
+            height: 55,
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(10),
@@ -399,6 +394,8 @@ class _LaporanScreenState extends State<LaporanScreen> {
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 15),
+          width: 150,
+          height: 55,
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(10),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/models/gaming/ps_unit_model.dart';
+import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:k_gamingxcafe/providers/gaming/jadwal_provider.dart';
@@ -48,9 +49,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                       decoration: BoxDecoration(
                         color: const Color.fromRGBO(20, 28, 47, 1),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color.fromRGBO(0, 224, 198, 1),
-                        ),
+                        border: Border.all(color: Colors.white10),
                       ),
                       padding: const EdgeInsets.all(25),
                       child: Column(
@@ -99,9 +98,18 @@ class _JadwalScreenState extends State<JadwalScreen> {
                                   ),
                                 ],
                               ),
-                              ButtonWidget(
-                                text: "ADD",
-                                onPressed: () => _showAddDialog(context),
+                              Row(
+                                children: [
+                                  ButtonWidget(
+                                    text: "Kembali",
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                  SizedBox(width: 10),
+                                  ButtonWidget(
+                                    text: "Pesan",
+                                    onPressed: () => _showAddDialog(context),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -548,34 +556,101 @@ class _JadwalScreenState extends State<JadwalScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return SizedBox(
-      height: 80,
+    final String username =
+        context.read<AuthProvider>().user?.username ?? "Pegawai";
+    return // ── HEADER ────────────────────────────────────────────
+    Container(
+      color: Colors.transparent,
+      width: double.infinity,
+      height: 100,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Image.asset("assets/images/bgLoginScreen.png", height: 50),
-              const SizedBox(width: 10),
+              Image.asset("assets/images/bgLoginScreen.png"),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Row(
+                    children: const [
+                      Text(
+                        "GAMING",
+                        style: TextStyle(
+                          color: Color.fromRGBO(226, 19, 136, 100),
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Poppins",
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Text(
+                        "X",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 35,
+                          fontWeight: FontWeight.normal,
+                          fontFamily: "Poppins",
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Text(
+                        "CAFE",
+                        style: TextStyle(
+                          color: Color.fromRGBO(0, 224, 198, 100),
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Poppins",
+                        ),
+                      ),
+                    ],
+                  ),
                   const Text(
-                    "GAMING X CAFE",
+                    "Booking & Transaction App",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  Text(
-                    widget.shiftName,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
             ],
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromRGBO(11, 18, 32, 100),
+            ),
+            onPressed: () {},
+            child: Row(
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      username,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      widget.shiftName,
+                      style: const TextStyle(color: Color(0xFF00E0C6)),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 10),
+                const Icon(
+                  Icons.person_pin,
+                  size: 50,
+                  color: Color(0xFF00E0C6),
+                ),
+              ],
+            ),
           ),
         ],
       ),
