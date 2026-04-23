@@ -793,4 +793,69 @@ class DatabaseService {
     final cafe = await getTotalCafeHariIni();
     return gaming + cafe;
   }
+
+  // edit username password untuk pegawai ==================================================
+  // ── Ambil user by ID ────────────────────────────────────────────
+  Future<Map<String, dynamic>?> getUserById(int id) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  // ── Update username ─────────────────────────────────────────────
+  // Return null jika sukses, return pesan error jika gagal
+  Future<String?> updateUsername({
+    required int userId,
+    required String newUsername,
+  }) async {
+    try {
+      final db = await instance.database;
+
+      // Cek apakah username sudah dipakai user lain
+      final existing = await db.query(
+        'users',
+        where: 'username = ? AND id != ?',
+        whereArgs: [newUsername, userId],
+        limit: 1,
+      );
+      if (existing.isNotEmpty) return 'Username sudah digunakan';
+
+      await db.update(
+        'users',
+        {'username': newUsername},
+        where: 'id = ?',
+        whereArgs: [userId],
+      );
+      return null; // sukses
+    } catch (e) {
+      debugPrint('updateUsername Error: $e');
+      return 'Gagal mengubah username';
+    }
+  }
+
+  // ── Update password (langsung tanpa verifikasi password lama) ───
+  // Return null jika sukses, return pesan error jika gagal
+  Future<String?> updatePassword({
+    required int userId,
+    required String newPassword,
+  }) async {
+    try {
+      final db = await instance.database;
+      await db.update(
+        'users',
+        {'password': newPassword},
+        where: 'id = ?',
+        whereArgs: [userId],
+      );
+      return null; // sukses
+    } catch (e) {
+      debugPrint('updatePassword Error: $e');
+      return 'Gagal mengubah password';
+    }
+  }
 }

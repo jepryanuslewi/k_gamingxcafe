@@ -87,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Image.asset(
                           "assets/images/bgLoginScreen.png",
-                          width: 290,
+                          width: 250,
                         ),
                         const SizedBox(height: 10),
                         Row(
@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               "GAMING",
                               style: TextStyle(
                                 color: Color.fromRGBO(226, 19, 136, 100),
-                                fontSize: 35,
+                                fontSize: 30,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: "Poppins",
                               ),
@@ -107,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               "X",
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 35,
+                                fontSize: 32,
                                 fontWeight: FontWeight.normal,
                                 fontFamily: "Poppins",
                               ),
@@ -117,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               "CAFE",
                               style: TextStyle(
                                 color: Color.fromRGBO(0, 224, 198, 100),
-                                fontSize: 35,
+                                fontSize: 30,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: "Poppins",
                               ),

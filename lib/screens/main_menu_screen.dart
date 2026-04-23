@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/providers/pendapatan_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
+import 'package:k_gamingxcafe/screens/edit_profile_screen.dart';
 import 'package:k_gamingxcafe/screens/jadwal_screen.dart';
 import 'package:k_gamingxcafe/screens/laporan/laporan_screen.dart';
 import 'package:k_gamingxcafe/screens/login_screen.dart';
@@ -27,15 +27,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     super.initState();
     // Fetch data saat layar pertama kali dibuka
     Future.microtask(() => context.read<PendapatanProvider>().fetchSemua());
-  }
-
-  // Format angka ke format Rupiah: 1000000 → Rp 1.000.000
-  String _formatRupiah(int nominal) {
-    return NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    ).format(nominal);
   }
 
   @override
@@ -147,7 +138,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                 100,
                               ),
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EditProfileScreen(),
+                                ),
+                              );
+                            },
                             child: Row(
                               children: [
                                 Column(
@@ -205,7 +203,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         children: [
                           // Salam & tanggal
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 'Semangat, $username',
@@ -229,7 +227,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
                           // ── CARD PENDAPATAN REALTIME ───────────────────
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               CardPendapatan(
                                 text: 'Gaming Hari Ini',

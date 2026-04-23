@@ -5,14 +5,14 @@ import 'package:k_gamingxcafe/providers/cafe/bahan_provider.dart';
 import 'package:k_gamingxcafe/providers/cafe/menu_provider.dart';
 import 'package:k_gamingxcafe/models/cafe/menu_model.dart';
 
-class MenuCafe extends StatefulWidget {
-  const MenuCafe({super.key});
+class MenuCafeScreen extends StatefulWidget {
+  const MenuCafeScreen({super.key});
 
   @override
-  State<MenuCafe> createState() => _MenuCafeState();
+  State<MenuCafeScreen> createState() => _MenuCafeScreenState();
 }
 
-class _MenuCafeState extends State<MenuCafe> {
+class _MenuCafeScreenState extends State<MenuCafeScreen> {
   final List<String> kategoriMenu = ["Minuman", "Makanan"];
   List<Map<String, dynamic>> resepInput = [];
 

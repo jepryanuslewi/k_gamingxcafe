@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:k_gamingxcafe/providers/pendapatan_provider.dart';
+import 'package:provider/provider.dart';
 import '../../models/gaming/ps_unit_model.dart';
 import '../../models/gaming/package_model.dart';
 
@@ -303,8 +305,6 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
               ),
               const SizedBox(height: 15),
 
-              // --- 7. DURASI (Hanya jika BUKAN Event) ---
-              // --- 7. DURASI (Hanya jika BUKAN Event) ---
               if (_selectedCategory != 'Event') ...[
                 _buildLabel("Durasi Bermain"),
                 Container(

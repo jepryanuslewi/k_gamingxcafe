@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart'; 
-import 'package:k_gamingxcafe/screens/dashboard/cafe/cafe_management_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:k_gamingxcafe/screens/dashboard/cafe/bahan_baku_screen.dart';
+import 'package:k_gamingxcafe/screens/dashboard/cafe/menu_cafe_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/dahboard_pegawai.dart';
 import 'package:k_gamingxcafe/screens/dashboard/dashboard_home_screen.dart';
-import 'package:k_gamingxcafe/screens/dashboard/gaming/unit_screen.dart';
+import 'package:k_gamingxcafe/screens/dashboard/gaming/add_paket_event_screen.dart';
+import 'package:k_gamingxcafe/screens/dashboard/gaming/add_ps_unit_screen.dart';
 import 'package:k_gamingxcafe/screens/login_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -19,8 +21,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final List<Widget> _pages = const [
     DashboardHomeScreen(),
     DahboardPegawai(),
-    UnitsScreen(),
-    CafeManagementScreen(),
+    AddPsUnitScreen(),
+    AddPaketEventScreen(),
+    BahanBakuScreen(),
+    MenuCafeScreen(),
   ];
 
   // --- FUNGSI LOGOUT DENGAN KONFIRMASI ---
@@ -157,8 +161,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   label: Text("PS Units"),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.local_cafe_outlined),
-                  label: Text("Cafe Management"),
+                  icon: Icon(Icons.videogame_asset_outlined),
+                  label: Text("Paket Event"),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.inventory_2_rounded),
+                  label: Text("Kelola Bahan Baku"),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.restaurant_menu_rounded),
+                  label: Text("Kelola Menu Cafe"),
                 ),
               ],
               selectedIndex: _selectedIndex,
