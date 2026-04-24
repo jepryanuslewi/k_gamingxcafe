@@ -201,6 +201,17 @@ class DatabaseService {
           FOREIGN KEY(bahan_id) REFERENCES bahan(id) ON DELETE CASCADE
         )
       ''');
+
+        await db.execute('''
+        CREATE TABLE IF NOT EXISTS package_menus (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          package_id INTEGER NOT NULL,
+          menu_id INTEGER NOT NULL,
+          qty INTEGER DEFAULT 1,
+          FOREIGN KEY(package_id) REFERENCES packages(id),
+          FOREIGN KEY(menu_id) REFERENCES menu(id)
+        )
+      ''');
       },
     );
   }

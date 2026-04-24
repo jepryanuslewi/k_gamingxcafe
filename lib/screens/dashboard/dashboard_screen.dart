@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/screens/dashboard/cafe/bahan_baku_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/cafe/menu_cafe_screen.dart';
-import 'package:k_gamingxcafe/screens/dashboard/dahboard_pegawai.dart';
 import 'package:k_gamingxcafe/screens/dashboard/dashboard_home_screen.dart';
+import 'package:k_gamingxcafe/screens/dashboard/dashboard_pegawai_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/gaming/add_paket_event_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/gaming/add_ps_unit_screen.dart';
+import 'package:k_gamingxcafe/screens/dashboard/laporan/dashboard_laporan_screen.dart';
 import 'package:k_gamingxcafe/screens/login_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -20,11 +21,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   final List<Widget> _pages = const [
     DashboardHomeScreen(),
-    DahboardPegawai(),
+    DashboardPegawaiScreen(),
     AddPsUnitScreen(),
     AddPaketEventScreen(),
     BahanBakuScreen(),
     MenuCafeScreen(),
+    DashboardLaporanScreen(shiftName: 'admin'),
   ];
 
   // --- FUNGSI LOGOUT DENGAN KONFIRMASI ---
@@ -161,7 +163,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   label: Text("PS Units"),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.videogame_asset_outlined),
+                  icon: Icon(Icons.event_note),
                   label: Text("Paket Event"),
                 ),
                 NavigationRailDestination(
@@ -171,6 +173,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 NavigationRailDestination(
                   icon: Icon(Icons.restaurant_menu_rounded),
                   label: Text("Kelola Menu Cafe"),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.restaurant_menu_rounded),
+                  label: Text("Kelola Laporan"),
                 ),
               ],
               selectedIndex: _selectedIndex,
@@ -186,18 +192,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.only(bottom: 20.0),
                     child: _isExpanded
                         ? SizedBox(
-                            width: 160,
+                            width: 200,
                             child: OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.redAccent),
-                                foregroundColor: Colors.redAccent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+
+                                foregroundColor: Colors.white,
+                                backgroundColor: Color.fromRGBO(
+                                  226,
+                                  19,
+                                  136,
+                                  100,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
                                 ),
                               ),
                               onPressed: _logout,
                               icon: const Icon(Icons.logout),
-                              label: const Text("LOGOUT"),
+                              label: const Text("SIGN OUT"),
                             ),
                           )
                         : IconButton(

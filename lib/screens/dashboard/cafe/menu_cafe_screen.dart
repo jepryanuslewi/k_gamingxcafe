@@ -16,6 +16,10 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
   final List<String> kategoriMenu = ["Minuman", "Makanan"];
   List<Map<String, dynamic>> resepInput = [];
 
+  // ✅ SEARCH
+  final TextEditingController searchController = TextEditingController();
+  String searchQuery = "";
+
   @override
   void initState() {
     super.initState();
@@ -56,7 +60,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
             content: SizedBox(
               width:
                   MediaQuery.of(context).size.width *
-                  0.85, // Batasi lebar dialog
+                  0.40, // Batasi lebar dialog
               child: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -235,7 +239,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xff00E0C6),
+                  backgroundColor: const Color(0xffe21388),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -260,7 +264,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                 child: const Text(
                   "Simpan",
                   style: TextStyle(
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -283,7 +287,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+        labelStyle: const TextStyle(color: Colors.grey),
       ),
       validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
     );
@@ -293,123 +297,173 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
   Widget build(BuildContext context) {
     final menuProvider = context.watch<MenuProvider>();
 
+    // ✅ FILTER MENU
+    final filteredMenu = menuProvider.listMenu.where((menu) {
+      return menu.nama.toLowerCase().contains(searchQuery) ||
+          menu.kategori.toLowerCase().contains(searchQuery);
+    }).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          "Kelola Menu Cafe",
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xff00E0C6),
+        backgroundColor: const Color(0xffe21388),
         onPressed: showAddMenuForm,
-        child: const Icon(Icons.add, color: Colors.black),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: menuProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: menuProvider.listMenu.length,
-              itemBuilder: (context, index) {
-                final menu = menuProvider.listMenu[index];
-                return Card(
-                  color: const Color(0xff1c273d),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0x2200E0C6),
-                      child: Icon(Icons.fastfood, color: Color(0xff00E0C6)),
+          : Padding(
+              padding: const EdgeInsets.only(top: 16, left: 20, right: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 10),
+                  const Text(
+                    "Kelola Bahan Baku",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
-                    title: Text(
-                      menu.nama,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: const [
+                      Text(
+                        "GAMING",
+                        style: TextStyle(
+                          color: Color.fromRGBO(226, 19, 136, 100),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Poppins",
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        "X",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          fontFamily: "Poppins",
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        "CAFE",
+                        style: TextStyle(
+                          color: Color.fromRGBO(0, 224, 198, 100),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Poppins",
+                        ),
+                      ),
+                    ],
+                  ),
+                  Divider(color: Colors.white10, thickness: 1, height: 32),
+                  SizedBox(height: 10),
+                  // ✅ SEARCH BAR
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: TextField(
+                      controller: searchController,
+                      style: const TextStyle(color: Colors.white),
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value.toLowerCase();
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: "Cari menu...",
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: Colors.white54,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xff1c273d),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
-                    subtitle: Text(
-                      "Rp ${menu.harga.toInt()}",
-                      style: const TextStyle(color: Colors.white60),
-                    ),
-                    trailing: SizedBox(
-                      width: 100, // Beri lebar agar cukup untuk 2 tombol
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          // TOMBOL EDIT
-                          IconButton(
-                            icon: const Icon(
-                              Icons.edit_outlined,
-                              color: Colors.amber,
-                            ),
-                            onPressed: () =>
-                                showEditMenuForm(menu), // Panggil form edit
-                          ),
-                          // TOMBOL DELETE
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (confirmContext) => AlertDialog(
-                                  backgroundColor: const Color(0xff141c2f),
-                                  title: const Text(
-                                    "Hapus Bahan?",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  content: const Text(
-                                    "Yakin ingin menghapus bahan ini dari resep?",
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(confirmContext),
-                                      child: const Text(
-                                        "Batal",
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        // Tutup dialog konfirmasi
-                                        Navigator.pop(confirmContext);
+                  ),
+                  SizedBox(height: 10),
 
-                                        menuProvider.removeMenu(menu.id!);
-                                      },
-                                      child: const Text(
-                                        "Hapus",
-                                        style: TextStyle(
-                                          color: Colors.redAccent,
-                                        ),
-                                      ),
+                  Expanded(
+                    child: filteredMenu.isEmpty
+                        ? const Center(
+                            child: Text(
+                              "Menu tidak ditemukan",
+                              style: TextStyle(color: Colors.white54),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(top: 16),
+                            itemCount: filteredMenu.length,
+                            itemBuilder: (context, index) {
+                              final menu = filteredMenu[index];
+
+                              return Card(
+                                color: const Color(0xff1c273d),
+                                margin: const EdgeInsets.only(bottom: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  leading: const CircleAvatar(
+                                    backgroundColor: Color(0x2200E0C6),
+                                    child: Icon(
+                                      Icons.fastfood,
+                                      color: Color(0xff00E0C6),
                                     ),
-                                  ],
+                                  ),
+                                  title: Text(
+                                    menu.nama,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    "Rp ${menu.harga.toInt()}",
+                                    style: const TextStyle(
+                                      color: Colors.white60,
+                                    ),
+                                  ),
+                                  trailing: SizedBox(
+                                    width: 100,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            color: Colors.amber,
+                                          ),
+                                          onPressed: () =>
+                                              showEditMenuForm(menu),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: () {
+                                            menuProvider.removeMenu(menu.id!);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               );
                             },
                           ),
-                        ],
-                      ),
-                    ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
     );
   }
@@ -462,7 +516,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
               ),
             ),
             content: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.85,
+              width: MediaQuery.of(context).size.width * 0.40,
               child: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -502,7 +556,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                           const Text(
                             "Edit Resep Bahan",
                             style: TextStyle(
-                              color: Colors.amberAccent,
+                              color: Colors.grey,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -630,8 +684,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.amber, // Warna berbeda untuk membedakan Edit & Add
+                  backgroundColor: const Color(0xffe21388),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -658,7 +711,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                 child: const Text(
                   "Update Data",
                   style: TextStyle(
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

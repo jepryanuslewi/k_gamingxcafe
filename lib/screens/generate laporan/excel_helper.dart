@@ -6,6 +6,111 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ExcelHelper {
+  // ─────────────────────────────────────────────────────────────────
+  //  EXPORT 3 SHEET SEKALIGUS (Jadwal + Transaksi + Stock)
+  // ─────────────────────────────────────────────────────────────────
+  static Future<void> saveAndShareAllSheets({
+    required List<List<String>> jadwalData,
+    required String jadwalTotal,
+    required List<List<String>> transaksiData,
+    required String transaksiTotal,
+    required List<List<String>> stockData,
+    required String stockTotal,
+    DateTime? tanggalAwal,
+    DateTime? tanggalAkhir,
+  }) async {
+    try {
+      final excel = Excel.createExcel();
+      excel.delete('Sheet1'); // Hapus sheet default
+
+      // ── Sheet 1: Jadwal ──────────────────────
+      _writeSheet(
+        sheet: excel['Jadwal'],
+        kategori: 'Jadwal',
+        headers: [
+          'NAMA',
+          'SHIFT',
+          'TANGGAL',
+          'DETAIL',
+          'JAM',
+          'DURASI',
+          'HARGA',
+          'STATUS',
+        ],
+        tableData: jadwalData,
+        totalLabel: 'TOTAL PENDAPATAN',
+        totalValue: jadwalTotal,
+        tanggalAwal: tanggalAwal,
+        tanggalAkhir: tanggalAkhir,
+      );
+
+      // ── Sheet 2: Transaksi ───────────────────
+      _writeSheet(
+        sheet: excel['Transaksi'],
+        kategori: 'Transaksi',
+        headers: [
+          'OPERATOR',
+          'SHIFT',
+          'TANGGAL',
+          'PRODUK',
+          'KATEGORI',
+          'QTY',
+          'HARGA SATUAN',
+          'TOTAL',
+        ],
+        tableData: transaksiData,
+        totalLabel: 'TOTAL PENJUALAN',
+        totalValue: transaksiTotal,
+        tanggalAwal: tanggalAwal,
+        tanggalAkhir: tanggalAkhir,
+      );
+
+      // ── Sheet 3: Stock ───────────────────────
+      _writeSheet(
+        sheet: excel['Stock'],
+        kategori: 'Stock',
+        headers: [
+          'NAMA',
+          'SHIFT',
+          'TANGGAL',
+          'BAHAN',
+          'KATEGORI',
+          'JUMLAH',
+          'TIPE',
+          'KETERANGAN',
+        ],
+        tableData: stockData,
+        totalLabel: 'MASUK / KELUAR',
+        totalValue: stockTotal,
+        tanggalAwal: tanggalAwal,
+        tanggalAkhir: tanggalAkhir,
+      );
+
+      // ── Simpan & Share ───────────────────────
+      final dir = await getTemporaryDirectory();
+      final tanggalStr = DateFormat('yyyyMMdd_HHmm').format(DateTime.now());
+      final filePath = '${dir.path}/Laporan_Lengkap_$tanggalStr.xlsx';
+
+      final fileBytes = excel.save();
+      if (fileBytes == null) throw Exception('Gagal generate Excel');
+
+      await File(filePath).writeAsBytes(fileBytes, flush: true);
+
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: 'Laporan Lengkap - Gaming X Cafe',
+        text:
+            'Laporan Jadwal, Transaksi & Stock periode ${_formatPeriode(tanggalAwal, tanggalAkhir)}',
+      );
+    } catch (e) {
+      debugPrint('ExcelHelper Error: $e');
+      rethrow;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  EXPORT 1 SHEET (tetap tersedia jika masih dibutuhkan)
+  // ─────────────────────────────────────────────────────────────────
   static Future<void> saveAndShareExcel({
     required String kategori,
     required List<List<String>> tableData,
@@ -106,6 +211,9 @@ class ExcelHelper {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────
+  //  WRITE SHEET (shared internal)
+  // ─────────────────────────────────────────────────────────────────
   static void _writeSheet({
     required Sheet sheet,
     required String kategori,
@@ -124,6 +232,7 @@ class ExcelHelper {
       'GAMING X CAFE - LAPORAN ${kategori.toUpperCase()}',
     );
     titleCell.cellStyle = CellStyle(bold: true, fontSize: 13);
+
     // ── Baris 2: Periode ────────────────────────
     final periodeCell = sheet.cell(
       CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1),

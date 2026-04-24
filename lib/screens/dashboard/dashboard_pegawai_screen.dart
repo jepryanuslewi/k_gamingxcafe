@@ -5,14 +5,14 @@ import 'package:k_gamingxcafe/models/user_model.dart';
 // Import DatabaseHelper Anda, contoh:
 // import 'package:k_gamingxcafe/database/db_helper.dart';
 
-class DahboardPegawai extends StatefulWidget {
-  const DahboardPegawai({super.key});
+class DashboardPegawaiScreen extends StatefulWidget {
+  const DashboardPegawaiScreen({super.key});
 
   @override
-  State<DahboardPegawai> createState() => _DahboardPegawaiState();
+  State<DashboardPegawaiScreen> createState() => _DashboardPegawaiScreenState();
 }
 
-class _DahboardPegawaiState extends State<DahboardPegawai> {
+class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
   List<UserModel> _allUsers = [];
   String _searchQuery = "";
   bool _isLoading = true;
@@ -252,10 +252,10 @@ class _DahboardPegawaiState extends State<DahboardPegawai> {
   }
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Database Pegawai",
           style: TextStyle(
             fontSize: 28,
@@ -264,29 +264,68 @@ class _DahboardPegawaiState extends State<DahboardPegawai> {
           ),
         ),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
-              onPressed: _refreshUserList, // Tombol refresh manual
+            Row(
+              children: const [
+                Text(
+                  "GAMING",
+                  style: TextStyle(
+                    color: Color.fromRGBO(226, 19, 136, 100),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: "Poppins",
+                  ),
+                ),
+                SizedBox(width: 5),
+                Text(
+                  "X",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                    fontFamily: "Poppins",
+                  ),
+                ),
+                SizedBox(width: 5),
+                Text(
+                  "CAFE",
+                  style: TextStyle(
+                    color: Color.fromRGBO(0, 224, 198, 100),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: "Poppins",
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xffe21388),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 15,
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
+                  onPressed: _refreshUserList, // Tombol refresh manual
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                const SizedBox(width: 10),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xffe21388),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 15,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed:
+                      _showAddUserDialog, // TERHUBUNG KE FUNGSI REGISTRASI
+                  icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
+                  label: const Text(
+                    "Registrasi Baru",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-              ),
-              onPressed: _showAddUserDialog, // TERHUBUNG KE FUNGSI REGISTRASI
-              icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
-              label: const Text(
-                "Registrasi Baru",
-                style: TextStyle(color: Colors.white),
-              ),
+              ],
             ),
           ],
         ),

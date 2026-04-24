@@ -4,7 +4,7 @@ import 'package:k_gamingxcafe/providers/pendapatan_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
 import 'package:k_gamingxcafe/screens/edit_profile_screen.dart';
 import 'package:k_gamingxcafe/screens/jadwal_screen.dart';
-import 'package:k_gamingxcafe/screens/laporan/laporan_screen.dart';
+import 'package:k_gamingxcafe/screens/laporan/laporan_pegawai_screen.dart';
 import 'package:k_gamingxcafe/screens/login_screen.dart';
 import 'package:k_gamingxcafe/screens/stock/stock_screen.dart';
 import 'package:k_gamingxcafe/screens/transaksi/transaksi_screen.dart';
