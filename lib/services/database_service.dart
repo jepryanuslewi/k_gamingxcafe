@@ -144,6 +144,7 @@ class DatabaseService {
           total_harga INTEGER NOT NULL,
           created_at TEXT,
           status TEXT DEFAULT 'active',
+          keterangan TEXT,
           FOREIGN KEY(shift_id) REFERENCES shifts(id),
           FOREIGN KEY(product_id) REFERENCES menu(id)
         )
@@ -362,40 +363,6 @@ class DatabaseService {
     return await db.delete('bahan', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Fungsi pengurangan stok bahan secara otomatis saat produk terjual
-  Future<void> kurangiStokBahanOtomatis(int productId, int qtyPesanan) async {
-    final db = await instance.database;
-
-    // Cari di resep_menu
-    final List<Map<String, dynamic>> resep = await db.query(
-      'resep_menu',
-      where: 'product_id = ?',
-      whereArgs: [productId],
-    );
-
-    for (var item in resep) {
-      int bahanId = item['bahan_id'];
-      double totalPotong =
-          (item['jumlah_pakai'] as num).toDouble() * qtyPesanan;
-
-      await db.transaction((txn) async {
-        await txn.rawUpdate(
-          'UPDATE bahan SET stok_saat_ini = stok_saat_ini - ? WHERE id = ?',
-          [totalPotong, bahanId],
-        );
-
-        await txn.insert('riwayat_bahan', {
-          'bahan_id': bahanId,
-          'jumlah': totalPotong,
-          'tipe': 'keluar',
-          'username': 'System',
-          'nama_shift': 'Auto-Cut',
-          'waktu': DateTime.now().toIso8601String(),
-        });
-      });
-    }
-  }
-
   Future<void> addMenuWithResep(
     MenuModel menu,
     List<Map<String, dynamic>> resep,
@@ -501,6 +468,13 @@ class DatabaseService {
     final db = await instance.database;
 
     await db.transaction((txn) async {
+      String keterangan = items
+          .map((item) {
+            final MenuModel p = item['selectedProduk'];
+            final int qty = item['qty'];
+            return "${p.nama} x$qty";
+          })
+          .join(", ");
       // 1. Loop setiap item yang dibeli
       for (var item in items) {
         final MenuModel p = item['selectedProduk'];
@@ -518,11 +492,10 @@ class DatabaseService {
           'total_harga': (p.harga) * qty,
           'created_at': DateTime.now().toIso8601String(),
           'status': 'active',
+          'keterangan': keterangan,
         });
 
-        // 3. Panggil fungsi pengurangan stok bahan baku otomatis
-        // Karena kita di dalam transaksi, kita panggil logic-nya secara berurutan
-        await _kurangiStokBahanInternal(txn, p.id!, qty);
+        await _kurangiStokBahanInternal(txn, p.id!, qty, p.nama);
       }
     });
   }
@@ -532,8 +505,8 @@ class DatabaseService {
     dynamic txn,
     int productId,
     int qtyPesanan,
+    String namaProduk, // ← parameter baru
   ) async {
-    // Cari resep untuk produk ini
     final List<Map<String, dynamic>> resep = await txn.query(
       'resep_menu',
       where: 'product_id = ?',
@@ -545,20 +518,56 @@ class DatabaseService {
       double totalPotong =
           (item['jumlah_pakai'] as num).toDouble() * qtyPesanan;
 
-      // Update stok bahan baku
       await txn.rawUpdate(
         'UPDATE bahan SET stok_saat_ini = stok_saat_ini - ? WHERE id = ?',
         [totalPotong, bahanId],
       );
 
-      // Catat ke riwayat bahan baku
       await txn.insert('riwayat_bahan', {
         'bahan_id': bahanId,
         'jumlah': totalPotong,
         'tipe': 'keluar',
         'username': 'System',
         'nama_shift': 'Auto-Cut (Sales)',
+        'keterangan': 'Terjual: $namaProduk', // ✅ nama menu sebagai keterangan
         'waktu': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  Future<void> kurangiStokBahanOtomatis(
+    int productId,
+    int qtyPesanan, {
+    String namaProduk = 'Produk',
+  }) async {
+    final db = await instance.database;
+
+    final List<Map<String, dynamic>> resep = await db.query(
+      'resep_menu',
+      where: 'product_id = ?',
+      whereArgs: [productId],
+    );
+
+    for (var item in resep) {
+      int bahanId = item['bahan_id'];
+      double totalPotong =
+          (item['jumlah_pakai'] as num).toDouble() * qtyPesanan;
+
+      await db.transaction((txn) async {
+        await txn.rawUpdate(
+          'UPDATE bahan SET stok_saat_ini = stok_saat_ini - ? WHERE id = ?',
+          [totalPotong, bahanId],
+        );
+
+        await txn.insert('riwayat_bahan', {
+          'bahan_id': bahanId,
+          'jumlah': totalPotong,
+          'tipe': 'keluar',
+          'username': 'System',
+          'nama_shift': 'Auto-Cut',
+          'keterangan': 'Terjual: $namaProduk', // ✅
+          'waktu': DateTime.now().toIso8601String(),
+        });
       });
     }
   }
@@ -762,9 +771,6 @@ class DatabaseService {
     ORDER BY ct.created_at DESC
   ''', whereArgs);
   }
-
-  // Untuk Laporan Pendapatan
-  // Tambahkan di dalam class DatabaseService
 
   // Total pendapatan Gaming hari ini (dari tabel jadwal)
   Future<int> getTotalGamingHariIni() async {

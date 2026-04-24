@@ -316,6 +316,14 @@ class _JadwalScreenState extends State<JadwalScreen> {
 
       await provider.addJadwal(newJadwal);
 
+      // Setelah provider.addJadwal(newJadwal)
+      if (result['is_paketan'] == true && result['package_name'] != null) {
+        await provider.potongStokBahanDariPaket(
+          packageName: result['package_name'],
+          shiftName: widget.shiftName,
+        );
+      }
+
       // ✅ Pindah tab sesuai status yang dipilih user
       setState(
         () =>

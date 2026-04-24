@@ -35,7 +35,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color.fromRGBO(20, 28, 47, 1),
-        title: const Text("Logout", style: TextStyle(color: Colors.white)),
+        title: const Text("SIGN OUT", style: TextStyle(color: Colors.white)),
         content: const Text(
           "Apakah Anda yakin ingin keluar?",
           style: TextStyle(color: Colors.white70),
@@ -118,14 +118,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         if (_isExpanded) ...[
                           const SizedBox(width: 12),
-                          const Text(
-                            "Gaming x Cafe",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              letterSpacing: 1.1,
-                            ),
+                          Row(
+                            children: const [
+                              Text(
+                                "GAMING",
+                                style: TextStyle(
+                                  color: Color.fromRGBO(226, 19, 136, 100),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: "Poppins",
+                                ),
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                "X",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.normal,
+                                  fontFamily: "Poppins",
+                                ),
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                "CAFE",
+                                style: TextStyle(
+                                  color: Color.fromRGBO(0, 224, 198, 100),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: "Poppins",
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ],
@@ -164,7 +188,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 NavigationRailDestination(
                   icon: Icon(Icons.event_note),
-                  label: Text("Paket Event"),
+                  label: Text("Paket Promo"),
                 ),
                 NavigationRailDestination(
                   icon: Icon(Icons.inventory_2_rounded),
@@ -175,7 +199,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   label: Text("Kelola Menu Cafe"),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.restaurant_menu_rounded),
+                  icon: Icon(Icons.bar_chart_rounded),
                   label: Text("Kelola Laporan"),
                 ),
               ],

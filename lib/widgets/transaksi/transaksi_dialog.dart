@@ -137,7 +137,7 @@ class TransactionDialog {
 
                             if (totalAkhir <= 0) return;
 
-                            // Tampilkan loading jika perlu, atau langsung panggil simpan
+                            
                             bool sukses = await context
                                 .read<MenuProvider>()
                                 .simpanTransaksi(items, totalAkhir, shiftName);

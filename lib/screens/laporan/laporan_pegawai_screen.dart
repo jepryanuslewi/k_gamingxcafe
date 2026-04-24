@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
+import 'package:k_gamingxcafe/widgets/gaming/button_widget.dart';
 import 'package:k_gamingxcafe/widgets/laporan/tabel_laporan_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -294,42 +295,52 @@ class _LaporanScreenState extends State<LaporanScreen> {
           ),
 
           const SizedBox(height: 40),
-
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00E0C6),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: () {
-                // Validasi input sebelum menampilkan
-                if (tanggalAwal == null ||
-                    tanggalAkhir == null ||
-                    selectedKategori == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Lengkapi semua filter terlebih dahulu"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                width: 250,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00E0C6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  );
-                  return;
-                }
-                setState(() {
-                  isTableVisible = true;
-                });
-              },
-              child: const Text(
-                "TAMPILKAN LAPORAN",
-                style: TextStyle(
-                  color: Color(0xFF0B1220),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  ),
+                  onPressed: () {
+                    // Validasi input sebelum menampilkan
+                    if (tanggalAwal == null ||
+                        tanggalAkhir == null ||
+                        selectedKategori == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Lengkapi semua filter terlebih dahulu",
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    setState(() {
+                      isTableVisible = true;
+                    });
+                  },
+                  child: const Text(
+                    "TAMPILKAN LAPORAN",
+                    style: TextStyle(
+                      color: Color(0xFF0B1220),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              ButtonWidget(
+                text: 'Kembali',
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
           ),
         ],
       ),

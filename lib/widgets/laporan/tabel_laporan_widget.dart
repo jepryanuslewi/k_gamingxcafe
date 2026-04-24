@@ -161,8 +161,9 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     final formatted = rawData.map((row) {
       final jumlah = (row['jumlah'] as num?)?.toInt() ?? 0;
       final tipe = row['tipe']?.toString() ?? "-";
-      if (tipe == 'masuk') totalMasuk += jumlah;
-      if (tipe == 'keluar') totalKeluar += jumlah;
+      final hasil = (jumlah / jumlah).toInt();
+      if (tipe == 'masuk') totalMasuk += hasil;
+      if (tipe == 'keluar') totalKeluar += hasil;
 
       return [
         row['username']?.toString() ?? "-", // [0] Nama
@@ -576,7 +577,7 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                     const SizedBox(width: 10),
 
                     // Tombol Export PDF (existing)
-                    ElevatedButton.icon(
+                    OutlinedButton.icon(
                       onPressed: _tableData.isEmpty
                           ? null
                           : () => PdfHelper.saveAndOpenPdf(
@@ -586,11 +587,14 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
                             ),
                       icon: const Icon(Icons.picture_as_pdf, size: 16),
                       label: const Text("PDF"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00E0C6),
-                        foregroundColor: const Color(0xFF0B1220),
-                        disabledBackgroundColor: Colors.white12,
-                        disabledForegroundColor: Colors.white38,
+
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        side: const BorderSide(
+                          color: Colors.redAccent,
+                          width: 0.8,
+                        ),
+                        disabledForegroundColor: Colors.white24,
                       ),
                     ),
                   ],
