@@ -25,7 +25,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch data saat layar pertama kali dibuka
     Future.microtask(() => context.read<PendapatanProvider>().fetchSemua());
   }
 
@@ -34,8 +33,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final tanggal = DateTime.now();
     final authprovider = context.watch<AuthProvider>();
     final String username = authprovider.user?.username ?? "";
-
-    // Watch PendapatanProvider agar otomatis rebuild saat data berubah
     final pendapatanProv = context.watch<PendapatanProvider>();
 
     return PopScope(
@@ -59,7 +56,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 50),
                 child: Column(
                   children: [
-                    // ── HEADER ────────────────────────────────────────────
                     Container(
                       color: Colors.transparent,
                       width: double.infinity,
@@ -183,7 +179,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
                     const SizedBox(height: 40),
 
-                    // ── MENU CONTAINER ────────────────────────────────────
                     Container(
                       decoration: BoxDecoration(
                         color: const Color.fromRGBO(20, 28, 47, 100),
@@ -201,7 +196,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       width: double.infinity,
                       child: Column(
                         children: [
-                          // Salam & tanggal
+                          
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -225,7 +220,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // ── CARD PENDAPATAN REALTIME ───────────────────
+                         
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -244,7 +239,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             ],
                           ),
 
-                          // ── TOMBOL MENU ───────────────────────────────
+                         
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -278,7 +273,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                           ),
                                         ),
                                       );
-                                      // Refresh pendapatan setelah kembali dari transaksi
+                                     
                                       if (context.mounted) {
                                         context
                                             .read<PendapatanProvider>()

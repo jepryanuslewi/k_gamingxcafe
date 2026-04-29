@@ -30,15 +30,15 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = false);
 
       if (success) {
-        final user = authProvider.user; // Ambil objek user utuh
+        final user = authProvider.user; 
         if (mounted && user != null) {
-          // LOGIKA PERCABANGAN ROLE
+         
           Widget destination;
           if (user.role == 'admin') {
-            // Jika admin, arahkan ke Dashboard (Pastikan sudah import file-nya)
+           
             destination = const DashboardScreen();
           } else {
-            // Jika selain admin (pegawai), arahkan ke ShiftScreen
+           
             destination = ShiftScreen(
               userId: user.id!,
               username: user.username,

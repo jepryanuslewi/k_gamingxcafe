@@ -33,6 +33,9 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
     final namaController = TextEditingController();
     final kategoriController = TextEditingController();
     final stokController = TextEditingController();
+    final isiPerQtyController = TextEditingController(
+      text: "1",
+    ); // Default 1 agar tidak bagi nol
     String selectedSatuan = "gram";
     final formKey = GlobalKey<FormState>();
 
@@ -56,7 +59,12 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                     _buildTextField(kategoriController, "Kategori"),
                     _buildTextField(
                       stokController,
-                      "Jumlah Stok",
+                      "Jumlah Stok Total",
+                      isNumber: true,
+                    ),
+                    _buildTextField(
+                      isiPerQtyController,
+                      "Isi per 1 Qty (Contoh: 250)",
                       isNumber: true,
                     ),
                     const SizedBox(height: 15),
@@ -93,16 +101,21 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: () {
+              onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   final newBahan = Bahan(
                     nama: namaController.text,
                     kategori: kategoriController.text,
                     satuan: selectedSatuan,
                     stokSaatIni: double.tryParse(stokController.text) ?? 0,
+                    isiPerQty: double.tryParse(isiPerQtyController.text) ?? 1,
                   );
-                  context.read<BahanProvider>().addBahan(newBahan);
-                  Navigator.pop(context);
+
+                  await context.read<BahanProvider>().addBahan(newBahan);
+
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: const Text(
@@ -122,6 +135,9 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
     final kategoriController = TextEditingController(text: bahan.kategori);
     final stokController = TextEditingController(
       text: bahan.stokSaatIni.toString(),
+    );
+    final isiPerQtyController = TextEditingController(
+      text: bahan.isiPerQty.toString(), // Load data lama
     );
     String selectedSatuan = bahan.satuan;
     final formKey = GlobalKey<FormState>();
@@ -146,7 +162,12 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                     _buildTextField(kategoriController, "Kategori"),
                     _buildTextField(
                       stokController,
-                      "Jumlah Stok",
+                      "Jumlah Stok Total",
+                      isNumber: true,
+                    ),
+                    _buildTextField(
+                      isiPerQtyController,
+                      "Isi per 1 Qty",
                       isNumber: true,
                     ),
                     const SizedBox(height: 15),
@@ -191,6 +212,9 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                     kategori: kategoriController.text,
                     satuan: selectedSatuan,
                     stokSaatIni: double.tryParse(stokController.text) ?? 0,
+                    isiPerQty:
+                        double.tryParse(isiPerQtyController.text) ??
+                        1, // UPDATE DATA
                   );
                   context.read<BahanProvider>().updateBahan(updatedBahan);
                   Navigator.pop(context);
@@ -224,7 +248,6 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
     );
   }
 
-  // ================= MAIN UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -377,9 +400,57 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          subtitle: Text(
-                            "${bahan.stokSaatIni} ${bahan.satuan} - ${bahan.kategori}",
-                            style: const TextStyle(color: Colors.white60),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "${bahan.stokSaatIni.toInt()} ${bahan.satuan} - ${bahan.kategori}",
+                                style: const TextStyle(color: Colors.white60),
+                              ),
+                              const SizedBox(height: 4),
+                              Builder(
+                                builder: (context) {
+                                  if (bahan.isiPerQty <= 0)
+                                    return const SizedBox();
+
+                                  bool isPas =
+                                      (bahan.stokSaatIni % bahan.isiPerQty) ==
+                                      0;
+                                  int qtyDisplay =
+                                      (bahan.stokSaatIni / bahan.isiPerQty)
+                                          .ceil();
+                                  String teksQty = isPas
+                                      ? "$qtyDisplay Qty"
+                                      : "< $qtyDisplay Qty";
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(
+                                        0xffe21388,
+                                      ).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xffe21388,
+                                        ).withOpacity(0.3),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      teksQty,
+                                      style: const TextStyle(
+                                        color: Color(0xffe21388),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,

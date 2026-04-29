@@ -170,8 +170,9 @@ class DatabaseService {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           nama TEXT NOT NULL,
           kategori TEXT NOT NULL,
-          satuan TEXT NOT NULL,               -- ✅ gram / ml / pcs / liter / kg
-          stok_saat_ini REAL NOT NULL DEFAULT 0 -- ✅ REAL agar bisa desimal (misal 0.5 kg)
+          satuan TEXT NOT NULL,              
+          stok_saat_ini REAL NOT NULL DEFAULT 0, 
+          isi_per_qty INTEGER NOT NULL DEFAULT 1
         )
       ''');
 
@@ -180,7 +181,7 @@ class DatabaseService {
         CREATE TABLE riwayat_bahan (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           bahan_id INTEGER NOT NULL,
-          jumlah REAL NOT NULL,               -- ✅ REAL agar bisa desimal
+          jumlah REAL NOT NULL,             
           tipe TEXT NOT NULL DEFAULT 'masuk',
           username TEXT NOT NULL,
           nama_shift TEXT NOT NULL,
@@ -217,13 +218,21 @@ class DatabaseService {
     );
   }
 
+  Future<int> getTotalAdmin() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      "SELECT COUNT(*) as total FROM users WHERE role = 'admin'",
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
   // Fungsi stok masuk — update stok_saat_ini + insert riwayat_bahan
   Future<bool> stokMasuk({
     required int bahanId,
     required double jumlah,
     required String username,
     required String namaShift,
-    String? keterangan, // Tambahkan ini jika di UI ada input deskripsi
+    String? keterangan,
   }) async {
     try {
       final db = await instance.database;
@@ -236,7 +245,6 @@ class DatabaseService {
           [jumlah, bahanId],
         );
 
-        // Opsional: Cek apakah ID bahan benar-benar ada
         if (updateCount == 0) {
           throw Exception("Bahan dengan ID $bahanId tidak ditemukan");
         }
@@ -248,15 +256,12 @@ class DatabaseService {
           'tipe': 'masuk',
           'username': username,
           'nama_shift': namaShift,
-          'keterangan': keterangan ?? '', // Masukkan deskripsi jika ada
+          'keterangan': keterangan ?? '',
           'waktu': DateTime.now().toIso8601String(),
         });
       });
-
-      // Jika sampai di sini tanpa error, kembalikan true
       return true;
     } catch (e) {
-      // Jika ada error (DB penuh, kolom salah, dll), cetak error dan kembalikan false
       debugPrint("Database Error: $e");
       return false;
     }
@@ -274,7 +279,6 @@ class DatabaseService {
       final db = await instance.database;
 
       await db.transaction((txn) async {
-        // Perhatikan tanda MINUS (-) untuk mengurangi stok
         int updateCount = await txn.rawUpdate(
           'UPDATE bahan SET stok_saat_ini = stok_saat_ini - ? WHERE id = ?',
           [jumlah, bahanId],
@@ -288,7 +292,7 @@ class DatabaseService {
         await txn.insert('riwayat_bahan', {
           'bahan_id': bahanId,
           'jumlah': jumlah,
-          'tipe': 'keluar', // Tipe dibedakan di sini
+          'tipe': 'keluar',
           'username': username,
           'nama_shift': namaShift,
           'keterangan': keterangan ?? '',
@@ -305,7 +309,6 @@ class DatabaseService {
   // 2. Fungsi Ambil Riwayat Keluar
   Future<List<Map<String, dynamic>>> getRiwayatKeluar() async {
     final db = await instance.database;
-    // Join dengan tabel bahan agar kita bisa dapat nama_bahan
     return await db.rawQuery('''
     SELECT riwayat_bahan.*, bahan.nama as nama_bahan, bahan.kategori 
     FROM riwayat_bahan 
@@ -350,7 +353,7 @@ class DatabaseService {
   Future<int> updateBahan(Bahan bahan) async {
     final db = await instance.database;
     return await db.update(
-      'bahan', // Pastikan nama tabel sesuai dengan yang Anda buat di onCreate
+      'bahan',
       bahan.toMap(),
       where: 'id = ?',
       whereArgs: [bahan.id],
@@ -412,7 +415,6 @@ class DatabaseService {
     final db = await instance.database;
 
     await db.transaction((txn) async {
-      // 1. Update info utama menu
       await txn.update(
         'menu',
         menu.toMap(),
@@ -458,8 +460,6 @@ class DatabaseService {
     return await db.delete('menu', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Tambahkan di dalam class DatabaseService
-
   Future<void> createTransaksi(
     num total,
     List<Map<String, dynamic>> items,
@@ -481,7 +481,6 @@ class DatabaseService {
         final int qty = item['qty'];
 
         // 2. Simpan ke tabel cafe_transactions
-        // Catatan: Saya set shift_id default ke 1 atau sesuaikan dengan sistem shift kamu
         await txn.insert('cafe_transactions', {
           'shift_id': 1,
           'shift_name': shiftName,
@@ -505,7 +504,7 @@ class DatabaseService {
     dynamic txn,
     int productId,
     int qtyPesanan,
-    String namaProduk, // ← parameter baru
+    String namaProduk,
   ) async {
     final List<Map<String, dynamic>> resep = await txn.query(
       'resep_menu',
@@ -529,7 +528,7 @@ class DatabaseService {
         'tipe': 'keluar',
         'username': 'System',
         'nama_shift': 'Auto-Cut (Sales)',
-        'keterangan': 'Terjual: $namaProduk', // ✅ nama menu sebagai keterangan
+        'keterangan': 'Terjual: $namaProduk',
         'waktu': DateTime.now().toIso8601String(),
       });
     }
@@ -565,7 +564,7 @@ class DatabaseService {
           'tipe': 'keluar',
           'username': 'System',
           'nama_shift': 'Auto-Cut',
-          'keterangan': 'Terjual: $namaProduk', // ✅
+          'keterangan': 'Terjual: $namaProduk',
           'waktu': DateTime.now().toIso8601String(),
         });
       });
@@ -574,7 +573,6 @@ class DatabaseService {
 
   /// --- UNTUK LAPORAN JADWAL --------------------------------------------------------------------------------------------------
 
-  // 1. Ambil daftar karyawan secara dinamis
   Future<List<String>> getAllStaffNames() async {
     try {
       final db = await instance.database;
@@ -592,7 +590,6 @@ class DatabaseService {
           .map((row) => row['username'].toString())
           .toList();
 
-      // Tetap kembalikan "Semua" di awal list untuk kebutuhan filter laporan
       return ["Semua", ...names];
     } catch (e) {
       print("Error ambil karyawan staff: $e");
@@ -672,7 +669,7 @@ class DatabaseService {
   Future<List<Map<String, dynamic>>> getStockLaporan({
     DateTime? tglAwal,
     DateTime? tglAkhir,
-    String? subKategori, // Masuk / Keluar / Semua
+    String? subKategori,
     String? namaKaryawan,
   }) async {
     final db = await instance.database;
@@ -687,7 +684,7 @@ class DatabaseService {
     }
 
     if (subKategori != null && subKategori != "Semua") {
-      final tipeDB = subKategori.toLowerCase(); // "masuk" atau "keluar"
+      final tipeDB = subKategori.toLowerCase();
       whereClauses.add("rb.tipe = ?");
       whereArgs.add(tipeDB);
     }
@@ -723,7 +720,7 @@ class DatabaseService {
   Future<List<Map<String, dynamic>>> getTransaksiLaporan({
     DateTime? tglAwal,
     DateTime? tglAkhir,
-    String? subKategori, // Makanan / Minuman / Semua
+    String? subKategori,
     String? namaKaryawan,
   }) async {
     final db = await instance.database;
@@ -738,9 +735,8 @@ class DatabaseService {
     }
 
     if (subKategori != null && subKategori != "Semua") {
-      // Join ke tabel menu untuk ambil kategori produk
       whereClauses.add("m.kategori = ?");
-      whereArgs.add(subKategori); // "Makanan" atau "Minuman"
+      whereArgs.add(subKategori);
     }
 
     if (namaKaryawan != null && namaKaryawan != "Semua") {
@@ -772,7 +768,6 @@ class DatabaseService {
   ''', whereArgs);
   }
 
-  // Total pendapatan Gaming hari ini (dari tabel jadwal)
   Future<int> getTotalGamingHariIni() async {
     final db = await instance.database;
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -788,7 +783,6 @@ class DatabaseService {
     return (result.first['total'] as num?)?.toInt() ?? 0;
   }
 
-  // Total pendapatan Cafe hari ini (dari tabel cafe_transactions)
   Future<int> getTotalCafeHariIni() async {
     final db = await instance.database;
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -804,15 +798,12 @@ class DatabaseService {
     return (result.first['total'] as num?)?.toInt() ?? 0;
   }
 
-  // Total gabungan Gaming + Cafe hari ini
   Future<int> getTotalGabunganHariIni() async {
     final gaming = await getTotalGamingHariIni();
     final cafe = await getTotalCafeHariIni();
     return gaming + cafe;
   }
 
-  // edit username password untuk pegawai ==================================================
-  // ── Ambil user by ID ────────────────────────────────────────────
   Future<Map<String, dynamic>?> getUserById(int id) async {
     final db = await instance.database;
     final result = await db.query(
@@ -824,8 +815,6 @@ class DatabaseService {
     return result.isNotEmpty ? result.first : null;
   }
 
-  // ── Update username ─────────────────────────────────────────────
-  // Return null jika sukses, return pesan error jika gagal
   Future<String?> updateUsername({
     required int userId,
     required String newUsername,
@@ -833,7 +822,6 @@ class DatabaseService {
     try {
       final db = await instance.database;
 
-      // Cek apakah username sudah dipakai user lain
       final existing = await db.query(
         'users',
         where: 'username = ? AND id != ?',
@@ -848,15 +836,13 @@ class DatabaseService {
         where: 'id = ?',
         whereArgs: [userId],
       );
-      return null; // sukses
+      return null;
     } catch (e) {
       debugPrint('updateUsername Error: $e');
       return 'Gagal mengubah username';
     }
   }
 
-  // ── Update password (langsung tanpa verifikasi password lama) ───
-  // Return null jika sukses, return pesan error jika gagal
   Future<String?> updatePassword({
     required int userId,
     required String newPassword,
@@ -869,7 +855,7 @@ class DatabaseService {
         where: 'id = ?',
         whereArgs: [userId],
       );
-      return null; // sukses
+      return null;
     } catch (e) {
       debugPrint('updatePassword Error: $e');
       return 'Gagal mengubah password';

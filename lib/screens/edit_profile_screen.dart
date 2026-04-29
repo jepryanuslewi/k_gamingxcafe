@@ -35,9 +35,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  // ─────────────────────────────────────────────
-  // AKSI
-  // ─────────────────────────────────────────────
   Future<void> _simpanUsername() async {
     final authProvider = context.read<AuthProvider>();
     final newUsername = _usernameController.text.trim();
@@ -117,10 +114,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // BUILD
-  // ─────────────────────────────────────────────
-
+ 
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
@@ -157,7 +151,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── KIRI ─────────────────────────
+                 
                   Expanded(
                     child: Column(
                       children: [
@@ -190,7 +184,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   const SizedBox(width: 40),
 
-                  // ── KANAN ────────────────────────
+                 
                   Expanded(
                     child: _buildCard(
                       title: 'Ubah Password',
@@ -240,9 +234,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // WIDGET PEMBANTU
-  // ─────────────────────────────────────────────
 
   Widget _buildProfileInfo(dynamic user) {
     return Container(

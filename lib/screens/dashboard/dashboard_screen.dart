@@ -3,6 +3,7 @@ import 'package:k_gamingxcafe/screens/dashboard/cafe/bahan_baku_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/cafe/menu_cafe_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/dashboard_home_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/dashboard_pegawai_screen.dart';
+import 'package:k_gamingxcafe/screens/dashboard/edit_profile_admin_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/gaming/add_paket_event_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/gaming/add_ps_unit_screen.dart';
 import 'package:k_gamingxcafe/screens/dashboard/laporan/dashboard_laporan_screen.dart';
@@ -27,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     BahanBakuScreen(),
     MenuCafeScreen(),
     DashboardLaporanScreen(shiftName: 'admin'),
+    EditProfileAdminScreen(),
   ];
 
   // --- FUNGSI LOGOUT DENGAN KONFIRMASI ---
@@ -201,6 +203,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 NavigationRailDestination(
                   icon: Icon(Icons.bar_chart_rounded),
                   label: Text("Kelola Laporan"),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.settings),
+                  label: Text("Setting"),
                 ),
               ],
               selectedIndex: _selectedIndex,

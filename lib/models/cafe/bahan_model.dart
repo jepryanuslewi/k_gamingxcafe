@@ -4,6 +4,7 @@ class Bahan {
   final String kategori;
   final String satuan;
   final double stokSaatIni;
+  final double isiPerQty;
 
   Bahan({
     this.id,
@@ -11,9 +12,9 @@ class Bahan {
     required this.kategori,
     required this.satuan,
     required this.stokSaatIni,
+    required this.isiPerQty,
   });
 
-  // Konversi dari Map (Database) ke Objek
   factory Bahan.fromMap(Map<String, dynamic> map) {
     return Bahan(
       id: map['id'],
@@ -21,10 +22,10 @@ class Bahan {
       kategori: map['kategori'],
       satuan: map['satuan'],
       stokSaatIni: (map['stok_saat_ini'] as num).toDouble(),
+      isiPerQty: (map['isi_per_qty'] as num? ?? 1).toDouble(),
     );
   }
 
-  // Konversi dari Objek ke Map (untuk Simpan ke Database)
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -32,6 +33,7 @@ class Bahan {
       'kategori': kategori,
       'satuan': satuan,
       'stok_saat_ini': stokSaatIni,
+      'isi_per_qty': isiPerQty,
     };
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
 import 'package:k_gamingxcafe/widgets/search_widget.dart';
 import 'package:k_gamingxcafe/models/user_model.dart';
+import 'package:provider/provider.dart';
 // Import DatabaseHelper Anda, contoh:
 // import 'package:k_gamingxcafe/database/db_helper.dart';
 
@@ -386,6 +388,8 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
+        final currentUserId = context.read<AuthProvider>().user?.id;
+        bool isCurrentUser = user.id == currentUserId;
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -437,10 +441,9 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
                   color: Colors.redAccent,
                   size: 20,
                 ),
-                onPressed: () => _deleteUser(
-                  user.id!,
-                  user.username,
-                ), // TERHUBUNG KE FUNGSI DELETE
+                onPressed: isCurrentUser
+                    ? null
+                    : () => _deleteUser(user.id!, user.username, user.role),
               ),
             ],
           ),
@@ -450,20 +453,49 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
   }
 
   // FUNGSI UNTUK UPDATE DATA USER
-  Future<void> _updateUser(int id, String username, String role) async {
+  Future<void> _updateUser(int id, String username, String roleBaru) async {
+    final currentUser = context.read<AuthProvider>().user;
+
     try {
       final db = await DatabaseService.instance.database;
+
+      // Ambil data lama
+      final oldUser = _allUsers.firstWhere((u) => u.id == id);
+
+      // ❌ Cegah downgrade admin terakhir
+      if (oldUser.role == 'admin' && roleBaru != 'admin') {
+        final totalAdmin = await DatabaseService.instance.getTotalAdmin();
+
+        if (totalAdmin <= 1) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Tidak bisa downgrade admin terakhir"),
+            ),
+          );
+          return;
+        }
+      }
+
+      // ❌ Jika user ubah dirinya sendiri jadi bukan admin → logout
+      bool isSelf = currentUser?.id == id;
+
       await db.update(
         'users',
-        {'username': username, 'role': role},
+        {'username': username, 'role': roleBaru},
         where: 'id = ?',
         whereArgs: [id],
       );
+
       _refreshUserList();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Data pegawai berhasil diperbarui")),
+          const SnackBar(content: Text("Data berhasil diperbarui")),
         );
+      }
+
+      if (isSelf && roleBaru != 'admin') {
+        context.read<AuthProvider>().logout();
       }
     } catch (e) {
       print("Error update user: $e");
@@ -471,8 +503,27 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
   }
 
   // FUNGSI UNTUK HAPUS USER
-  Future<void> _deleteUser(int id, String username) async {
-    // Tampilkan konfirmasi sebelum hapus
+  Future<void> _deleteUser(int id, String username, String role) async {
+    final currentUserId = context.read<AuthProvider>().user?.id;
+
+    if (id == currentUserId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Tidak bisa menghapus akun sendiri")),
+      );
+      return;
+    }
+
+    if (role == 'admin') {
+      final totalAdmin = await DatabaseService.instance.getTotalAdmin();
+
+      if (totalAdmin <= 1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Minimal harus ada 1 admin")),
+        );
+        return;
+      }
+    }
+
     bool confirm =
         await showDialog(
           context: context,
@@ -483,7 +534,7 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
               style: TextStyle(color: Colors.white),
             ),
             content: Text(
-              "Apakah Anda yakin ingin menghapus $username?",
+              "Yakin hapus $username?",
               style: const TextStyle(color: Colors.grey),
             ),
             actions: [
@@ -504,13 +555,9 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
         false;
 
     if (confirm) {
-      try {
-        final db = await DatabaseService.instance.database;
-        await db.delete('users', where: 'id = ?', whereArgs: [id]);
-        _refreshUserList();
-      } catch (e) {
-        print("Error delete user: $e");
-      }
+      final db = await DatabaseService.instance.database;
+      await db.delete('users', where: 'id = ?', whereArgs: [id]);
+      _refreshUserList();
     }
   }
 

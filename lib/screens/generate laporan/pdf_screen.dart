@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart'; // Tambahkan intl di pubspec.yaml jika belum ada
+import 'package:intl/intl.dart'; 
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
@@ -22,14 +22,14 @@ class PdfHelper {
       );
       final poppins = pw.Font.ttf(fontData);
 
-      // Ambil waktu saat ini untuk tanggal generate
+      
       String tanggalCetak = DateFormat(
         'dd MMMM yyyy, HH:mm',
       ).format(DateTime.now());
 
       pdf.addPage(
         pw.MultiPage(
-          // Menggunakan MultiPage agar jika data banyak otomatis pindah halaman
+         
           pageFormat: PdfPageFormat.a4.copyWith(
             marginBottom: 1 * PdfPageFormat.cm,
             marginTop: 1 * PdfPageFormat.cm,
@@ -97,7 +97,7 @@ class PdfHelper {
                   'DUR', // Kolom 5 (Durasi)
                   'HARGA', // Kolom 6
                 ],
-                // Kita ambil index 0,1,2,3,4,5,6 saja (Status index 7 diabaikan di PDF agar tidak terlalu sempit)
+               
                 data: tableData
                     .map(
                       (row) => [
@@ -122,13 +122,13 @@ class PdfHelper {
                 cellStyle: const pw.TextStyle(fontSize: 8),
                 cellHeight: 20,
                 columnWidths: {
-                  0: const pw.FlexColumnWidth(2.5), // Nama
-                  1: const pw.FlexColumnWidth(1.5), // Shift
-                  2: const pw.FlexColumnWidth(2), // Tanggal
-                  3: const pw.FlexColumnWidth(3), // Detail
-                  4: const pw.FlexColumnWidth(2.5), // Waktu (15:00 - 16:00)
-                  5: const pw.FlexColumnWidth(1), // Durasi
-                  6: const pw.FlexColumnWidth(2), // Harga
+                  0: const pw.FlexColumnWidth(2.5),
+                  1: const pw.FlexColumnWidth(1.5), 
+                  2: const pw.FlexColumnWidth(2), 
+                  3: const pw.FlexColumnWidth(3), 
+                  4: const pw.FlexColumnWidth(2.5), 
+                  5: const pw.FlexColumnWidth(1), 
+                  6: const pw.FlexColumnWidth(2), 
                 },
                 cellAlignments: {
                   0: pw.Alignment.centerLeft,
@@ -181,7 +181,7 @@ class PdfHelper {
 
       // Simpan File
       final output =
-          await getExternalStorageDirectory(); // Lebih aman untuk Android agar gampang dicari
+          await getExternalStorageDirectory(); 
       final directory = output ?? await getApplicationDocumentsDirectory();
       final fileName =
           "Laporan_${kategori}_${DateTime.now().millisecondsSinceEpoch}.pdf";

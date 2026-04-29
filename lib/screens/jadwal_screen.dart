@@ -311,7 +311,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
         ).add(Duration(hours: result['duration'])).toIso8601String(),
         totalPrice: result['total_price'],
         status:
-            result['status'], // ✅ pakai dari pilihan user ('walkin'/'booking')
+            result['status'],
       );
 
       await provider.addJadwal(newJadwal);
@@ -324,7 +324,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
         );
       }
 
-      // ✅ Pindah tab sesuai status yang dipilih user
+  
       setState(
         () =>
             currentView = result['status'] == 'walkin' ? "WALK IN" : "BOOKING",
@@ -566,7 +566,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
   Widget _buildHeader(BuildContext context) {
     final String username =
         context.read<AuthProvider>().user?.username ?? "Pegawai";
-    return // ── HEADER ────────────────────────────────────────────
+    return
     Container(
       color: Colors.transparent,
       width: double.infinity,
