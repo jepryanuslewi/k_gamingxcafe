@@ -3,23 +3,23 @@ class MenuModel {
   final String nama;
   final double harga;
   final String kategori;
-  final int? stok; // Tambahkan ini agar sinkron dengan DB
+  final int? stok; 
 
   MenuModel({
     this.id,
     required this.nama,
     required this.harga,
     required this.kategori,
-    this.stok = 0, // Default 0
+    this.stok = 0, 
   });
 
   Map<String, dynamic> toMap() {
     return {
-      if (id != null) 'id': id, // Bagus untuk auto-increment
+      if (id != null) 'id': id,
       'nama': nama,
       'harga': harga,
       'kategori': kategori,
-      'stok': stok ?? 0, // Pastikan dikirim ke DB
+      'stok': stok ?? 0,
     };
   }
 
@@ -27,7 +27,6 @@ class MenuModel {
     return MenuModel(
       id: map['id'],
       nama: map['nama'] ?? '',
-      // Konversi harga dari INTEGER DB ke double Dart secara aman
       harga: (map['harga'] as num?)?.toDouble() ?? 0.0,
       kategori: map['kategori'] ?? '',
       stok: map['stok'] ?? 0,

@@ -62,7 +62,7 @@ class DropdownMenuWidget extends StatelessWidget {
               style: const TextStyle(color: Colors.white54, fontSize: 11),
             ),
             trailing: Text(
-              item.kategori ?? "-",
+              item.kategori,
               style: const TextStyle(color: Color(0xFF00E0C6), fontSize: 10),
             ),
           );

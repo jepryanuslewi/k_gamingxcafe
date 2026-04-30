@@ -13,7 +13,6 @@ class MenuProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _riwayatTransaksi = [];
   List<Map<String, dynamic>> get riwayatTransaksi => _riwayatTransaksi;
 
-  // Fungsi untuk mengambil data dari DB
   Future<void> fetchRiwayatTransaksi() async {
     final db = await DatabaseService.instance.database;
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -47,7 +46,6 @@ class MenuProvider extends ChangeNotifier {
     }
   }
 
-  // Simpan transaksi
   Future<bool> simpanTransaksi(
     List<Map<String, dynamic>> items,
     num total,
@@ -57,14 +55,12 @@ class MenuProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Filter item valid
       final validItems = items
           .where((item) => item['selectedProduk'] != null && item['qty'] > 0)
           .toList();
 
       if (validItems.isEmpty) return false;
 
-      // Jalankan service database
       await DatabaseService.instance.createTransaksi(
         total,
         validItems,
@@ -82,7 +78,6 @@ class MenuProvider extends ChangeNotifier {
     }
   }
 
-  // GANTI ATAU TAMBAHKAN FUNGSI INI
   Future<void> addMenuWithResep(
     MenuModel menu,
     List<Map<String, dynamic>> resep,
@@ -91,9 +86,8 @@ class MenuProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Memanggil fungsi transaksi di DatabaseService
       await DatabaseService.instance.addMenuWithResep(menu, resep);
-      await fetchMenu(); // Refresh otomatis setelah simpan
+      await fetchMenu();
     } catch (e) {
       print("Error simpan menu dan resep: $e");
     } finally {
@@ -111,7 +105,7 @@ class MenuProvider extends ChangeNotifier {
 
     try {
       await DatabaseService.instance.updateMenuWithResep(menu, resep);
-      await fetchMenu(); // Refresh list
+      await fetchMenu();
     } catch (e) {
       print("Error update lengkap: $e");
     } finally {

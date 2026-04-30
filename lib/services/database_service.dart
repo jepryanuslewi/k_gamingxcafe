@@ -226,7 +226,6 @@ class DatabaseService {
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  // Fungsi stok masuk — update stok_saat_ini + insert riwayat_bahan
   Future<bool> stokMasuk({
     required int bahanId,
     required double jumlah,
@@ -237,9 +236,7 @@ class DatabaseService {
     try {
       final db = await instance.database;
 
-      // Gunakan return di depan db.transaction untuk memastikan hasil transaksi tertangkap
       await db.transaction((txn) async {
-        // 1. Update stok_saat_ini di tabel bahan
         int updateCount = await txn.rawUpdate(
           'UPDATE bahan SET stok_saat_ini = stok_saat_ini + ? WHERE id = ?',
           [jumlah, bahanId],
@@ -249,7 +246,6 @@ class DatabaseService {
           throw Exception("Bahan dengan ID $bahanId tidak ditemukan");
         }
 
-        // 2. Insert ke riwayat_bahan
         await txn.insert('riwayat_bahan', {
           'bahan_id': bahanId,
           'jumlah': jumlah,
@@ -267,7 +263,6 @@ class DatabaseService {
     }
   }
 
-  // 1. Fungsi Stok Keluar
   Future<bool> stokKeluar({
     required int bahanId,
     required double jumlah,
@@ -288,7 +283,6 @@ class DatabaseService {
           throw Exception("Bahan tidak ditemukan");
         }
 
-        // Insert ke riwayat dengan tipe 'keluar'
         await txn.insert('riwayat_bahan', {
           'bahan_id': bahanId,
           'jumlah': jumlah,
@@ -306,7 +300,6 @@ class DatabaseService {
     }
   }
 
-  // 2. Fungsi Ambil Riwayat Keluar
   Future<List<Map<String, dynamic>>> getRiwayatKeluar() async {
     final db = await instance.database;
     return await db.rawQuery('''
@@ -318,7 +311,6 @@ class DatabaseService {
   ''');
   }
 
-  // Ambil riwayat stok masuk dengan JOIN ke tabel bahan
   Future<List<Map<String, dynamic>>> getRiwayatMasuk() async {
     final db = await instance.database;
     return await db.rawQuery('''
@@ -338,7 +330,6 @@ class DatabaseService {
   ''');
   }
 
-  // fungi untuk stok masuk dan keluar
   Future<List<Map<String, dynamic>>> getBahanSemua() async {
     final db = await instance.database;
     return await db.query('bahan', orderBy: 'nama ASC');
@@ -349,7 +340,6 @@ class DatabaseService {
     return await db.insert('bahan', bahan.toMap());
   }
 
-  // Fungsi untuk Update Bahan Baku
   Future<int> updateBahan(Bahan bahan) async {
     final db = await instance.database;
     return await db.update(
@@ -360,7 +350,6 @@ class DatabaseService {
     );
   }
 
-  // Fungsi untuk Delete Bahan Baku
   Future<int> deleteBahan(int id) async {
     final db = await instance.database;
     return await db.delete('bahan', where: 'id = ?', whereArgs: [id]);
@@ -395,17 +384,9 @@ class DatabaseService {
     });
   }
 
-  // Fungsi Untuk Kelola Menu Cafe
   Future<int> createMenu(MenuModel menu) async {
     final db = await instance.database;
     return await db.insert('menu', menu.toMap());
-  }
-
-  Future<List<MenuModel>> readAllMenu() async {
-    final db = await instance.database;
-    // Pastikan nama tabel adalah 'menu'
-    final result = await db.query('menu', orderBy: 'nama ASC');
-    return result.map((json) => MenuModel.fromMap(json)).toList();
   }
 
   Future<void> updateMenuWithResep(
@@ -428,7 +409,6 @@ class DatabaseService {
         whereArgs: [menu.id],
       );
 
-      // 3. Masukkan resep baru hasil editan
       for (var item in resep) {
         if (item['bahan_id'] != null) {
           final controller = item['jumlah'] as TextEditingController;
@@ -475,12 +455,11 @@ class DatabaseService {
             return "${p.nama} x$qty";
           })
           .join(", ");
-      // 1. Loop setiap item yang dibeli
+
       for (var item in items) {
         final MenuModel p = item['selectedProduk'];
         final int qty = item['qty'];
 
-        // 2. Simpan ke tabel cafe_transactions
         await txn.insert('cafe_transactions', {
           'shift_id': 1,
           'shift_name': shiftName,
@@ -499,7 +478,6 @@ class DatabaseService {
     });
   }
 
-  // Fungsi pembantu untuk mengurangi stok di dalam transaksi yang sama
   Future<void> _kurangiStokBahanInternal(
     dynamic txn,
     int productId,
@@ -569,6 +547,57 @@ class DatabaseService {
         });
       });
     }
+  }
+
+  /// Hitung stok menu berdasarkan ketersediaan bahan di resep
+  Future<int> hitungStokMenu(int productId) async {
+    final db = await instance.database;
+
+    final resep = await db.rawQuery(
+      '''
+    SELECT 
+      rm.jumlah_pakai,
+      b.stok_saat_ini
+    FROM resep_menu rm
+    JOIN bahan b ON b.id = rm.bahan_id
+    WHERE rm.product_id = ?
+  ''',
+      [productId],
+    );
+
+    // Jika tidak ada resep, stok = 0
+    if (resep.isEmpty) return 0;
+
+    int stokMin = 999999;
+
+    for (final item in resep) {
+      final double jumlahPakai = (item['jumlah_pakai'] as num).toDouble();
+      final double stokBahan = (item['stok_saat_ini'] as num).toDouble();
+
+      if (jumlahPakai <= 0) continue;
+
+      final int bisaBuat = (stokBahan / jumlahPakai).floor();
+      if (bisaBuat < stokMin) stokMin = bisaBuat;
+    }
+
+    return stokMin == 999999 ? 0 : stokMin;
+  }
+
+  /// Ganti readAllMenu yang lama dengan ini
+  Future<List<MenuModel>> readAllMenu() async {
+    final db = await instance.database;
+    final List<Map<String, dynamic>> rows = await db.query(
+      'menu',
+      orderBy: 'nama ASC',
+    );
+
+    final List<MenuModel> result = [];
+    for (final row in rows) {
+      final int stok = await hitungStokMenu(row['id'] as int);
+      result.add(MenuModel.fromMap({...row, 'stok': stok}));
+    }
+
+    return result;
   }
 
   /// --- UNTUK LAPORAN JADWAL --------------------------------------------------------------------------------------------------

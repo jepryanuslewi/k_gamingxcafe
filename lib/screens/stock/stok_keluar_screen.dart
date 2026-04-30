@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/models/cafe/bahan_model.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/providers/cafe/bahan_provider.dart';
+import 'package:k_gamingxcafe/widgets/stock/button_stock.dart';
 import 'package:k_gamingxcafe/widgets/stock/dropdown_search_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -23,9 +24,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
     super.initState();
     Future.microtask(() {
       context.read<BahanProvider>().fetchBahan();
-      context
-          .read<BahanProvider>()
-          .fetchRiwayatKeluar(); // Ambil riwayat khusus keluar
+      context.read<BahanProvider>().fetchRiwayatKeluar();
     });
   }
 
@@ -52,7 +51,6 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
       return;
     }
 
-    // Validasi tambahan: Cek apakah stok cukup sebelum dikurangi
     if ((selectedBahan?.stokSaatIni ?? 0) < qty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -170,14 +168,38 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
             children: [
               Image.asset("assets/images/bgLoginScreen.png", height: 50),
               const SizedBox(width: 15),
-              const Text(
-                "STOCK OUT",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: "Poppins",
-                ),
+              Row(
+                children: const [
+                  Text(
+                    "GAMING",
+                    style: TextStyle(
+                      color: Color.fromRGBO(226, 19, 136, 100),
+                      fontSize: 35,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: "Poppins",
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Text(
+                    "X",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 35,
+                      fontWeight: FontWeight.normal,
+                      fontFamily: "Poppins",
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Text(
+                    "CAFE",
+                    style: TextStyle(
+                      color: Color.fromRGBO(0, 224, 198, 100),
+                      fontSize: 35,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: "Poppins",
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -198,7 +220,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
                   Text(
                     widget.shiftName,
                     style: const TextStyle(
-                      color: Colors.orangeAccent,
+                      color: Color.fromRGBO(0, 224, 198, 100),
                       fontSize: 13,
                     ),
                   ),
@@ -208,7 +230,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
               const Icon(
                 Icons.person_pin,
                 size: 50,
-                color: Colors.orangeAccent,
+                color: Color.fromRGBO(0, 224, 198, 100),
               ),
             ],
           ),
@@ -231,16 +253,16 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "INPUT STOK KELUAR",
+                "BARANG KELUAR",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                "${tanggal.day}/${tanggal.month}/${tanggal.year}",
-                style: const TextStyle(color: Colors.white70),
+              ButtonStock(
+                text: "kembali",
+                onPressed: () => Navigator.pop(context),
               ),
             ],
           ),

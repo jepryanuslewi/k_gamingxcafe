@@ -114,7 +114,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
- 
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
@@ -151,7 +150,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                 
                   Expanded(
                     child: Column(
                       children: [
@@ -184,7 +182,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   const SizedBox(width: 40),
 
-                 
                   Expanded(
                     child: _buildCard(
                       title: 'Ubah Password',
@@ -234,14 +231,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-
   Widget _buildProfileInfo(dynamic user) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFF141C2F),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF00E0C6).withOpacity(0.3)),
+        border: Border.all(color: Colors.white10),
       ),
       child: Row(
         children: [

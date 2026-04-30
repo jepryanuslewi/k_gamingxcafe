@@ -196,7 +196,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       width: double.infinity,
                       child: Column(
                         children: [
-                          
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -220,7 +219,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                         
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -239,7 +237,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             ],
                           ),
 
-                         
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -273,7 +270,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                           ),
                                         ),
                                       );
-                                     
+
                                       if (context.mounted) {
                                         context
                                             .read<PendapatanProvider>()
@@ -329,7 +326,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 backgroundColor: const Color.fromRGBO(
                                   226,

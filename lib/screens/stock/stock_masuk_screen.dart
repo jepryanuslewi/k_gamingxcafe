@@ -22,7 +22,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
   @override
   void initState() {
     super.initState();
-    // Memastikan data di-fetch saat layar dibuka
     Future.microtask(() {
       context.read<BahanProvider>().fetchBahan();
       context.read<BahanProvider>().fetchRiwayatMasuk();
@@ -36,7 +35,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     super.dispose();
   }
 
-  // TAMBAHKAN FUNGSI INI DI DALAM _StockMasukScreenState
   Future<void> _handleSimpan() async {
     // 1. Validasi Input
     if (selectedBahan == null || _stokController.text.isEmpty) {
@@ -54,7 +52,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
       return;
     }
 
-    // 2. Ambil data dari Provider
     final authProv = context.read<AuthProvider>();
     final bahanProv = context.read<BahanProvider>();
     final String username = authProv.user?.username ?? "Unknown";
@@ -68,7 +65,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
       keterangan: _deskripsiController.text,
     );
 
-    // 4. Respon UI
     if (!mounted) return;
 
     if (success) {
@@ -79,7 +75,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
         ),
       );
 
-      // Reset Form
       setState(() {
         selectedBahan = null;
         _stokController.clear();
@@ -95,7 +90,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     }
   }
 
-  // --- WIDGET HELPER ---
   Widget _buildStyledTextField({
     required String label,
     required TextEditingController controller,
@@ -167,7 +161,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     );
   }
 
-  // --- SUB-WIDGET: HEADER ---
   Widget _buildHeader(String username) {
     return SizedBox(
       height: 90,
@@ -225,7 +218,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     );
   }
 
-  // --- SUB-WIDGET: FORM INPUT ---
   Widget _buildFormInput(DateTime tanggal, BahanProvider prov) {
     return Container(
       padding: const EdgeInsets.all(25),
@@ -240,7 +232,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "INPUT STOK MASUK",
+                "BARANG MASUK",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -310,8 +302,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     );
   }
 
-  // --- SUB-WIDGET: TABEL RIWAYAT ---
-  // --- SUB-WIDGET: TABEL RIWAYAT ---
   Widget _buildTableRiwayat(BahanProvider prov) {
     if (prov.isLoading && prov.listRiwayat.isEmpty) {
       return const Center(
@@ -319,21 +309,18 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
       );
     }
 
-    // 1. Ambil waktu saat ini
     final now = DateTime.now();
 
-    // 2. Filter listRiwayat hanya untuk hari ini
     final riwayatHariIni = prov.listRiwayat.where((r) {
       if (r.waktu == null) return false;
       try {
-        // Asumsi format r.waktu bisa di-parse oleh DateTime (contoh: "2024-05-20 14:30:00")
         final dateWaktu = DateTime.parse(r.waktu!);
-        // Cocokkan tahun, bulan, dan hari
+
         return dateWaktu.year == now.year &&
             dateWaktu.month == now.month &&
             dateWaktu.day == now.day;
       } catch (e) {
-        return false; // Jika format waktu salah, jangan tampilkan agar tidak error
+        return false;
       }
     }).toList();
 

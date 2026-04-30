@@ -7,7 +7,7 @@ class DialogSingout {
   }) {
     return showDialog(
       context: context,
-      barrierDismissible: false, // User wajib pilih tombol
+      barrierDismissible: false, 
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF141C2F),
@@ -25,10 +25,19 @@ class DialogSingout {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("BATAL", style: TextStyle(color: Colors.grey)),
+              child: const Text(
+                "BATAL",
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 backgroundColor: Colors.redAccent,
               ),
               onPressed: () {
@@ -37,7 +46,10 @@ class DialogSingout {
               },
               child: const Text(
                 "YA, KELUAR",
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
