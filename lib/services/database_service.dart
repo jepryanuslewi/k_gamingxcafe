@@ -13,6 +13,9 @@ class DatabaseService {
 
   static const _dbName = 'rental_ps.db';
   static const _dbVersion = 1;
+  static void resetDatabase() {
+    _database = null;
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -354,6 +357,25 @@ class DatabaseService {
     final db = await instance.database;
     return await db.delete('bahan', where: 'id = ?', whereArgs: [id]);
   }
+
+  Future<void> tambahBahanDanRiwayat(
+    Bahan bahan,
+    Map<String, dynamic> dataRiwayat,
+  ) async {
+    final db = await instance.database;
+
+    await db.transaction((txn) async {
+      // 1. Tambah bahan dan ambil ID auto-increment-nya
+      // toMap() akan mengirimkan id: null, dan SQLite akan mengisinya otomatis
+      int newBahanId = await txn.insert('bahan', bahan.toMap());
+
+      // 2. Masukkan ke riwayat menggunakan ID yang baru didapat
+      dataRiwayat['bahan_id'] = newBahanId;
+      await txn.insert('riwayat_bahan', dataRiwayat);
+    });
+  }
+
+  // ====================================================================
 
   Future<void> addMenuWithResep(
     MenuModel menu,

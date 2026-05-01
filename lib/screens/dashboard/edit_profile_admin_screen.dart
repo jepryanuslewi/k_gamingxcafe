@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
+import 'package:k_gamingxcafe/screens/dashboard/backup_service.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
 import 'package:provider/provider.dart';
 
@@ -20,13 +24,191 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
   bool _isLoadingUsername = false;
   bool _isLoadingPassword = false;
 
+  // ✅ Pindahkan ke level class
+  List<FileSystemEntity> _backupFiles = [];
+  bool _isLoadingBackup = false;
+
   @override
   void initState() {
     super.initState();
     final user = context.read<AuthProvider>().user;
     _usernameController.text = user?.username ?? '';
+    _loadBackupList(); // ✅ Load backup list saat init
   }
 
+  // ─── Backup Methods ────────────────────────────────────────────
+  Future<void> _loadBackupList() async {
+    final files = await BackupService.getBackupList();
+    setState(() => _backupFiles = files);
+  }
+
+  Future<void> _doBackup() async {
+    setState(() => _isLoadingBackup = true);
+    final result = await BackupService.backupToLocal();
+    setState(() => _isLoadingBackup = false);
+
+    _showBackupSnackbar(result);
+    if (result.isSuccess) await _loadBackupList();
+  }
+
+  Future<void> _doRestoreFromPicker() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xff141c2f),
+        title: const Text(
+          'Restore dari File',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Anda akan memilih file backup (.db) dari penyimpanan.\n\n'
+          '⚠️ Data saat ini akan diganti!\n'
+          'Pastikan sudah backup data terbaru.\n\n'
+          'Lanjutkan?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('Pilih File'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoadingBackup = true);
+
+    final result = await BackupService.restoreFromPicker(
+      onBeforeRestore: () async {
+        final db = await DatabaseService.instance.database;
+        await db.close();
+        DatabaseService.resetDatabase();
+      },
+    );
+
+    setState(() => _isLoadingBackup = false);
+    _showBackupSnackbar(result);
+  }
+
+  Future<void> _doRestore(String filePath) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xff141c2f),
+        title: const Text(
+          'Konfirmasi Restore',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Data saat ini akan diganti dengan data backup.\n'
+          'Pastikan Anda sudah backup data terbaru!\n\n'
+          'Lanjutkan?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Restore'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoadingBackup = true);
+
+    final result = await BackupService.restoreFromFile(
+      filePath,
+      onBeforeRestore: () async {
+        final db = await DatabaseService.instance.database;
+        await db.close();
+        DatabaseService.resetDatabase(); // ✅ Gunakan method publik
+      },
+    );
+
+    setState(() => _isLoadingBackup = false);
+    _showBackupSnackbar(result);
+  }
+
+  Future<void> _doDelete(String filePath) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xff141c2f),
+        title: const Text(
+          'Hapus Backup?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          _formatFileName(filePath),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final deleted = await BackupService.deleteBackup(filePath);
+    if (deleted) {
+      _showBackupSnackbar(BackupResult.success('File backup dihapus'));
+      await _loadBackupList();
+    }
+  }
+
+  void _showBackupSnackbar(BackupResult result) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result.message),
+        backgroundColor: result.isSuccess ? Colors.green : Colors.red,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  String _formatFileName(String path) {
+    final name = path.split('/').last.replaceAll('.db', '');
+    final parts = name.split('_');
+    if (parts.length < 5) return name;
+
+    final dateStr = parts[3];
+    final timeStr = parts[4];
+
+    try {
+      final date = DateFormat('yyyyMMdd').parse(dateStr);
+      final formattedDate = DateFormat('dd MMM yyyy', 'id').format(date);
+      final time =
+          '${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}:${timeStr.substring(4)}';
+      return '$formattedDate  $time';
+    } catch (_) {
+      return name;
+    }
+  }
+
+  // ─── Profile Methods ───────────────────────────────────────────
   Future<void> _simpanUsername() async {
     final authProvider = context.read<AuthProvider>();
     final newUsername = _usernameController.text.trim();
@@ -37,9 +219,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     }
 
     setState(() => _isLoadingUsername = true);
-
     final error = await authProvider.updateUsername(newUsername);
-
     setState(() => _isLoadingUsername = false);
 
     _snack(error ?? "Username berhasil diubah", error != null);
@@ -58,12 +238,10 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     }
 
     setState(() => _isLoadingPassword = true);
-
     final error = await DatabaseService.instance.updatePassword(
       userId: userId,
       newPassword: newPw,
     );
-
     setState(() => _isLoadingPassword = false);
 
     if (error == null) {
@@ -119,7 +297,6 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 20),
 
                 // PASSWORD
@@ -156,6 +333,84 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 20),
+
+                // ✅ BACKUP & RESTORE
+                _card(
+                  "Backup & Restore Database",
+                  Icons.backup,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ─── 2 Tombol Utama ───────────────────────────
+                      _isLoadingBackup
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : Row(
+                              children: [
+                                // Tombol Backup
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: _doBackup,
+                                    icon: const Icon(
+                                      Icons.backup_outlined,
+                                      color: Colors.black,
+                                      size: 18,
+                                    ),
+                                    label: const Text(
+                                      'Backup',
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xff00e0c6),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+
+                                // Tombol Restore
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: _doRestoreFromPicker,
+                                    icon: const Icon(
+                                      Icons.folder_open_outlined,
+                                      color: Colors.orange,
+                                      size: 18,
+                                    ),
+                                    label: const Text(
+                                      'Restore',
+                                      style: TextStyle(color: Colors.orange),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(
+                                        color: Colors.orange,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                      const SizedBox(height: 6),
+                      const Text(
+                        '📁 Backup disimpan di: Download/KGamingBackup/',
+                        style: TextStyle(fontSize: 11, color: Colors.white38),
+                        textAlign: TextAlign.center,
+                      ),
+                      const Divider(color: Colors.white12, height: 32),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -164,6 +419,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     );
   }
 
+  // ─── Widgets ───────────────────────────────────────────────────
   Widget _profileHeader(user) {
     return Container(
       padding: const EdgeInsets.all(20),

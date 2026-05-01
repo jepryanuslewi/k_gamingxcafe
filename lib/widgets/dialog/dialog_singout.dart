@@ -41,8 +41,8 @@ class DialogSingout {
                 backgroundColor: Colors.redAccent,
               ),
               onPressed: () {
-                Navigator.pop(context); // Tutup dialog
-                onConfirm(); // Jalankan fungsi logout
+                Navigator.pop(context); 
+                onConfirm(); 
               },
               child: const Text(
                 "YA, KELUAR",

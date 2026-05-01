@@ -148,7 +148,7 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
             formKey: formKey,
             menuInput: menuInput,
             setModalState: setModalState,
-            accentColor: Colors.amber,
+            accentColor: Color(0xFF00E0C6),
             saveLabel: "Update",
             onSave: () async {
               if (formKey.currentState!.validate()) {
@@ -399,7 +399,7 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
               child: Text(
                 saveLabel,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -528,28 +528,24 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
                             "${pkg["duration_hours"]} Jam • Rp ${pkg["price"]}",
                             style: const TextStyle(color: Colors.white70),
                           ),
-                          trailing: PopupMenuButton<String>(
-                            color: const Color(0xff1c273d),
-                            onSelected: (val) {
-                              if (val == 'edit')
-                                showEditPackageForm(pkg);
-                              else if (val == 'delete')
-                                deletePackage(pkg["id"]);
-                            },
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(
-                                value: 'edit',
-                                child: Text(
-                                  "Edit",
-                                  style: TextStyle(color: Colors.greenAccent),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  color: Color(0xFF00E0C6),
                                 ),
+                                onPressed: () => showEditPackageForm(pkg),
+                                tooltip: 'Edit Paket',
                               ),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Text(
-                                  "Hapus",
-                                  style: TextStyle(color: Colors.redAccent),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.redAccent,
                                 ),
+                                onPressed: () => deletePackage(pkg["id"]),
+                                tooltip: 'Hapus Paket',
                               ),
                             ],
                           ),

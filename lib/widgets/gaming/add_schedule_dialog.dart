@@ -213,8 +213,14 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
                             )
                             .toList(),
                         onChanged: (val) {
-                          setState(() => _selectedPackage = val);
-                          _calculatePrice();
+                          setState(() {
+                            _selectedPackage = val;
+                            // Update durasi berdasarkan data dari database
+                            if (val != null) {
+                              _selectedDuration = val.durationHours;
+                            }
+                            _calculatePrice();
+                          });
                         },
                       ),
                 const SizedBox(height: 15),

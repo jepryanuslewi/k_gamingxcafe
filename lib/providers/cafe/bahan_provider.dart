@@ -87,28 +87,20 @@ class BahanProvider extends ChangeNotifier {
     String keterangan = "",
   }) async {
     try {
-      final db = await DatabaseService.instance.database;
+      bool success = await DatabaseService.instance.stokMasuk(
+        bahanId: bahanId,
+        jumlah: jumlah,
+        username: username,
+        namaShift: namaShift,
+        keterangan: keterangan,
+      );
+      if (success) {
+        await fetchBahan();
+        await fetchRiwayatMasuk();
+        return true;
+      }
 
-      await db.transaction((txn) async {
-        await txn.rawUpdate(
-          'UPDATE bahan SET stok_saat_ini = stok_saat_ini + ? WHERE id = ?',
-          [jumlah, bahanId],
-        );
-
-        await txn.insert('riwayat_bahan', {
-          'bahan_id': bahanId,
-          'jumlah': jumlah,
-          'tipe': 'masuk',
-          'username': username,
-          'nama_shift': namaShift,
-          'waktu': DateTime.now().toIso8601String(),
-          'keterangan': keterangan,
-        });
-      });
-
-      await fetchBahan();
-      await fetchRiwayatMasuk();
-      return true;
+      return false;
     } catch (e) {
       debugPrint("Error tambahStokMasuk: $e");
       return false;
@@ -116,22 +108,98 @@ class BahanProvider extends ChangeNotifier {
   }
 
   // Fungsi Tambah Bahan
-  Future<void> addBahan(Bahan bahan) async {
+  Future<void> addBahan(Bahan bahan, String username) async {
     try {
-      await DatabaseService.instance.tambahBahan(bahan);
+      _isLoading = true;
+      notifyListeners();
+
+      // 1. Simpan bahan dengan stok 0 terlebih dahulu
+      // agar saat stokMasuk dipanggil, perhitungannya (0 + jumlah) benar.
+      Bahan bahanBaruTanpaStok = Bahan(
+        nama: bahan.nama,
+        kategori: bahan.kategori,
+        satuan: bahan.satuan,
+        isiPerQty: bahan.isiPerQty,
+        stokSaatIni: 0, // Set 0 di sini
+      );
+
+      // Ambil ID dari bahan yang baru dibuat
+      final int newId = await DatabaseService.instance.tambahBahan(
+        bahanBaruTanpaStok,
+      );
+
+      // 2. Gunakan stokMasuk untuk mengisi stok awal dan mencatat riwayat
+      await DatabaseService.instance.stokMasuk(
+        bahanId: newId,
+        jumlah: bahan.stokSaatIni, // Jumlah asli yang diinput admin
+        username: username,
+        namaShift: '-Admin-',
+        keterangan: "Stok awal bahan baru",
+      );
+
       await fetchBahan();
+      await fetchRiwayatMasuk();
     } catch (e) {
       debugPrint("Error addBahan: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   // Fungsi Update Bahan
-  Future<void> updateBahan(Bahan bahan) async {
+  Future<void> updateBahan(Bahan bahanBaru, {required String username}) async {
     try {
-      await DatabaseService.instance.updateBahan(bahan);
+      _isLoading = true;
+      notifyListeners();
+
+      // 1. Ambil data lama untuk hitung selisih
+      final bahanLama = _listBahan.firstWhere((b) => b.id == bahanBaru.id);
+      double selisih = bahanBaru.stokSaatIni - bahanLama.stokSaatIni;
+
+      // 2. JANGAN update stok via fungsi updateBahan biasa.
+      // Kita buat objek baru yang stoknya tetap menggunakan stok LAMA
+      // agar tidak terjadi double update saat memanggil stokMasuk/Keluar.
+      Bahan dataUpdateTanpaStok = Bahan(
+        id: bahanBaru.id,
+        nama: bahanBaru.nama,
+        kategori: bahanBaru.kategori,
+        satuan: bahanBaru.satuan,
+        isiPerQty: bahanBaru.isiPerQty,
+        stokSaatIni: bahanLama.stokSaatIni, // Tetap pakai stok lama
+      );
+
+      // 3. Update info dasar (nama, dll) dulu
+      await DatabaseService.instance.updateBahan(dataUpdateTanpaStok);
+
+      // 4. Jika ada perubahan stok, baru panggil stokMasuk/Keluar
+      if (selisih != 0) {
+        if (selisih > 0) {
+          await DatabaseService.instance.stokMasuk(
+            bahanId: bahanBaru.id!,
+            jumlah: selisih,
+            username: username,
+            namaShift: '-Admin-',
+            keterangan: "Penyesuaian (Update)",
+          );
+        } else {
+          await DatabaseService.instance.stokKeluar(
+            bahanId: bahanBaru.id!,
+            jumlah: selisih.abs(),
+            username: username,
+            namaShift: '-Admin-',
+            keterangan: "Penyesuaian (Update)",
+          );
+        }
+      }
+
       await fetchBahan();
+      await fetchRiwayatMasuk();
     } catch (e) {
       debugPrint("Error updateBahan: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

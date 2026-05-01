@@ -93,9 +93,9 @@ class PdfHelper {
                   'SHIFT',
                   'TANGGAL',
                   'DETAIL',
-                  'WAKTU', // Kolom 4
-                  'DUR', // Kolom 5 (Durasi)
-                  'HARGA', // Kolom 6
+                  'WAKTU', 
+                  'DUR', 
+                  'HARGA', 
                 ],
                
                 data: tableData

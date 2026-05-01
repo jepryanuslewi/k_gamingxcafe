@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/models/cafe/bahan_model.dart';
+import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/providers/cafe/bahan_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -111,7 +112,10 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                     isiPerQty: double.tryParse(isiPerQtyController.text) ?? 1,
                   );
 
-                  await context.read<BahanProvider>().addBahan(newBahan);
+                  await context.read<BahanProvider>().addBahan(
+                    newBahan,
+                    context.read<AuthProvider>().user?.username ?? "Admin",
+                  );
 
                   if (context.mounted) {
                     Navigator.pop(context);
@@ -199,7 +203,7 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xffe21388),
+                backgroundColor: Color(0xFF00E0C6),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -216,13 +220,17 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                         double.tryParse(isiPerQtyController.text) ??
                         1, // UPDATE DATA
                   );
-                  context.read<BahanProvider>().updateBahan(updatedBahan);
+                  context.read<BahanProvider>().updateBahan(
+                    updatedBahan,
+                    username:
+                        context.read<AuthProvider>().user?.username ?? "Admin",
+                  );
                   Navigator.pop(context);
                 }
               },
               child: const Text(
                 "Update",
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.black),
               ),
             ),
           ],
@@ -458,7 +466,7 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                               IconButton(
                                 icon: const Icon(
                                   Icons.edit_outlined,
-                                  color: Colors.amber,
+                                  color: Color(0xFF00E0C6),
                                   size: 20,
                                 ),
                                 onPressed: () => showEditBahanForm(bahan),
