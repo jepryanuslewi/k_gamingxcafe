@@ -24,7 +24,6 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
   bool _isLoadingUsername = false;
   bool _isLoadingPassword = false;
 
-  // ✅ Pindahkan ke level class
   List<FileSystemEntity> _backupFiles = [];
   bool _isLoadingBackup = false;
 
@@ -33,13 +32,19 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     super.initState();
     final user = context.read<AuthProvider>().user;
     _usernameController.text = user?.username ?? '';
-    _loadBackupList(); // ✅ Load backup list saat init
+    _loadBackupList();
   }
 
   // ─── Backup Methods ────────────────────────────────────────────
   Future<void> _loadBackupList() async {
-    final files = await BackupService.getBackupList();
-    setState(() => _backupFiles = files);
+    try {
+      final files = await BackupService.getBackupList();
+      if (mounted) {
+        setState(() => _backupFiles = files);
+      }
+    } catch (e) {
+      debugPrint('Error load backup list: $e');
+    }
   }
 
   Future<void> _doBackup() async {
@@ -115,12 +120,17 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Restore'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color.fromRGBO(226, 19, 136, 1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Restore', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -135,48 +145,12 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
       onBeforeRestore: () async {
         final db = await DatabaseService.instance.database;
         await db.close();
-        DatabaseService.resetDatabase(); // ✅ Gunakan method publik
+        DatabaseService.resetDatabase();
       },
     );
 
     setState(() => _isLoadingBackup = false);
     _showBackupSnackbar(result);
-  }
-
-  Future<void> _doDelete(String filePath) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xff141c2f),
-        title: const Text(
-          'Hapus Backup?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          _formatFileName(filePath),
-          style: const TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Hapus'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    final deleted = await BackupService.deleteBackup(filePath);
-    if (deleted) {
-      _showBackupSnackbar(BackupResult.success('File backup dihapus'));
-      await _loadBackupList();
-    }
   }
 
   void _showBackupSnackbar(BackupResult result) {
@@ -335,14 +309,14 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // ✅ BACKUP & RESTORE
+                // BACKUP & RESTORE
                 _card(
                   "Backup & Restore Database",
                   Icons.backup,
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // ─── 2 Tombol Utama ───────────────────────────
+                      // ─── 2 Tombol Utama ───────────────────────
                       _isLoadingBackup
                           ? const Center(
                               child: Padding(
@@ -358,15 +332,23 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                                     onPressed: _doBackup,
                                     icon: const Icon(
                                       Icons.backup_outlined,
-                                      color: Colors.black,
+                                      color: Colors.white,
                                       size: 18,
                                     ),
                                     label: const Text(
                                       'Backup',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(color: Colors.white),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xff00e0c6),
+                                      backgroundColor: Color.fromRGBO(
+                                        226,
+                                        19,
+                                        136,
+                                        1,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 12,
                                       ),
@@ -375,7 +357,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                                 ),
                                 const SizedBox(width: 10),
 
-                                // Tombol Restore
+                                // Tombol Restore dari file picker
                                 Expanded(
                                   child: OutlinedButton.icon(
                                     onPressed: _doRestoreFromPicker,
@@ -389,6 +371,9 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                                       style: TextStyle(color: Colors.orange),
                                     ),
                                     style: OutlinedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                       side: const BorderSide(
                                         color: Colors.orange,
                                       ),
@@ -408,6 +393,82 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const Divider(color: Colors.white12, height: 32),
+
+                      // ─── Riwayat Backup ───────────────────────
+                      const Text(
+                        'Riwayat Backup',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      _backupFiles.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Text(
+                                'Belum ada backup tersimpan',
+                                style: TextStyle(color: Colors.white38),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _backupFiles.length,
+                              separatorBuilder: (_, __) => const Divider(
+                                color: Colors.white12,
+                                height: 1,
+                              ),
+                              itemBuilder: (context, index) {
+                                final file = _backupFiles[index];
+                                final label = _formatFileName(file.path);
+
+                                return ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: const Icon(
+                                    Icons.storage,
+                                    color: Color.fromRGBO(226, 19, 136, 1),
+                                  ),
+                                  title: Text(
+                                    label,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  subtitle: index == 0
+                                      ? const Text(
+                                          'Terbaru',
+                                          style: TextStyle(
+                                            color: Colors.greenAccent,
+                                            fontSize: 11,
+                                          ),
+                                        )
+                                      : null,
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Tombol restore dari list
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.restore,
+                                          color: Color.fromRGBO(
+                                            226,
+                                            19,
+                                            136,
+                                            1,
+                                          ),
+                                        ),
+                                        tooltip: 'Restore file ini',
+                                        onPressed: () => _doRestore(file.path),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
                     ],
                   ),
                 ),

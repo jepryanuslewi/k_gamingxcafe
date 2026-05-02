@@ -26,7 +26,7 @@ class _StockScreenState extends State<StockScreen> {
   void initState() {
     super.initState();
     _refreshBahan();
-    // Listener untuk pencarian otomatis saat mengetik
+
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -207,7 +207,7 @@ class _StockScreenState extends State<StockScreen> {
                                     headingRowColor: MaterialStateProperty.all(
                                       Colors.white.withOpacity(0.05),
                                     ),
-                                    columnSpacing: 15,
+                                    columnSpacing: 14,
                                     columns: const [
                                       DataColumn(
                                         label: Text(
@@ -220,7 +220,7 @@ class _StockScreenState extends State<StockScreen> {
                                       ),
                                       DataColumn(
                                         label: Text(
-                                          "NAMA",
+                                          "NAMA BAHAN",
                                           style: TextStyle(
                                             color: Color(0xFF00E0C6),
                                             fontWeight: FontWeight.bold,
@@ -229,7 +229,7 @@ class _StockScreenState extends State<StockScreen> {
                                       ),
                                       DataColumn(
                                         label: Text(
-                                          "KAT",
+                                          "KATEGORI",
                                           style: TextStyle(
                                             color: Color(0xFF00E0C6),
                                             fontWeight: FontWeight.bold,
@@ -247,7 +247,7 @@ class _StockScreenState extends State<StockScreen> {
                                       ),
                                       DataColumn(
                                         label: Text(
-                                          "SATUAN",
+                                          "QTY",
                                           style: TextStyle(
                                             color: Color(0xFF00E0C6),
                                             fontWeight: FontWeight.bold,
@@ -259,6 +259,9 @@ class _StockScreenState extends State<StockScreen> {
                                       _filteredBahan.length,
                                       (index) {
                                         final item = _filteredBahan[index];
+                                        final qty =
+                                            item['stok_saat_ini'] /
+                                            item['isi_per_qty'];
                                         return DataRow(
                                           cells: [
                                             DataCell(
@@ -287,8 +290,7 @@ class _StockScreenState extends State<StockScreen> {
                                             ),
                                             DataCell(
                                               Text(
-                                                item['stok_saat_ini']
-                                                    .toString(),
+                                                "${item['stok_saat_ini'].toString()} ${item['satuan'] ?? '-'}",
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                 ),
@@ -296,7 +298,7 @@ class _StockScreenState extends State<StockScreen> {
                                             ),
                                             DataCell(
                                               Text(
-                                                item['satuan'] ?? '-',
+                                                "${qty.toString()} PCS",
                                                 style: const TextStyle(
                                                   color: Colors.white54,
                                                 ),

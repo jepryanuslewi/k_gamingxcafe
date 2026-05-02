@@ -24,6 +24,7 @@ class BackupService {
 
   static String _pad(int n) => n.toString().padLeft(2, '0');
 
+  // ─── Backup ke lokal ───────────────────────────────────────────
   static Future<BackupResult> backupToLocal() async {
     try {
       PermissionStatus status = await Permission.manageExternalStorage
@@ -61,23 +62,33 @@ class BackupService {
     }
   }
 
+  // ─── Ambil daftar file backup ──────────────────────────────────
   static Future<List<FileSystemEntity>> getBackupList() async {
-    final backupDir = Directory(
-      '/storage/emulated/0/Download/$_backupFolderName',
-    );
+    try {
+      final backupDir = Directory(
+        '/storage/emulated/0/Download/$_backupFolderName',
+      );
 
-    if (!await backupDir.exists()) return [];
+      if (!await backupDir.exists()) return [];
 
-    final files =
-        backupDir.listSync().where((f) => f.path.endsWith('.db')).toList()
-          ..sort((a, b) => b.path.compareTo(a.path)); // terbaru di atas
+      final files = await backupDir
+          .list()
+          .where((f) => f.path.endsWith('.db'))
+          .toList();
 
-    return files;
+      files.sort((a, b) => b.path.compareTo(a.path));
+
+      return files;
+    } catch (e) {
+      debugPrint('Gagal load backup list: $e');
+      return [];
+    }
   }
 
+  // ─── Restore dari file path (dari list riwayat) ────────────────
   static Future<BackupResult> restoreFromFile(
     String sourcePath, {
-    required VoidCallback onBeforeRestore,
+    required Future<void> Function() onBeforeRestore, // ✅ support async
   }) async {
     try {
       final sourceFile = File(sourcePath);
@@ -85,7 +96,7 @@ class BackupService {
         return BackupResult.fail('File backup tidak ditemukan');
       }
 
-      onBeforeRestore();
+      await onBeforeRestore(); // ✅ await
 
       final dbFile = await _getDbFile();
       await sourceFile.copy(dbFile.path);
@@ -98,27 +109,23 @@ class BackupService {
     }
   }
 
-  static Future<bool> deleteBackup(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (await file.exists()) await file.delete();
-      return true;
-    } catch (e) {
-      debugPrint('Gagal hapus backup: $e');
-      return false;
-    }
-  }
-
-  // Tambahkan method ini di dalam class BackupService
+  // ─── Restore dari file picker ──────────────────────────────────
   static Future<BackupResult> restoreFromPicker({
-    required VoidCallback onBeforeRestore,
+    required Future<void> Function() onBeforeRestore, // ✅ support async
   }) async {
     try {
-      // Buka file picker, filter hanya file .db
+      PermissionStatus status = await Permission.manageExternalStorage
+          .request();
+      if (!status.isGranted) {
+        status = await Permission.storage.request();
+        if (!status.isGranted) {
+          return BackupResult.fail('Izin penyimpanan ditolak');
+        }
+      }
+
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['db'],
-        dialogTitle: 'Pilih file backup database',
+        type: FileType.any,
+        dialogTitle: 'Pilih file backup (.db)',
       );
 
       if (result == null || result.files.single.path == null) {
@@ -126,14 +133,17 @@ class BackupService {
       }
 
       final sourcePath = result.files.single.path!;
-      final sourceFile = File(sourcePath);
 
+      if (!sourcePath.endsWith('.db')) {
+        return BackupResult.fail('File harus berekstensi .db');
+      }
+
+      final sourceFile = File(sourcePath);
       if (!await sourceFile.exists()) {
         return BackupResult.fail('File tidak ditemukan');
       }
 
-      // Tutup koneksi DB sebelum replace
-      onBeforeRestore();
+      await onBeforeRestore(); // ✅ await
 
       final dbFile = await _getDbFile();
       await sourceFile.copy(dbFile.path);

@@ -14,28 +14,27 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Inisialisasi Instance Tunggal
+  
   final authProvider = AuthProvider();
   final shiftProvider = ShiftProvider();
 
-  // 2. Muat data dari SharedPreferences
+ 
   await authProvider.checkLoginStatus();
   await shiftProvider.loadActiveShift();
 
   runApp(
     MultiProvider(
       providers: [
-        // Gunakan .value untuk provider yang sudah di-load datanya di atas
+        
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider.value(value: shiftProvider),
 
-        // Untuk provider lainnya, tetap gunakan create biasa
+        
         ChangeNotifierProvider(create: (_) => JadwalProvider()),
         ChangeNotifierProvider(create: (_) => BahanProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()),
 
-        // pendapatan
-        // Tambahkan PendapatanProvider di MultiProvider
+        
         ChangeNotifierProvider(
           create: (_) => PendapatanProvider()..startRealtime(),
         ),
@@ -50,7 +49,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Gunakan watch agar widget rebuild saat status login/shift berubah
+    
     final auth = context.watch<AuthProvider>();
     final shift = context.watch<ShiftProvider>();
 
@@ -61,15 +60,15 @@ class MyApp extends StatelessWidget {
       );
     }
 
-    // Periksa apakah admin (Admin biasanya tidak butuh pilih shift)
+    
     if (auth.user?.role == 'admin') {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: DashboardScreen(), // Pastikan sudah diimport
+        home: DashboardScreen(), 
       );
     }
 
-    // Alur untuk Pegawai
+    
     if (shift.activeShift == null) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
