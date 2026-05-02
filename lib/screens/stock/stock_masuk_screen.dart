@@ -59,7 +59,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     // 3. Eksekusi fungsi Provider
     final success = await bahanProv.stokMasuk(
       bahanId: selectedBahan!.id!,
-      jumlah: qty,
+      jumlah: qty * selectedBahan!.isiPerQty,
       username: username,
       namaShift: widget.shiftName,
       keterangan: _deskripsiController.text,
@@ -169,7 +169,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
         children: [
           Row(
             children: [
-              Image.asset("assets/images/bgLoginScreen.png", height: 50),
+              Image.asset("assets/images/bgLoginScreen.png", height: 100),
               const SizedBox(width: 15),
               const Text(
                 "STOCK MANAGEMENT",
@@ -232,7 +232,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "BARANG MASUK",
+                "STOK MASUK",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -415,6 +415,8 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                 rows: riwayatHariIni.asMap().entries.map((entry) {
                   final index = entry.key + 1;
                   final r = entry.value;
+                  final double isiPerQty = (r.isiPerQty ?? 1).toDouble();
+                  final double qty = r.jumlah! / isiPerQty;
                   return DataRow(
                     cells: [
                       DataCell(
@@ -437,7 +439,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                       ),
                       DataCell(
                         Text(
-                          "${r.jumlah}",
+                          "${qty.toStringAsFixed(0)} / ${r.jumlah} ${r.satuan}",
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
@@ -449,7 +451,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                       ),
                       DataCell(
                         Text(
-                          r.namaShift ?? "-",
+                          "${r.namaShift}",
                           style: const TextStyle(color: Colors.white70),
                         ),
                       ),

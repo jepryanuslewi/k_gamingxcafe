@@ -27,14 +27,10 @@ class DropdownBahanWidget extends StatelessWidget {
       compareFn: (item, selectedItem) => item.id == selectedItem.id,
       onSelected: onSelected,
 
-      // --- PERBAIKAN: Builder untuk teks yang muncul di field utama ---
       dropdownBuilder: (context, selectedItem) {
         return Text(
           selectedItem?.nama ?? (isLoading ? "Loading..." : "Pilih bahan..."),
-          style: const TextStyle(
-            color: Colors.white, // Warna teks isi jadi putih
-            fontSize: 14,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 14),
         );
       },
 
@@ -81,7 +77,7 @@ class DropdownBahanWidget extends StatelessWidget {
             borderSide: BorderSide(
               color: label == "masuk"
                   ? Color.fromRGBO(0, 224, 198, 1)
-                  : Colors.orangeAccent,
+                  : Color.fromRGBO(226, 19, 136, 100),
             ),
             borderRadius: BorderRadius.circular(10),
           ),

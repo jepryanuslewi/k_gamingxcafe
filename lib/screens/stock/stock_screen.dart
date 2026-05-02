@@ -333,7 +333,7 @@ class _StockScreenState extends State<StockScreen> {
             children: [
               Image.asset(
                 "assets/images/bgLoginScreen.png",
-                height: 100,
+                width: 100,
                 errorBuilder: (c, e, s) =>
                     const Icon(Icons.broken_image, color: Colors.white),
               ),

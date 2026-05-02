@@ -68,7 +68,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
 
     final success = await bahanProv.stokKeluar(
       bahanId: selectedBahan!.id!,
-      jumlah: qty,
+      jumlah: qty * (selectedBahan?.isiPerQty ?? 1.0),
       username: authProv.user?.username ?? "Unknown",
       namaShift: widget.shiftName,
       keterangan: _deskripsiController.text,
@@ -79,7 +79,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.orange,
+          backgroundColor: Color.fromRGBO(226, 19, 136, 100),
           content: Text("Stok ${selectedBahan!.nama} berhasil dikurangi!"),
         ),
       );
@@ -107,8 +107,8 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
         fillColor: const Color.fromRGBO(26, 37, 64, 1),
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(
-            color: Colors.orangeAccent,
-          ), // Warna oranye untuk "Keluar"
+            color: Color.fromRGBO(226, 19, 136, 100),
+          ),
           borderRadius: BorderRadius.circular(10),
         ),
         focusedBorder: OutlineInputBorder(
@@ -166,40 +166,16 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
         children: [
           Row(
             children: [
-              Image.asset("assets/images/bgLoginScreen.png", height: 50),
+              Image.asset("assets/images/bgLoginScreen.png", width: 100),
               const SizedBox(width: 15),
-              Row(
-                children: const [
-                  Text(
-                    "GAMING",
-                    style: TextStyle(
-                      color: Color.fromRGBO(226, 19, 136, 100),
-                      fontSize: 35,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "Poppins",
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Text(
-                    "X",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 35,
-                      fontWeight: FontWeight.normal,
-                      fontFamily: "Poppins",
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Text(
-                    "CAFE",
-                    style: TextStyle(
-                      color: Color.fromRGBO(0, 224, 198, 100),
-                      fontSize: 35,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "Poppins",
-                    ),
-                  ),
-                ],
+              const Text(
+                "STOCK MANAGEMENT",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: "Poppins",
+                ),
               ),
             ],
           ),
@@ -253,7 +229,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "BARANG KELUAR",
+                "STOK KELUAR",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -302,7 +278,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
             height: 50,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orangeAccent,
+                backgroundColor: Color.fromRGBO(226, 19, 136, 100),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -311,7 +287,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
               child: const Text(
                 "KURANGI STOK",
                 style: TextStyle(
-                  color: Colors.black,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -392,6 +368,15 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
                   ),
                   DataColumn(
                     label: Text(
+                      "SHIFT",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
                       "JAM",
                       style: TextStyle(
                         color: Colors.white,
@@ -402,6 +387,8 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
                 ],
                 rows: prov.listRiwayatKeluar.asMap().entries.map((entry) {
                   final r = entry.value;
+                  final double isiPerQty = (r.isiPerQty ?? 1).toDouble();
+                  final double qty = r.jumlah! / isiPerQty;
                   return DataRow(
                     cells: [
                       DataCell(
@@ -424,13 +411,19 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
                       ),
                       DataCell(
                         Text(
-                          "${r.jumlah}",
+                          "${qty.toStringAsFixed(0)} / ${r.jumlah} ${r.satuan}",
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
                       DataCell(
                         Text(
                           "${r.username}",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          "${r.namaShift}",
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),

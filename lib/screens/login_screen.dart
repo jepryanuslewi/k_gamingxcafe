@@ -30,15 +30,12 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = false);
 
       if (success) {
-        final user = authProvider.user; 
+        final user = authProvider.user;
         if (mounted && user != null) {
-         
           Widget destination;
           if (user.role == 'admin') {
-           
             destination = const DashboardScreen();
           } else {
-           
             destination = ShiftScreen(
               userId: user.id!,
               username: user.username,
@@ -68,7 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            Image.asset("assets/images/bgLoginScreen.png"),
+            Image.asset(
+              "assets/images/bgLoginScreen.png",
+              fit: BoxFit.cover,
+              width: double.infinity,
+            ),
             Center(
               child: Container(
                 margin: EdgeInsets.symmetric(vertical: 10),
@@ -87,9 +88,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Image.asset(
                           "assets/images/bgLoginScreen.png",
-                          width: 250,
+                          width: 180,
                         ),
-                        const SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
