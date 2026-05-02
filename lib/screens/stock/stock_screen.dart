@@ -298,7 +298,7 @@ class _StockScreenState extends State<StockScreen> {
                                             ),
                                             DataCell(
                                               Text(
-                                                "${qty.toString()} PCS",
+                                                "${qty.toStringAsFixed(0)} PCS",
                                                 style: const TextStyle(
                                                   color: Colors.white54,
                                                 ),
