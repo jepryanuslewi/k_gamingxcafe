@@ -305,11 +305,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xffe21388),
-        onPressed: showAddMenuForm,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+
       body: menuProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
@@ -319,7 +315,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                 children: [
                   SizedBox(height: 10),
                   const Text(
-                    "Kelola Bahan Baku",
+                    "Kelola Menu Cafe",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -361,7 +357,22 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                     ],
                   ),
                   Divider(color: Colors.white10, thickness: 1, height: 32),
-                  SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xffe21388),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: showAddMenuForm,
+                      child: Text(
+                        "Tambah Menu",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
                   // ✅ SEARCH BAR
                   Padding(
                     padding: const EdgeInsets.only(top: 5),

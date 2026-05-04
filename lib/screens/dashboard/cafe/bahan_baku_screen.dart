@@ -260,11 +260,6 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xffe21388),
-        onPressed: showAddBahanForm,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       body: Padding(
         padding: const EdgeInsets.only(top: 16, left: 20, right: 20),
         child: Column(
@@ -314,7 +309,22 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
               ],
             ),
             Divider(color: Colors.white10, thickness: 1, height: 32),
-            SizedBox(height: 10),
+            Align(
+              alignment: Alignment.topRight,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xffe21388),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: showAddBahanForm,
+                child: Text(
+                  "Tambah Menu",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
             // 🔍 SEARCH
             Padding(
               padding: const EdgeInsets.only(top: 5),

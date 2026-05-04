@@ -434,11 +434,6 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xffe21388),
-        onPressed: showAddPackageForm,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : packages.isEmpty
@@ -497,7 +492,22 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
                     ],
                   ),
                   Divider(color: Colors.white10, thickness: 1, height: 32),
-                  SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xffe21388),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: showAddPackageForm,
+                      child: Text(
+                        "Tambah Paket",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
                   ListView.builder(
                     shrinkWrap: true,
                     padding: const EdgeInsets.only(top: 16),

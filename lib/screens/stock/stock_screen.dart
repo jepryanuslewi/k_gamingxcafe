@@ -238,7 +238,7 @@ class _StockScreenState extends State<StockScreen> {
                                       ),
                                       DataColumn(
                                         label: Text(
-                                          "STOK",
+                                          "QTY",
                                           style: TextStyle(
                                             color: Color(0xFF00E0C6),
                                             fontWeight: FontWeight.bold,
@@ -247,7 +247,7 @@ class _StockScreenState extends State<StockScreen> {
                                       ),
                                       DataColumn(
                                         label: Text(
-                                          "QTY",
+                                          "SATUAN",
                                           style: TextStyle(
                                             color: Color(0xFF00E0C6),
                                             fontWeight: FontWeight.bold,
@@ -290,17 +290,17 @@ class _StockScreenState extends State<StockScreen> {
                                             ),
                                             DataCell(
                                               Text(
-                                                "${item['stok_saat_ini'].toString()} ${item['satuan'] ?? '-'}",
+                                                "${qty.toStringAsFixed(0)} PCS",
                                                 style: const TextStyle(
-                                                  color: Colors.white,
+                                                  color: Colors.white54,
                                                 ),
                                               ),
                                             ),
                                             DataCell(
                                               Text(
-                                                "${qty.toStringAsFixed(0)} PCS",
+                                                "${item['stok_saat_ini'].toString()} ${item['satuan'] ?? '-'}",
                                                 style: const TextStyle(
-                                                  color: Colors.white54,
+                                                  color: Colors.white,
                                                 ),
                                               ),
                                             ),

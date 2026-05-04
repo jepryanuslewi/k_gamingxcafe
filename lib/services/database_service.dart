@@ -304,8 +304,8 @@ class DatabaseService {
   }
 
   Future<List<Map<String, dynamic>>> getRiwayatKeluar() async {
-  final db = await instance.database;
-  return await db.rawQuery('''
+    final db = await instance.database;
+    return await db.rawQuery('''
     SELECT 
       riwayat_bahan.*,
       bahan.nama        AS nama_bahan,
@@ -317,11 +317,11 @@ class DatabaseService {
     WHERE riwayat_bahan.tipe = 'keluar'
     ORDER BY riwayat_bahan.waktu DESC
   ''');
-}
+  }
 
   Future<List<Map<String, dynamic>>> getRiwayatMasuk() async {
-  final db = await instance.database;
-  return await db.rawQuery('''
+    final db = await instance.database;
+    return await db.rawQuery('''
     SELECT 
       r.id,
       b.nama          AS nama_bahan,
@@ -337,7 +337,7 @@ class DatabaseService {
     WHERE r.tipe = 'masuk'
     ORDER BY r.waktu DESC
   ''');
-}
+  }
 
   Future<List<Map<String, dynamic>>> getBahanSemua() async {
     final db = await instance.database;
@@ -760,6 +760,7 @@ class DatabaseService {
       b.nama AS nama_bahan,
       b.kategori,
       b.satuan,
+      b.isi_per_qty,
       rb.jumlah,
       rb.tipe,
       rb.username,

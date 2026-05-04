@@ -300,6 +300,18 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
   }
 
   Widget _buildTableRiwayat(BahanProvider prov) {
+    final now = DateTime.now();
+    final riwayatHariIni = prov.listRiwayatKeluar.where((r) {
+      if (r.waktu == null) return false;
+      try {
+        final dateWaktu = DateTime.parse(r.waktu!);
+        return dateWaktu.year == now.year &&
+            dateWaktu.month == now.month &&
+            dateWaktu.day == now.day;
+      } catch (e) {
+        return false;
+      }
+    }).toList();
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -385,7 +397,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
                     ),
                   ),
                 ],
-                rows: prov.listRiwayatKeluar.asMap().entries.map((entry) {
+                rows: riwayatHariIni.asMap().entries.map((entry) {
                   final r = entry.value;
                   final double isiPerQty = (r.isiPerQty ?? 1).toDouble();
                   final double qty = r.jumlah! / isiPerQty;

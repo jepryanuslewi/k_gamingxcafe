@@ -158,24 +158,35 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     int totalMasuk = 0;
     int totalKeluar = 0;
 
-    final formatted = rawData.map((row) {
-      final jumlah = (row['jumlah'] as num?)?.toInt() ?? 0;
-      final tipe = row['tipe']?.toString() ?? "-";
-      final hasil = (jumlah / jumlah).toInt();
-      if (tipe == 'masuk') totalMasuk += hasil;
-      if (tipe == 'keluar') totalKeluar += hasil;
+    final formatted = rawData
+        .map((row) {
+          final double jumlah = (row['jumlah'] as num?)?.toDouble() ?? 0;
+          final double isiPerQty =
+              (row['isi_per_qty'] as num?)?.toDouble() ?? 1;
+          final tipe = row['tipe']?.toString() ?? "-";
 
-      return [
-        row['username']?.toString() ?? "-", // [0] Nama
-        row['nama_shift']?.toString() ?? "-", // [1] Shift
-        _formatTanggal(row['waktu']?.toString()), // [2] Tanggal
-        row['nama_bahan']?.toString() ?? "-", // [3] Bahan
-        row['kategori']?.toString() ?? "-", // [4] Kategori Bahan
-        "$jumlah ${row['satuan']?.toString() ?? ''}", // [5] Jumlah + Satuan
-        tipe.toUpperCase(), // [6] Tipe
-        row['keterangan']?.toString() ?? "-", // [7] Keterangan
-      ];
-    }).toList();
+          final int hasil = jumlah >= isiPerQty
+              ? (jumlah / isiPerQty).floor()
+              : 0;
+
+          if (hasil == 0) return null;
+
+          if (tipe == 'masuk') totalMasuk += hasil;
+          if (tipe == 'keluar') totalKeluar += hasil;
+
+          return [
+            row['username']?.toString() ?? "-",
+            row['nama_shift']?.toString() ?? "-",
+            _formatTanggal(row['waktu']?.toString()),
+            row['nama_bahan']?.toString() ?? "-",
+            row['kategori']?.toString() ?? "-",
+            "$hasil pcs", // ✅ tampil pcs, bukan ml lagi
+            tipe.toUpperCase(),
+            row['keterangan']?.toString() ?? "-",
+          ];
+        })
+        .whereType<List<String>>()
+        .toList();
 
     if (mounted) {
       setState(() {
