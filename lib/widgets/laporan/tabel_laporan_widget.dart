@@ -158,35 +158,51 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     int totalMasuk = 0;
     int totalKeluar = 0;
 
-    final formatted = rawData
-        .map((row) {
-          final double jumlah = (row['jumlah'] as num?)?.toDouble() ?? 0;
-          final double isiPerQty =
-              (row['isi_per_qty'] as num?)?.toDouble() ?? 1;
-          final tipe = row['tipe']?.toString() ?? "-";
+    // 🔥 GROUPING PER BAHAN
+    Map<String, double> akumulasi = {};
+    Map<String, Map<String, dynamic>> sampleRow = {};
 
-          final int hasil = jumlah >= isiPerQty
-              ? (jumlah / isiPerQty).floor()
-              : 0;
+    for (var row in rawData) {
+      final namaBahan = row['nama_bahan'] ?? '-';
+      final tipe = row['tipe'] ?? '-';
 
-          if (hasil == 0) return null;
+      final key = "$namaBahan-$tipe";
 
-          if (tipe == 'masuk') totalMasuk += hasil;
-          if (tipe == 'keluar') totalKeluar += hasil;
+      final jumlah = (row['jumlah'] as num?)?.toDouble() ?? 0;
 
-          return [
-            row['username']?.toString() ?? "-",
-            row['nama_shift']?.toString() ?? "-",
-            _formatTanggal(row['waktu']?.toString()),
-            row['nama_bahan']?.toString() ?? "-",
-            row['kategori']?.toString() ?? "-",
-            "$hasil pcs", // ✅ tampil pcs, bukan ml lagi
-            tipe.toUpperCase(),
-            row['keterangan']?.toString() ?? "-",
-          ];
-        })
-        .whereType<List<String>>()
-        .toList();
+      akumulasi[key] = (akumulasi[key] ?? 0) + jumlah;
+      sampleRow[key] = row; // simpan contoh row untuk ambil data lain
+    }
+
+    final List<List<String>> formatted = [];
+
+    akumulasi.forEach((key, totalJumlah) {
+      final row = sampleRow[key]!;
+
+      final double isiPerQty = (row['isi_per_qty'] as num?)?.toDouble() ?? 1;
+
+      final tipe = row['tipe']?.toString() ?? "-";
+
+      final int hasil = totalJumlah >= isiPerQty
+          ? (totalJumlah / isiPerQty).floor()
+          : 0;
+
+      if (hasil == 0) return;
+
+      if (tipe == 'masuk') totalMasuk += hasil;
+      if (tipe == 'keluar') totalKeluar += hasil;
+
+      formatted.add([
+        row['username']?.toString() ?? "-",
+        row['nama_shift']?.toString() ?? "-",
+        _formatTanggal(row['waktu']?.toString()),
+        row['nama_bahan']?.toString() ?? "-",
+        row['kategori']?.toString() ?? "-",
+        "$hasil pcs",
+        tipe.toUpperCase(),
+        row['keterangan']?.toString() ?? "-",
+      ]);
+    });
 
     if (mounted) {
       setState(() {
@@ -197,10 +213,8 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // HELPERS FORMAT
-  // ─────────────────────────────────────────────
-
+  
+  // FORMAT
   int _toInt(dynamic val) {
     if (val == null) return 0;
     if (val is int) return val;
@@ -260,10 +274,8 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // WARNA BADGE
-  // ─────────────────────────────────────────────
-
+  
+  // WARNA 
   Color _badgeColorJadwal(String teks) {
     if (teks.contains('BOOKING')) return Colors.orange;
     if (teks.contains('WALK IN')) return const Color(0xFF00E0C6);
@@ -295,10 +307,8 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     return Colors.white54;
   }
 
-  // ─────────────────────────────────────────────
-  // KOLOM HEADER — berbeda tiap kategori
-  // ─────────────────────────────────────────────
-
+ 
+  // KOLOM HEADER 
   List<DataColumn> _buildColumns() {
     const style = TextStyle(color: Colors.white70, fontWeight: FontWeight.bold);
     switch (widget.kategori) {
@@ -340,9 +350,8 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // BARIS DATA — render berbeda tiap kategori
-  // ─────────────────────────────────────────────
+  
+  // BARIS DATA
 
   List<DataRow> _buildRows() {
     switch (widget.kategori) {

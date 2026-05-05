@@ -476,13 +476,7 @@ class DatabaseService {
     final db = await instance.database;
 
     await db.transaction((txn) async {
-      String keterangan = items
-          .map((item) {
-            final MenuModel p = item['selectedProduk'];
-            final int qty = item['qty'];
-            return "${p.nama} x$qty";
-          })
-          .join(", ");
+      String keterangan = 'AUTO-CUT (TRANSAKSI)';
 
       for (var item in items) {
         final MenuModel p = item['selectedProduk'];
@@ -510,7 +504,7 @@ class DatabaseService {
     dynamic txn,
     int productId,
     int qtyPesanan,
-    String namaProduk,
+    String keteranganProduk,
   ) async {
     final List<Map<String, dynamic>> resep = await txn.query(
       'resep_menu',
@@ -533,8 +527,8 @@ class DatabaseService {
         'jumlah': totalPotong,
         'tipe': 'keluar',
         'username': 'System',
-        'nama_shift': 'Auto-Cut (Sales)',
-        'keterangan': 'Terjual: $namaProduk',
+        'nama_shift': 'Auto-Cut (TRANSAKSI)',
+        'keterangan': 'AUTO-CUT (TRANSAKSI)',
         'waktu': DateTime.now().toIso8601String(),
       });
     }

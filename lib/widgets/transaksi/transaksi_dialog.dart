@@ -10,7 +10,22 @@ class TransactionDialog {
       {'selectedProduk': null, 'qty': 0},
     ];
 
+    // ✅ error state di luar builder (biar tidak reset)
+    String? errorMessage;
+
     context.read<MenuProvider>().fetchMenu();
+    int getSisaStok(List<Map<String, dynamic>> items, MenuModel product) {
+      int totalDipakai = 0;
+
+      for (var item in items) {
+        final MenuModel? p = item['selectedProduk'];
+        if (p != null && p.id == product.id) {
+          totalDipakai += item['qty'] as int;
+        }
+      }
+
+      return (product.stok ?? 0) - totalDipakai;
+    }
 
     showDialog(
       context: context,
@@ -43,7 +58,23 @@ class TransactionDialog {
                       ),
                     ),
                     const Divider(color: Colors.white24, height: 30),
-
+                    // ✅ ERROR MESSAGE DALAM DIALOG
+                    if (errorMessage != null)
+                      Container(
+                        width: 300,
+                        padding: const EdgeInsets.all(5),
+                        margin: const EdgeInsets.only(bottom: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.redAccent),
+                        ),
+                        child: Text(
+                          errorMessage!,
+                          style: const TextStyle(color: Colors.redAccent),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     Flexible(
                       child: SingleChildScrollView(
                         child: Wrap(
@@ -54,7 +85,6 @@ class TransactionDialog {
                             int index = entry.key;
                             var item = entry.value;
 
-                            // KEY SANGAT PENTING: Mencegah lag saat rebuild list
                             return KeyedSubtree(
                               key: ValueKey("item_$index"),
                               child: _buildProductCard(
@@ -64,21 +94,56 @@ class TransactionDialog {
                                 menuList: menuProv.listMenu,
                                 isLoading: menuProv.isLoading,
                                 onProdukChanged: (val) {
-                                  setState(
-                                    () => items[index]['selectedProduk'] = val,
-                                  );
+                                  final MenuModel? menu = val as MenuModel?;
+
+                                  if (menu != null) {
+                                    int sisaStok = getSisaStok(items, menu);
+
+                                    if (sisaStok <= 0) {
+                                      setState(() {
+                                        errorMessage =
+                                            "${menu.nama} stok habis di transaksi ini!";
+                                      });
+                                      return;
+                                    }
+                                  }
+
+                                  setState(() {
+                                    items[index]['selectedProduk'] = val;
+                                    errorMessage = null;
+                                  });
                                 },
                                 onQtyChanged: (newQty) {
+                                  final MenuModel? p = item['selectedProduk'];
+
+                                  if (p != null) {
+                                    int sisaStok = getSisaStok(items, p);
+
+                                    // Tambahkan kembali qty lama item ini (biar tidak double hitung)
+                                    sisaStok += item['qty'] as int;
+
+                                    if (newQty > sisaStok) {
+                                      setState(() {
+                                        errorMessage =
+                                            "Stok ${p.nama} tidak cukup!\nSisa: $sisaStok";
+                                      });
+                                      return;
+                                    }
+                                  }
+
                                   if (newQty >= 0) {
-                                    setState(
-                                      () => items[index]['qty'] = newQty,
-                                    );
+                                    setState(() {
+                                      items[index]['qty'] = newQty;
+                                      errorMessage = null;
+                                    });
                                   }
                                 },
-                                // Tambahkan fungsi hapus jika perlu
                                 onRemove: () {
                                   if (items.length > 1) {
-                                    setState(() => items.removeAt(index));
+                                    setState(() {
+                                      items.removeAt(index);
+                                      errorMessage = null;
+                                    });
                                   }
                                 },
                               ),
@@ -90,11 +155,12 @@ class TransactionDialog {
 
                     const SizedBox(height: 20),
 
-                    // Tombol Tambah
+                    // ➕ Tambah item
                     InkWell(
                       onTap: () {
                         setState(() {
                           items.add({'selectedProduk': null, 'qty': 0});
+                          errorMessage = null;
                         });
                       },
                       child: Container(
@@ -111,7 +177,7 @@ class TransactionDialog {
                       ),
                     ),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 20),
 
                     Row(
                       children: [
@@ -128,7 +194,22 @@ class TransactionDialog {
                           color: const Color(0xFF00E0C6),
                           textColor: const Color.fromRGBO(11, 18, 32, 1),
                           onPressed: () async {
-                            // Hitung total
+                            for (var item in items) {
+                              final MenuModel? p = item['selectedProduk'];
+                              final int qty = item['qty'] as int;
+
+                              if (p == null || qty <= 0) continue;
+
+                              if (qty > (p.stok ?? 0)) {
+                                setState(() {
+                                  errorMessage =
+                                      "Stok ${p.nama} tidak cukup!\n"
+                                      "Diminta: $qty, Tersedia: ${p.stok ?? 0}";
+                                });
+                                return;
+                              }
+                            }
+
                             num totalAkhir = items.fold<num>(0, (sum, item) {
                               final MenuModel? p = item['selectedProduk'];
                               return sum +
@@ -137,7 +218,6 @@ class TransactionDialog {
 
                             if (totalAkhir <= 0) return;
 
-                            
                             bool sukses = await context
                                 .read<MenuProvider>()
                                 .simpanTransaksi(items, totalAkhir, shiftName);

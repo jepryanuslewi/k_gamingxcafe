@@ -242,8 +242,11 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
       appBar: AppBar(
-        backgroundColor: const Color(0xff141c2f),
-        title: const Text("Admin Profile"),
+        backgroundColor: const Color(0xff0b1220),
+        title: const Text(
+          "Admin Profile",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -255,58 +258,68 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                 _profileHeader(user),
                 const SizedBox(height: 25),
 
-                // USERNAME
-                _card(
-                  "Ubah Username",
-                  Icons.person,
-                  Column(
-                    children: [
-                      _input(_usernameController, "Username"),
-                      const SizedBox(height: 15),
-                      _button(
-                        "SIMPAN USERNAME",
-                        _isLoadingUsername,
-                        _simpanUsername,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // USERNAME
+                    Expanded(
+                      child: _card(
+                        "Ubah Username",
+                        Icons.person,
+                        Column(
+                          children: [
+                            _input(_usernameController, "Username"),
+                            const SizedBox(height: 15),
+                            _button(
+                              "SIMPAN USERNAME",
+                              _isLoadingUsername,
+                              _simpanUsername,
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 20),
+                    // PASSWORD
+                    Expanded(
+                      child: _card(
+                        "Ubah Password",
+                        Icons.lock,
+                        Column(
+                          children: [
+                            _input(
+                              _newPasswordController,
+                              "Password Baru",
+                              isPassword: true,
+                              show: _showNewPassword,
+                              toggle: () => setState(
+                                () => _showNewPassword = !_showNewPassword,
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            _input(
+                              _confirmPasswordController,
+                              "Konfirmasi Password",
+                              isPassword: true,
+                              show: _showConfirmPassword,
+                              toggle: () => setState(
+                                () => _showConfirmPassword =
+                                    !_showConfirmPassword,
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            _button(
+                              "SIMPAN PASSWORD",
+                              _isLoadingPassword,
+                              _simpanPassword,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
 
-                // PASSWORD
-                _card(
-                  "Ubah Password",
-                  Icons.lock,
-                  Column(
-                    children: [
-                      _input(
-                        _newPasswordController,
-                        "Password Baru",
-                        isPassword: true,
-                        show: _showNewPassword,
-                        toggle: () => setState(
-                          () => _showNewPassword = !_showNewPassword,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      _input(
-                        _confirmPasswordController,
-                        "Konfirmasi Password",
-                        isPassword: true,
-                        show: _showConfirmPassword,
-                        toggle: () => setState(
-                          () => _showConfirmPassword = !_showConfirmPassword,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      _button(
-                        "SIMPAN PASSWORD",
-                        _isLoadingPassword,
-                        _simpanPassword,
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 20),
 
                 // BACKUP & RESTORE
