@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/models/cafe/menu_model.dart';
 import 'package:k_gamingxcafe/providers/cafe/menu_provider.dart';
+import 'package:k_gamingxcafe/services/database_service.dart';
 import 'package:k_gamingxcafe/widgets/transaksi/dropdown_menu_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -9,23 +10,114 @@ class TransactionDialog {
     List<Map<String, dynamic>> items = [
       {'selectedProduk': null, 'qty': 0},
     ];
-
-    // ✅ error state di luar builder (biar tidak reset)
     String? errorMessage;
 
-    context.read<MenuProvider>().fetchMenu();
-    int getSisaStok(List<Map<String, dynamic>> items, MenuModel product) {
-      int totalDipakai = 0;
+    // ✅ Cache resep agar tidak query DB berulang
+    Map<int, List<Map<String, dynamic>>> resepCache = {};
+    // ✅ Cache stok bahan saat dialog dibuka
+    Map<int, double> stokBahanAwal = {};
+    bool stokSudahDimuat = false;
 
-      for (var item in items) {
+    // ✅ Muat stok bahan sekali saat dialog dibuka
+    Future<void> muatStokBahan() async {
+      if (stokSudahDimuat) return;
+      final semuaBahan = await DatabaseService.instance.getBahanSemua();
+      for (var b in semuaBahan) {
+        stokBahanAwal[b['id'] as int] = (b['stok_saat_ini'] as num).toDouble();
+      }
+      stokSudahDimuat = true;
+    }
+
+    // ✅ Ambil resep dengan cache
+    Future<List<Map<String, dynamic>>> getResep(int productId) async {
+      if (resepCache.containsKey(productId)) return resepCache[productId]!;
+      final resep = await DatabaseService.instance.getResepByProductId(
+        productId,
+      );
+      resepCache[productId] = resep;
+      return resep;
+    }
+
+    // ✅ Hitung sisa stok bahan setelah dikurangi semua item di dialog
+    Future<Map<int, double>> hitungSisaStokBahan(
+      List<Map<String, dynamic>> currentItems,
+    ) async {
+      await muatStokBahan();
+
+      // Salin stok awal
+      final Map<int, double> sisa = Map.from(stokBahanAwal);
+
+      for (var item in currentItems) {
         final MenuModel? p = item['selectedProduk'];
-        if (p != null && p.id == product.id) {
-          totalDipakai += item['qty'] as int;
+        final int qty = item['qty'] as int;
+        if (p == null || qty <= 0 || p.id == null) continue;
+
+        final resep = await getResep(p.id!);
+        for (var r in resep) {
+          final int bahanId = r['bahan_id'] as int;
+          final double jumlahPakai = (r['jumlah_pakai'] as num).toDouble();
+          sisa[bahanId] = (sisa[bahanId] ?? 0) - (jumlahPakai * qty);
         }
       }
 
-      return (product.stok ?? 0) - totalDipakai;
+      return sisa;
     }
+
+    // ✅ Cek apakah qty bisa ditambah berdasarkan sisa bahan
+    Future<String?> bisaTambahQty(
+      List<Map<String, dynamic>> currentItems,
+      int targetIndex,
+      int newQty,
+    ) async {
+      await muatStokBahan();
+
+      final MenuModel? p = currentItems[targetIndex]['selectedProduk'];
+      if (p == null || p.id == null) return null;
+
+      final resep = await getResep(p.id!);
+      if (resep.isEmpty) return null;
+
+      // Hitung sisa stok TANPA item index ini dulu
+      final Map<int, double> sisaTanpaItem = Map.from(stokBahanAwal);
+      for (int i = 0; i < currentItems.length; i++) {
+        if (i == targetIndex) continue; // skip item ini
+        final MenuModel? pi = currentItems[i]['selectedProduk'];
+        final int qi = currentItems[i]['qty'] as int;
+        if (pi == null || qi <= 0 || pi.id == null) continue;
+
+        final resepI = await getResep(pi.id!);
+        for (var r in resepI) {
+          final int bahanId = r['bahan_id'] as int;
+          final double jumlahPakai = (r['jumlah_pakai'] as num).toDouble();
+          sisaTanpaItem[bahanId] =
+              (sisaTanpaItem[bahanId] ?? 0) - (jumlahPakai * qi);
+        }
+      }
+
+      // Cek apakah newQty cukup dengan sisa yang ada
+      for (var r in resep) {
+        final int bahanId = r['bahan_id'] as int;
+        final double jumlahPakai = (r['jumlah_pakai'] as num).toDouble();
+        final double sisaUntukItem = sisaTanpaItem[bahanId] ?? 0;
+        final double dibutuhkan = jumlahPakai * newQty;
+
+        if (dibutuhkan > sisaUntukItem) {
+          // Cari nama bahan
+          final semuaBahan = await DatabaseService.instance.getBahanSemua();
+          final bahan = semuaBahan.firstWhere(
+            (b) => b['id'] == bahanId,
+            orElse: () => {'nama': 'Bahan', 'satuan': ''},
+          );
+          final maxBisa = (sisaUntukItem / jumlahPakai).floor();
+          return "Bahan '${bahan['nama']}' tidak cukup!\n"
+              "Maks qty ${p.nama}: $maxBisa";
+        }
+      }
+
+      return null; // ✅ Bisa ditambah
+    }
+
+    context.read<MenuProvider>().fetchMenu();
 
     showDialog(
       context: context,
@@ -57,12 +149,12 @@ class TransactionDialog {
                         letterSpacing: 2,
                       ),
                     ),
-                    const Divider(color: Colors.white24, height: 30),
-                    // ✅ ERROR MESSAGE DALAM DIALOG
+                    const Divider(color: Colors.white24, height: 20),
+
                     if (errorMessage != null)
                       Container(
-                        width: 300,
-                        padding: const EdgeInsets.all(5),
+                        width: 500,
+                        padding: const EdgeInsets.all(2),
                         margin: const EdgeInsets.only(bottom: 15),
                         decoration: BoxDecoration(
                           color: Colors.red.withOpacity(0.2),
@@ -75,6 +167,7 @@ class TransactionDialog {
                           textAlign: TextAlign.center,
                         ),
                       ),
+
                     Flexible(
                       child: SingleChildScrollView(
                         child: Wrap(
@@ -93,50 +186,73 @@ class TransactionDialog {
                                 qty: item['qty'],
                                 menuList: menuProv.listMenu,
                                 isLoading: menuProv.isLoading,
-                                onProdukChanged: (val) {
+                                onProdukChanged: (val) async {
                                   final MenuModel? menu = val as MenuModel?;
+                                  if (menu == null) {
+                                    setState(() {
+                                      items[index]['selectedProduk'] = null;
+                                      items[index]['qty'] = 0;
+                                      errorMessage = null;
+                                    });
+                                    return;
+                                  }
 
-                                  if (menu != null) {
-                                    int sisaStok = getSisaStok(items, menu);
+                                  // ✅ Preload resep saat produk dipilih
+                                  if (menu.id != null) await getResep(menu.id!);
 
-                                    if (sisaStok <= 0) {
-                                      setState(() {
-                                        errorMessage =
-                                            "${menu.nama} stok habis di transaksi ini!";
-                                      });
-                                      return;
-                                    }
+                                  // ✅ Cek apakah qty 1 saja sudah cukup
+                                  final tempItems =
+                                      List<Map<String, dynamic>>.from(items);
+                                  tempItems[index] = {
+                                    'selectedProduk': menu,
+                                    'qty': 1,
+                                  };
+                                  final error = await bisaTambahQty(
+                                    tempItems,
+                                    index,
+                                    1,
+                                  );
+
+                                  if (error != null) {
+                                    setState(
+                                      () => errorMessage =
+                                          "${menu.nama}: Stok bahan tidak mencukupi!",
+                                    );
+                                    return;
                                   }
 
                                   setState(() {
-                                    items[index]['selectedProduk'] = val;
+                                    items[index]['selectedProduk'] = menu;
+                                    items[index]['qty'] = 0;
                                     errorMessage = null;
                                   });
                                 },
-                                onQtyChanged: (newQty) {
-                                  final MenuModel? p = item['selectedProduk'];
+                                onQtyChanged: (newQty) async {
+                                  if (newQty < 0) return;
 
-                                  if (p != null) {
-                                    int sisaStok = getSisaStok(items, p);
-
-                                    // Tambahkan kembali qty lama item ini (biar tidak double hitung)
-                                    sisaStok += item['qty'] as int;
-
-                                    if (newQty > sisaStok) {
-                                      setState(() {
-                                        errorMessage =
-                                            "Stok ${p.nama} tidak cukup!\nSisa: $sisaStok";
-                                      });
-                                      return;
-                                    }
-                                  }
-
-                                  if (newQty >= 0) {
+                                  if (newQty == 0) {
                                     setState(() {
-                                      items[index]['qty'] = newQty;
+                                      items[index]['qty'] = 0;
                                       errorMessage = null;
                                     });
+                                    return;
                                   }
+
+                                  // ✅ Validasi realtime ke bahan
+                                  final error = await bisaTambahQty(
+                                    items,
+                                    index,
+                                    newQty,
+                                  );
+                                  if (error != null) {
+                                    setState(() => errorMessage = error);
+                                    return;
+                                  }
+
+                                  setState(() {
+                                    items[index]['qty'] = newQty;
+                                    errorMessage = null;
+                                  });
                                 },
                                 onRemove: () {
                                   if (items.length > 1) {
@@ -153,9 +269,8 @@ class TransactionDialog {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
 
-                    // ➕ Tambah item
                     InkWell(
                       onTap: () {
                         setState(() {
@@ -194,23 +309,47 @@ class TransactionDialog {
                           color: const Color(0xFF00E0C6),
                           textColor: const Color.fromRGBO(11, 18, 32, 1),
                           onPressed: () async {
-                            for (var item in items) {
-                              final MenuModel? p = item['selectedProduk'];
-                              final int qty = item['qty'] as int;
+                            final validItems = items
+                                .where(
+                                  (i) =>
+                                      i['selectedProduk'] != null &&
+                                      i['qty'] > 0,
+                                )
+                                .toList();
 
-                              if (p == null || qty <= 0) continue;
+                            if (validItems.isEmpty) {
+                              setState(
+                                () =>
+                                    errorMessage = "Pilih produk dan isi qty!",
+                              );
+                              return;
+                            }
 
-                              if (qty > (p.stok ?? 0)) {
-                                setState(() {
-                                  errorMessage =
-                                      "Stok ${p.nama} tidak cukup!\n"
-                                      "Diminta: $qty, Tersedia: ${p.stok ?? 0}";
-                                });
+                            // ✅ Validasi akhir sebelum simpan
+                            final sisaStok = await hitungSisaStokBahan(
+                              validItems,
+                            );
+                            for (var entry in sisaStok.entries) {
+                              if (entry.value < 0) {
+                                final semuaBahan = await DatabaseService
+                                    .instance
+                                    .getBahanSemua();
+                                final bahan = semuaBahan.firstWhere(
+                                  (b) => b['id'] == entry.key,
+                                  orElse: () => {'nama': 'Bahan'},
+                                );
+                                setState(
+                                  () => errorMessage =
+                                      "Bahan '${bahan['nama']}' tidak mencukupi!",
+                                );
                                 return;
                               }
                             }
 
-                            num totalAkhir = items.fold<num>(0, (sum, item) {
+                            num totalAkhir = validItems.fold<num>(0, (
+                              sum,
+                              item,
+                            ) {
                               final MenuModel? p = item['selectedProduk'];
                               return sum +
                                   ((p?.harga ?? 0) * (item['qty'] as int));
@@ -220,7 +359,11 @@ class TransactionDialog {
 
                             bool sukses = await context
                                 .read<MenuProvider>()
-                                .simpanTransaksi(items, totalAkhir, shiftName);
+                                .simpanTransaksi(
+                                  validItems,
+                                  totalAkhir,
+                                  shiftName,
+                                );
 
                             if (sukses && context.mounted) {
                               Navigator.pop(context);

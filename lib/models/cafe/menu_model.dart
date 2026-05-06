@@ -4,14 +4,16 @@ class MenuModel {
   final double harga;
   final String kategori;
   final int? stok; 
+ 
 
   MenuModel({
     this.id,
     required this.nama,
     required this.harga,
     required this.kategori,
-    this.stok = 0, 
+    this.stok,
   });
+
 
   Map<String, dynamic> toMap() {
     return {
