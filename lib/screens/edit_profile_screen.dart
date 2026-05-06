@@ -212,7 +212,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   _showConfirmPassword = !_showConfirmPassword,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 43),
                           _buildButton(
                             label: 'SIMPAN PASSWORD',
                             isLoading: _isLoadingPassword,
