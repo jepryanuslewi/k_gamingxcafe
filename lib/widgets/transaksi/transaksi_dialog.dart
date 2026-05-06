@@ -12,11 +12,10 @@ class TransactionDialog {
     ];
     String? errorMessage;
 
-    // ✅ Cache resep agar tidak query DB berulang
     Map<int, List<Map<String, dynamic>>> resepCache = {};
-    // ✅ Cache stok bahan saat dialog dibuka
     Map<int, double> stokBahanAwal = {};
     bool stokSudahDimuat = false;
+    Map<int, double> sisaStokBahanState = {};
 
     // ✅ Muat stok bahan sekali saat dialog dibuka
     Future<void> muatStokBahan() async {
@@ -117,6 +116,26 @@ class TransactionDialog {
       return null; // ✅ Bisa ditambah
     }
 
+    // ✅ Update sisa stok dan trigger rebuild
+    Future<void> updateSisaStok(StateSetter setState) async {
+      final sisa = await hitungSisaStokBahan(items);
+      setState(() => sisaStokBahanState = sisa);
+    }
+
+    context.read<MenuProvider>().fetchMenu().then((_) async {
+      // ✅ fetchMenu sudah selesai, baru preload resep
+      await muatStokBahan();
+
+      final menuProv = context.read<MenuProvider>();
+      for (var menu in menuProv.listMenu) {
+        if (menu.id != null) {
+          await getResep(menu.id!);
+        }
+      }
+
+      debugPrint('✅ Preload selesai. resepCache: ${resepCache.keys.toList()}');
+      debugPrint('✅ stokBahanAwal: $stokBahanAwal');
+    });
     context.read<MenuProvider>().fetchMenu();
 
     showDialog(
@@ -125,7 +144,27 @@ class TransactionDialog {
         return StatefulBuilder(
           builder: (context, setState) {
             final menuProv = context.watch<MenuProvider>();
+            Map<int, double> _hitungSisaSync() {
+              final Map<int, double> sisa = Map.from(stokBahanAwal);
+              for (var item in items) {
+                final MenuModel? p = item['selectedProduk'];
+                final int qty = item['qty'] as int;
+                if (p == null || qty <= 0 || p.id == null) continue;
 
+                final resep = resepCache[p.id!];
+                if (resep == null) continue;
+
+                for (var r in resep) {
+                  final int bahanId = r['bahan_id'] as int;
+                  final double jumlahPakai = (r['jumlah_pakai'] as num)
+                      .toDouble();
+                  sisa[bahanId] = (sisa[bahanId] ?? 0) - (jumlahPakai * qty);
+                }
+              }
+              return sisa;
+            }
+
+            sisaStokBahanState = _hitungSisaSync();
             return AlertDialog(
               backgroundColor: const Color.fromRGBO(11, 18, 32, 1),
               shape: RoundedRectangleBorder(
@@ -261,7 +300,11 @@ class TransactionDialog {
                                       errorMessage = null;
                                     });
                                   }
+                                  updateSisaStok(setState);
                                 },
+                                sisaStokBahan: sisaStokBahanState,
+                                resepCache: resepCache,
+                                onBeforeOpen: () => updateSisaStok(setState),
                               ),
                             );
                           }).toList(),
@@ -272,11 +315,13 @@ class TransactionDialog {
                     const SizedBox(height: 10),
 
                     InkWell(
-                      onTap: () {
+                      onTap: () async {
                         setState(() {
                           items.add({'selectedProduk': null, 'qty': 0});
                           errorMessage = null;
                         });
+                        _hitungSisaSync();
+                        await updateSisaStok(setState);
                       },
                       child: Container(
                         padding: const EdgeInsets.all(8),
@@ -397,6 +442,9 @@ class TransactionDialog {
     required Function(dynamic) onProdukChanged,
     required Function(int) onQtyChanged,
     required VoidCallback onRemove,
+    Map<int, double>? sisaStokBahan,
+    Map<int, List<Map<String, dynamic>>>? resepCache,
+    Future<void> Function()? onBeforeOpen,
   }) {
     return Container(
       width: 240,
@@ -428,6 +476,9 @@ class TransactionDialog {
             selectedItem: produk,
             isLoading: isLoading,
             onSelected: onProdukChanged,
+            sisaStokBahan: sisaStokBahan,
+            resepCache: resepCache,
+            onBeforeOpen: onBeforeOpen,
           ),
           const SizedBox(height: 15),
           Row(
