@@ -67,7 +67,21 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildTextField(namaController, "Nama Menu"),
+                      _buildTextField(
+                        namaController,
+                        "Nama Menu",
+                        extraValidator: (v) {
+                          final sudahAda = context
+                              .read<MenuProvider>()
+                              .listMenu
+                              .any(
+                                (m) =>
+                                    m.nama.toLowerCase().trim() ==
+                                    v!.toLowerCase().trim(),
+                              );
+                          return sudahAda ? "Menu '$v' sudah ada!" : null;
+                        },
+                      ),
                       _buildTextField(
                         hargaController,
                         "Harga Jual",
@@ -100,7 +114,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                           const Text(
                             "Resep Bahan",
                             style: TextStyle(
-                              color: Colors.cyanAccent,
+                              color: Colors.grey,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -115,7 +129,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                             },
                             icon: const Icon(
                               Icons.add_circle,
-                              color: Colors.cyanAccent,
+                              color: Color(0xffe21388),
                             ),
                           ),
                         ],
@@ -280,6 +294,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
     TextEditingController controller,
     String label, {
     bool isNumber = false,
+    String? Function(String?)? extraValidator,
   }) {
     return TextFormField(
       controller: controller,
@@ -289,7 +304,11 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
       ),
-      validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
+      validator: (v) {
+        if (v == null || v.isEmpty) return "Wajib diisi";
+        if (extraValidator != null) return extraValidator(v);
+        return null;
+      },
     );
   }
 
@@ -451,7 +470,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                         IconButton(
                                           icon: const Icon(
                                             Icons.edit_outlined,
-                                            color: Colors.amber,
+                                            color: Colors.cyanAccent,
                                           ),
                                           onPressed: () =>
                                               showEditMenuForm(menu),
@@ -488,12 +507,10 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
     String selectedKategori = menu.kategori;
     final formKey = GlobalKey<FormState>();
 
-    // 2. Ambil resep lama dari Database (Opsional: Tampilkan loading jika resep banyak)
     final resepLama = await DatabaseService.instance.getResepByProductId(
       menu.id!,
     );
 
-    // 3. Map data resep lama ke dalam resepInput agar muncul di UI
     setState(() {
       resepInput = resepLama.map((r) {
         return {
@@ -534,7 +551,21 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildTextField(namaController, "Nama Menu"),
+                      _buildTextField(
+                        namaController,
+                        "Nama Menu",
+                        extraValidator: (v) {
+                          final sudahAda = context
+                              .read<MenuProvider>()
+                              .listMenu
+                              .any(
+                                (m) =>
+                                    m.nama.toLowerCase().trim() ==
+                                    v!.toLowerCase().trim(),
+                              );
+                          return sudahAda ? "Menu '$v' sudah ada!" : null;
+                        },
+                      ),
                       _buildTextField(
                         hargaController,
                         "Harga Jual",
@@ -582,7 +613,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                             },
                             icon: const Icon(
                               Icons.add_circle,
-                              color: Colors.amberAccent,
+                              color: Colors.cyanAccent,
                             ),
                           ),
                         ],
@@ -695,7 +726,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xffe21388),
+                  backgroundColor: Color.fromRGBO(0, 224, 198, 100),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

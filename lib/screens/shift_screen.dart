@@ -123,7 +123,7 @@ class ShiftScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            // Tombol "Pilih" kecil di bawah
+
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(

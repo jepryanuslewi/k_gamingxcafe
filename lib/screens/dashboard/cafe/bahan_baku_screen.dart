@@ -56,7 +56,21 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildTextField(namaController, "Nama Bahan"),
+                    _buildTextField(
+                      namaController,
+                      "Nama Bahan",
+                      extraValidator: (v) {
+                        final sudahAda = context
+                            .read<BahanProvider>()
+                            .listBahan
+                            .any(
+                              (b) =>
+                                  b.nama.toLowerCase().trim() ==
+                                  v!.toLowerCase().trim(),
+                            );
+                        return sudahAda ? "Bahan '$v' sudah ada!" : null;
+                      },
+                    ),
                     _buildTextField(kategoriController, "Kategori"),
                     _buildTextField(
                       stokController,
@@ -166,7 +180,22 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildTextField(namaController, "Nama Bahan"),
+                    _buildTextField(
+                      namaController,
+                      "Nama Bahan",
+                      extraValidator: (v) {
+                        final sudahAda = context
+                            .read<BahanProvider>()
+                            .listBahan
+                            .any(
+                              (b) =>
+                                  b.nama.toLowerCase().trim() ==
+                                      v!.toLowerCase().trim() &&
+                                  b.id != bahan.id,
+                            );
+                        return sudahAda ? "Bahan '$v' sudah ada!" : null;
+                      },
+                    ),
                     _buildTextField(kategoriController, "Kategori"),
                     _buildTextField(
                       stokController,
@@ -234,7 +263,7 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
               },
               child: const Text(
                 "Update",
-                style: TextStyle(color: Colors.black),
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ],
@@ -247,6 +276,7 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
     TextEditingController controller,
     String label, {
     bool isNumber = false,
+    String? Function(String?)? extraValidator,
   }) {
     return TextFormField(
       controller: controller,
@@ -256,7 +286,11 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
       ),
-      validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
+      validator: (v) {
+        if (v == null || v.isEmpty) return "Wajib diisi";
+        if (extraValidator != null) return extraValidator(v);
+        return null;
+      },
     );
   }
 

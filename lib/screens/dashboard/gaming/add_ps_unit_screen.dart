@@ -164,22 +164,29 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextFormField(
-                    controller: nameController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      labelText: "Nama Unit",
-                      labelStyle: TextStyle(color: Colors.grey),
-                    ),
+                  _buildTextField(
+                    nameController,
+                    "Nama Unit",
+                    extraValidator: (v) {
+                      final sudahAda = units.any(
+                        (u) =>
+                            u['name'].toString().toLowerCase().trim() ==
+                            v!.toLowerCase().trim(),
+                      );
+                      return sudahAda ? "Unit '$v' sudah ada!" : null;
+                    },
                   ),
-                  TextFormField(
-                    controller: priceController,
-                    style: const TextStyle(color: Colors.white),
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Harga per Jam",
-                      labelStyle: TextStyle(color: Colors.grey),
-                    ),
+                  _buildTextField(
+                    priceController,
+                    "Harga per Jam",
+                    isNumber: true,
+                    extraValidator: (v) {
+                      final harga = int.tryParse(v!);
+                      if (harga == null || harga <= 0) {
+                        return "Harga harus lebih dari 0";
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 15),
                   DropdownButtonFormField<String>(
@@ -235,6 +242,28 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    bool isNumber = false,
+    String? Function(String?)? extraValidator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white),
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.grey),
+      ),
+      validator: (v) {
+        if (v == null || v.isEmpty) return "Wajib diisi";
+        if (extraValidator != null) return extraValidator(v);
+        return null;
+      },
     );
   }
 
