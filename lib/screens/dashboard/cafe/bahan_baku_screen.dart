@@ -104,12 +104,16 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
               ),
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
+                  final double qtyStok =
+                      double.tryParse(stokController.text) ?? 0;
+                  final double isi =
+                      double.tryParse(isiPerQtyController.text) ?? 1;
                   final newBahan = Bahan(
                     nama: namaController.text,
                     kategori: kategoriController.text,
                     satuan: selectedSatuan,
-                    stokSaatIni: double.tryParse(stokController.text) ?? 0,
-                    isiPerQty: double.tryParse(isiPerQtyController.text) ?? 1,
+                    stokSaatIni: qtyStok * isi,
+                    isiPerQty: isi,
                   );
 
                   await context.read<BahanProvider>().addBahan(
@@ -521,7 +525,7 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
+            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
             onPressed: () {

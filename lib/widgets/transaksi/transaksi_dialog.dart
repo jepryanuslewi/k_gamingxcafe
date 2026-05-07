@@ -17,7 +17,6 @@ class TransactionDialog {
     bool stokSudahDimuat = false;
     Map<int, double> sisaStokBahanState = {};
 
-    // ✅ Muat stok bahan sekali saat dialog dibuka
     Future<void> muatStokBahan() async {
       if (stokSudahDimuat) return;
       final semuaBahan = await DatabaseService.instance.getBahanSemua();
@@ -27,7 +26,6 @@ class TransactionDialog {
       stokSudahDimuat = true;
     }
 
-    // ✅ Ambil resep dengan cache
     Future<List<Map<String, dynamic>>> getResep(int productId) async {
       if (resepCache.containsKey(productId)) return resepCache[productId]!;
       final resep = await DatabaseService.instance.getResepByProductId(
@@ -37,13 +35,11 @@ class TransactionDialog {
       return resep;
     }
 
-    // ✅ Hitung sisa stok bahan setelah dikurangi semua item di dialog
     Future<Map<int, double>> hitungSisaStokBahan(
       List<Map<String, dynamic>> currentItems,
     ) async {
       await muatStokBahan();
 
-      // Salin stok awal
       final Map<int, double> sisa = Map.from(stokBahanAwal);
 
       for (var item in currentItems) {
@@ -62,7 +58,6 @@ class TransactionDialog {
       return sisa;
     }
 
-    // ✅ Cek apakah qty bisa ditambah berdasarkan sisa bahan
     Future<String?> bisaTambahQty(
       List<Map<String, dynamic>> currentItems,
       int targetIndex,
@@ -76,7 +71,6 @@ class TransactionDialog {
       final resep = await getResep(p.id!);
       if (resep.isEmpty) return null;
 
-      // Hitung sisa stok TANPA item index ini dulu
       final Map<int, double> sisaTanpaItem = Map.from(stokBahanAwal);
       for (int i = 0; i < currentItems.length; i++) {
         if (i == targetIndex) continue; // skip item ini
@@ -93,7 +87,6 @@ class TransactionDialog {
         }
       }
 
-      // Cek apakah newQty cukup dengan sisa yang ada
       for (var r in resep) {
         final int bahanId = r['bahan_id'] as int;
         final double jumlahPakai = (r['jumlah_pakai'] as num).toDouble();
@@ -101,7 +94,6 @@ class TransactionDialog {
         final double dibutuhkan = jumlahPakai * newQty;
 
         if (dibutuhkan > sisaUntukItem) {
-          // Cari nama bahan
           final semuaBahan = await DatabaseService.instance.getBahanSemua();
           final bahan = semuaBahan.firstWhere(
             (b) => b['id'] == bahanId,
@@ -113,17 +105,15 @@ class TransactionDialog {
         }
       }
 
-      return null; // ✅ Bisa ditambah
+      return null;
     }
 
-    // ✅ Update sisa stok dan trigger rebuild
     Future<void> updateSisaStok(StateSetter setState) async {
       final sisa = await hitungSisaStokBahan(items);
       setState(() => sisaStokBahanState = sisa);
     }
 
     context.read<MenuProvider>().fetchMenu().then((_) async {
-      // ✅ fetchMenu sudah selesai, baru preload resep
       await muatStokBahan();
 
       final menuProv = context.read<MenuProvider>();
@@ -133,8 +123,8 @@ class TransactionDialog {
         }
       }
 
-      debugPrint('✅ Preload selesai. resepCache: ${resepCache.keys.toList()}');
-      debugPrint('✅ stokBahanAwal: $stokBahanAwal');
+      debugPrint('Preload selesai. resepCache: ${resepCache.keys.toList()}');
+      debugPrint('stokBahanAwal: $stokBahanAwal');
     });
     context.read<MenuProvider>().fetchMenu();
 
@@ -236,10 +226,8 @@ class TransactionDialog {
                                     return;
                                   }
 
-                                  // ✅ Preload resep saat produk dipilih
                                   if (menu.id != null) await getResep(menu.id!);
 
-                                  // ✅ Cek apakah qty 1 saja sudah cukup
                                   final tempItems =
                                       List<Map<String, dynamic>>.from(items);
                                   tempItems[index] = {
@@ -277,7 +265,6 @@ class TransactionDialog {
                                     return;
                                   }
 
-                                  // ✅ Validasi realtime ke bahan
                                   final error = await bisaTambahQty(
                                     items,
                                     index,
@@ -370,7 +357,6 @@ class TransactionDialog {
                               return;
                             }
 
-                            // ✅ Validasi akhir sebelum simpan
                             final sisaStok = await hitungSisaStokBahan(
                               validItems,
                             );

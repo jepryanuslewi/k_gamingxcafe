@@ -399,7 +399,7 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
               child: Text(
                 saveLabel,
                 style: const TextStyle(
-                  color: Colors.black,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -437,77 +437,26 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : packages.isEmpty
-          ? const Center(
-              child: Text(
-                "Belum ada paket",
-                style: TextStyle(color: Colors.white54),
+          ? Padding(
+              padding: const EdgeInsets.only(top: 16, left: 20, right: 20),
+              child: Column(
+                children: [
+                  _header(),
+                  const Center(
+                    child: Text(
+                      "Belum ada paket",
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                ],
               ),
             )
           : Padding(
               padding: const EdgeInsets.only(top: 16, left: 20, right: 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 10),
-                  const Text(
-                    "Manajemen Unit PS",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    children: const [
-                      Text(
-                        "GAMING",
-                        style: TextStyle(
-                          color: Color.fromRGBO(226, 19, 136, 100),
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: "Poppins",
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        "X",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.normal,
-                          fontFamily: "Poppins",
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        "CAFE",
-                        style: TextStyle(
-                          color: Color.fromRGBO(0, 224, 198, 100),
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: "Poppins",
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(color: Colors.white10, thickness: 1, height: 32),
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xffe21388),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: showAddPackageForm,
-                      child: Text(
-                        "Tambah Paket",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
+                  _header(),
+
                   ListView.builder(
                     shrinkWrap: true,
                     padding: const EdgeInsets.only(top: 16),
@@ -554,7 +503,41 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
                                   Icons.delete_outline,
                                   color: Colors.redAccent,
                                 ),
-                                onPressed: () => deletePackage(pkg["id"]),
+                                onPressed: () => showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    backgroundColor: const Color(0xff141c2f),
+                                    title: const Text(
+                                      "Hapus Unit?",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    content: Text(
+                                      "Yakin ingin menghapus ${pkg["name"]}?",
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text(
+                                          "Batal",
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            deletePackage(pkg["id"]),
+                                        child: const Text(
+                                          "Hapus",
+                                          style: TextStyle(
+                                            color: Colors.redAccent,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 tooltip: 'Hapus Paket',
                               ),
                             ],
@@ -566,6 +549,71 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _header() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 10),
+        const Text(
+          "Manajemen Unit PS",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 10),
+        Row(
+          children: const [
+            Text(
+              "GAMING",
+              style: TextStyle(
+                color: Color.fromRGBO(226, 19, 136, 100),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                fontFamily: "Poppins",
+              ),
+            ),
+            SizedBox(width: 5),
+            Text(
+              "X",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.normal,
+                fontFamily: "Poppins",
+              ),
+            ),
+            SizedBox(width: 5),
+            Text(
+              "CAFE",
+              style: TextStyle(
+                color: Color.fromRGBO(0, 224, 198, 100),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                fontFamily: "Poppins",
+              ),
+            ),
+          ],
+        ),
+        Divider(color: Colors.white10, thickness: 1, height: 32),
+        Align(
+          alignment: Alignment.centerRight,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xffe21388),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: showAddPackageForm,
+            child: Text("Tambah Paket", style: TextStyle(color: Colors.white)),
+          ),
+        ),
+      ],
     );
   }
 }

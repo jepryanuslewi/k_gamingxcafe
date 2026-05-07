@@ -225,7 +225,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                               onPressed: () {
                                 TransactionDialog.show(
                                   context,
-                                  shiftName: username,
+                                  shiftName: widget.shiftName,
                                 );
                               },
                             ),

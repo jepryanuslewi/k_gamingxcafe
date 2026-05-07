@@ -242,11 +242,6 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xffe21388),
-        onPressed: showAddUnitForm,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
@@ -298,6 +293,22 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
                     ],
                   ),
                   Divider(color: Colors.white10, thickness: 1, height: 32),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xffe21388),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: showAddUnitForm,
+                      child: Text(
+                        "Tambah Unit PS",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
                   SizedBox(height: 10),
                   GridView.builder(
                     shrinkWrap: true,

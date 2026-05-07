@@ -70,7 +70,7 @@ class _DropdownMenuWidgetState extends State<DropdownMenuWidget> {
     return stokMin == 999999 ? 0 : stokMin;
   }
 
-  // ✅ Panggil update dari parent lalu update state lokal
+ 
   Future<void> _handleBeforeOpen() async {
     if (widget.onBeforeOpen != null) await widget.onBeforeOpen!();
 
@@ -148,10 +148,7 @@ class _DropdownMenuWidgetState extends State<DropdownMenuWidget> {
                       decoration: BoxDecoration(
                         color: Colors.redAccent.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: Colors.redAccent,
-                          width: 0.5,
-                        ),
+                        border: Border.all(color: Colors.redAccent, width: 0.5),
                       ),
                       child: const Text(
                         "HABIS",
@@ -185,10 +182,7 @@ class _DropdownMenuWidgetState extends State<DropdownMenuWidget> {
               borderRadius: BorderRadius.circular(10),
             ),
             focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(
-                color: Color(0xFF00E0C6),
-                width: 1,
-              ),
+              borderSide: const BorderSide(color: Color(0xFF00E0C6), width: 1),
               borderRadius: BorderRadius.circular(10),
             ),
           ),

@@ -65,19 +65,6 @@ class DatabaseService {
           'created_at': DateTime.now().toIso8601String(),
         });
 
-        await db.insert('users', {
-          'username': 'pegawai1',
-          'password': '1234',
-          'role': 'staff',
-          'created_at': DateTime.now().toIso8601String(),
-        });
-        await db.insert('users', {
-          'username': 'pegawai2',
-          'password': '1234',
-          'role': 'staff',
-          'created_at': DateTime.now().toIso8601String(),
-        });
-
         /// PS UNITS ====================================================================
         await db.execute('''
           CREATE TABLE ps_units(
@@ -189,7 +176,8 @@ class DatabaseService {
           username TEXT NOT NULL,
           nama_shift TEXT NOT NULL,
           waktu TEXT NOT NULL,
-          keterangan TEXT, 
+          keterangan TEXT,
+          nama_bahan TEXT, 
           FOREIGN KEY(bahan_id) REFERENCES bahan(id)
         )
       ''');
@@ -235,10 +223,21 @@ class DatabaseService {
     required String username,
     required String namaShift,
     String? keterangan,
+    String? namaBahan,
   }) async {
     try {
       final db = await instance.database;
-
+      String nama = namaBahan ?? '';
+      if (nama.isEmpty) {
+        final result = await db.query(
+          'bahan',
+          columns: ['nama'],
+          where: 'id = ?',
+          whereArgs: [bahanId],
+          limit: 1,
+        );
+        if (result.isNotEmpty) nama = result.first['nama'] as String;
+      }
       await db.transaction((txn) async {
         int updateCount = await txn.rawUpdate(
           'UPDATE bahan SET stok_saat_ini = stok_saat_ini + ? WHERE id = ?',
@@ -251,6 +250,7 @@ class DatabaseService {
 
         await txn.insert('riwayat_bahan', {
           'bahan_id': bahanId,
+          'nama_bahan': nama,
           'jumlah': jumlah,
           'tipe': 'masuk',
           'username': username,
@@ -272,10 +272,21 @@ class DatabaseService {
     required String username,
     required String namaShift,
     String? keterangan,
+    String? namaBahan,
   }) async {
     try {
       final db = await instance.database;
-
+      String nama = namaBahan ?? '';
+      if (nama.isEmpty) {
+        final result = await db.query(
+          'bahan',
+          columns: ['nama'],
+          where: 'id = ?',
+          whereArgs: [bahanId],
+          limit: 1,
+        );
+        if (result.isNotEmpty) nama = result.first['nama'] as String;
+      }
       await db.transaction((txn) async {
         int updateCount = await txn.rawUpdate(
           'UPDATE bahan SET stok_saat_ini = stok_saat_ini - ? WHERE id = ?',
@@ -288,6 +299,7 @@ class DatabaseService {
 
         await txn.insert('riwayat_bahan', {
           'bahan_id': bahanId,
+          'nama_bahan': nama,
           'jumlah': jumlah,
           'tipe': 'keluar',
           'username': username,
@@ -361,7 +373,25 @@ class DatabaseService {
 
   Future<int> deleteBahan(int id) async {
     final db = await instance.database;
-    return await db.delete('bahan', where: 'id = ?', whereArgs: [id]);
+
+    await db.execute("PRAGMA foreign_keys = OFF");
+
+    await db.update(
+      'riwayat_bahan',
+      {'keterangan': '[Bahan Dihapus] '},
+      where: 'bahan_id = ?',
+      whereArgs: [id],
+    );
+
+    // Hapus resep
+    await db.delete('resep_menu', where: 'bahan_id = ?', whereArgs: [id]);
+
+    // Hapus bahan
+    final result = await db.delete('bahan', where: 'id = ?', whereArgs: [id]);
+
+    await db.execute("PRAGMA foreign_keys = ON");
+
+    return result;
   }
 
   Future<void> tambahBahanDanRiwayat(
@@ -371,11 +401,8 @@ class DatabaseService {
     final db = await instance.database;
 
     await db.transaction((txn) async {
-      // 1. Tambah bahan dan ambil ID auto-increment-nya
-      // toMap() akan mengirimkan id: null, dan SQLite akan mengisinya otomatis
       int newBahanId = await txn.insert('bahan', bahan.toMap());
 
-      // 2. Masukkan ke riwayat menggunakan ID yang baru didapat
       dataRiwayat['bahan_id'] = newBahanId;
       await txn.insert('riwayat_bahan', dataRiwayat);
     });
