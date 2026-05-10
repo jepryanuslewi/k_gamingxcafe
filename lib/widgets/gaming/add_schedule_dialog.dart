@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:k_gamingxcafe/providers/pendapatan_provider.dart';
-import 'package:provider/provider.dart';
 import '../../models/gaming/ps_unit_model.dart';
 import '../../models/gaming/package_model.dart';
 
@@ -22,9 +20,10 @@ class AddScheduleDialog extends StatefulWidget {
 class _AddScheduleDialogState extends State<AddScheduleDialog> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   String _selectedCategory = 'REGULAR';
-  String _selectedStatus = 'walkin'; // ✅ tambah ini
+  String _selectedStatus = 'walkin';
   int? _selectedUnitId;
   PackageModel? _selectedPackage;
 
@@ -83,328 +82,427 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
       ),
       content: SizedBox(
         width: 450,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- 1. TIPE RESERVASI (WALK IN / BOOKING) ---
-              _buildLabel("Tipe Reservasi"),
-              Row(
-                children:
-                    [
-                      {'label': 'WALK IN', 'value': 'walkin'},
-                      {'label': 'BOOKING', 'value': 'booking'},
-                    ].map((item) {
-                      final isSelected = _selectedStatus == item['value'];
-                      return GestureDetector(
-                        onTap: () =>
-                            setState(() => _selectedStatus = item['value']!),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 10),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? const Color(0xFF00E0C6)
-                                : Colors.white10,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
+
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- 1. TIPE RESERVASI (WALK IN / BOOKING) ---
+                _buildLabel("Tipe Reservasi"),
+                Row(
+                  children:
+                      [
+                        {'label': 'WALK IN', 'value': 'walkin'},
+                        {'label': 'BOOKING', 'value': 'booking'},
+                      ].map((item) {
+                        final isSelected = _selectedStatus == item['value'];
+                        return GestureDetector(
+                          onTap: () => setState(() {
+                            _selectedStatus = item['value']!;
+                            if (_selectedStatus == 'walkin') {
+                              _selectedDate = DateTime.now();
+                            }
+                          }),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
                               color: isSelected
                                   ? const Color(0xFF00E0C6)
-                                  : Colors.white24,
+                                  : Colors.white10,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFF00E0C6)
+                                    : Colors.white24,
+                              ),
+                            ),
+                            child: Text(
+                              item['label']!,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? const Color(0xFF0B1220)
+                                    : Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
-                          child: Text(
-                            item['label']!,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? const Color(0xFF0B1220)
-                                  : Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-              const SizedBox(height: 15),
-
-              // --- 2. KATEGORI ---
-              _buildLabel("Kategori"),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                dropdownColor: const Color(0xFF141C2F),
-                style: const TextStyle(color: Colors.white),
-                decoration: _inputDeco(""),
-                items: ['REGULAR', 'VIP 1', 'VIP 2', 'Event']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (val) {
-                  setState(() {
-                    _selectedCategory = val!;
-                    _selectedUnitId = null;
-                    _selectedPackage = null;
-                    _calculatePrice();
-                  });
-                },
-              ),
-              const SizedBox(height: 15),
-
-              // --- 3. UNIT (Hanya jika BUKAN Event) ---
-              if (_selectedCategory != 'Event') ...[
-                _buildLabel("Pilih Unit PS"),
-                DropdownButtonFormField<int>(
-                  value: _selectedUnitId,
-                  hint: const Text(
-                    "Pilih No Unit",
-                    style: TextStyle(color: Colors.white54),
-                  ),
-                  dropdownColor: const Color(0xFF141C2F),
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _inputDeco(""),
-                  items: filteredUnits
-                      .map(
-                        (u) =>
-                            DropdownMenuItem(value: u.id, child: Text(u.name)),
-                      )
-                      .toList(),
-                  onChanged: (val) {
-                    setState(() => _selectedUnitId = val);
-                    _calculatePrice();
-                  },
+                        );
+                      }).toList(),
                 ),
                 const SizedBox(height: 15),
-              ],
 
-              // --- 4. PAKETAN (Hanya jika Kategori EVENT) ---
-              if (_selectedCategory == 'Event') ...[
-                _buildLabel("Pilih Paket Event"),
-                filteredPackages.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          "Belum ada paket event di database",
-                          style: TextStyle(
-                            color: Colors.redAccent,
-                            fontSize: 12,
+                // --- 2. KATEGORI & UNIT BERDAMPINGAN ---
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Kategori (kiri)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel("Kategori"),
+                          DropdownButtonFormField<String>(
+                            value: _selectedCategory,
+                            dropdownColor: const Color(0xFF141C2F),
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _inputDeco(""),
+                            items: ['REGULAR', 'VIP 1', 'VIP 2', 'Event']
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) {
+                              setState(() {
+                                _selectedCategory = val!;
+                                _selectedUnitId = null;
+                                _selectedPackage = null;
+                                _calculatePrice();
+                              });
+                            },
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+
+                    // Unit / Paket (kanan)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel(
+                            _selectedCategory == 'Event'
+                                ? "Pilih Paket Event"
+                                : "Pilih Unit PS",
+                          ),
+                          if (_selectedCategory != 'Event')
+                            DropdownButtonFormField<int>(
+                              value: _selectedUnitId,
+                              hint: const Text(
+                                "Pilih No Unit",
+                                style: TextStyle(color: Colors.white54),
+                              ),
+                              dropdownColor: const Color(0xFF141C2F),
+                              style: const TextStyle(color: Colors.white),
+                              decoration: _inputDeco(""),
+                              items: widget.allUnits
+                                  .where(
+                                    (u) =>
+                                        u.type.trim().toLowerCase() ==
+                                        _selectedCategory.trim().toLowerCase(),
+                                  )
+                                  .map(
+                                    (u) => DropdownMenuItem(
+                                      value: u.id,
+                                      child: Text(u.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (val) {
+                                setState(() => _selectedUnitId = val);
+                                _calculatePrice();
+                              },
+                            ),
+
+                          if (_selectedCategory == 'Event')
+                            widget.availablePackages
+                                    .where(
+                                      (p) => p.category == _selectedCategory,
+                                    )
+                                    .isEmpty
+                                ? const Padding(
+                                    padding: EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      "Belum ada paket event",
+                                      style: TextStyle(
+                                        color: Colors.redAccent,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  )
+                                : DropdownButtonFormField<PackageModel>(
+                                    value: _selectedPackage,
+                                    hint: const Text(
+                                      "Pilih Paket",
+                                      style: TextStyle(color: Colors.white54),
+                                    ),
+                                    dropdownColor: const Color(0xFF141C2F),
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: _inputDeco(""),
+                                    items: widget.availablePackages
+                                        .where(
+                                          (p) =>
+                                              p.category == _selectedCategory,
+                                        )
+                                        .map(
+                                          (p) => DropdownMenuItem(
+                                            value: p,
+                                            child: Text(
+                                              "${p.name} (Rp ${NumberFormat("#,###").format(p.price)})",
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _selectedPackage = val;
+                                        if (val != null) {
+                                          _selectedDuration = val.durationHours;
+                                        }
+                                        _calculatePrice();
+                                      });
+                                    },
+                                  ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                // --- 5. DATA CUSTOMER ---
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel(
+                            _selectedStatus == 'booking'
+                                ? "Nama Pelanggan *"
+                                : "Nama Pelanggan",
+                          ),
+                          TextFormField(
+                            controller: _nameController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _inputDeco(
+                              _selectedStatus == 'booking'
+                                  ? "Wajib diisi"
+                                  : "Opsional",
+                            ),
+                            validator: (v) {
+                              if (_selectedStatus == 'booking' &&
+                                  (v == null || v.trim().isEmpty)) {
+                                return "Nama pelanggan wajib diisi!";
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel("No Telepon"),
+                          TextField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _inputDeco("0812..."),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                // --- 6. TANGGAL & JAM ---
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel("Tanggal"),
+                          // ✅ Jika walkin, tanggal hari ini dan tidak bisa diubah
+                          _selectedStatus == 'walkin'
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                    horizontal: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.white10),
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Colors.white.withOpacity(0.05),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        DateFormat(
+                                          'dd/MM/yyyy',
+                                        ).format(DateTime.now()),
+                                        style: const TextStyle(
+                                          color: Colors
+                                              .white54, 
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.calendar_month,
+                                        color: Colors
+                                            .white24, 
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : _buildPickerTile(
+                                  DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(_selectedDate),
+                                  Icons.calendar_month,
+                                  () async {
+                                    final picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: _selectedDate,
+                                      firstDate: DateTime.now(),
+                                      lastDate: DateTime(2027),
+                                    );
+                                    if (picked != null) {
+                                      setState(() => _selectedDate = picked);
+                                    }
+                                  },
+                                ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel("Jam Mulai"),
+                          _buildPickerTile(
+                            _selectedTime.format(context),
+                            Icons.access_time,
+                            () async {
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: _selectedTime,
+                              );
+                              if (picked != null)
+                                setState(() => _selectedTime = picked);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                if (_selectedCategory != 'Event') ...[
+                  _buildLabel("Durasi Bermain"),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 5,
+                      horizontal: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Tombol Minus
+                        IconButton(
+                          icon: const Icon(
+                            Icons.remove_circle_outline,
+                            color: Color(0xFF00E0C6),
+                          ),
+                          onPressed: () {
+                            if (_selectedDuration > 1) {
+                              setState(() {
+                                _selectedDuration--;
+                                _calculatePrice();
+                              });
+                            }
+                          },
                         ),
-                      )
-                    : DropdownButtonFormField<PackageModel>(
-                        value: _selectedPackage,
-                        hint: const Text(
-                          "Pilih Paket",
-                          style: TextStyle(color: Colors.white54),
-                        ),
-                        dropdownColor: const Color(0xFF141C2F),
-                        style: const TextStyle(color: Colors.white),
-                        decoration: _inputDeco(""),
-                        items: filteredPackages
-                            .map(
-                              (p) => DropdownMenuItem(
-                                value: p,
-                                child: Text(
-                                  "${p.name} (Rp ${NumberFormat("#,###").format(p.price)})",
+
+                        // Angka Durasi
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 25),
+                          child: Column(
+                            children: [
+                              Text(
+                                "$_selectedDuration",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            )
-                            .toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            _selectedPackage = val;
-                            // Update durasi berdasarkan data dari database
-                            if (val != null) {
-                              _selectedDuration = val.durationHours;
-                            }
-                            _calculatePrice();
-                          });
-                        },
-                      ),
-                const SizedBox(height: 15),
-              ],
+                              const Text(
+                                "JAM",
+                                style: TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
 
-              // --- 5. DATA CUSTOMER ---
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel("Nama Pelanggan"),
-                        TextField(
-                          controller: _nameController,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: _inputDeco("Opsional"),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel("No Telepon"),
-                        TextField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: _inputDeco("0812..."),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-
-              // --- 6. TANGGAL & JAM ---
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel("Tanggal"),
-                        _buildPickerTile(
-                          DateFormat('dd/MM/yyyy').format(_selectedDate),
-                          Icons.calendar_month,
-                          () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _selectedDate,
-                              firstDate: DateTime.now(),
-                              lastDate: DateTime(2027),
-                            );
-                            if (picked != null)
-                              setState(() => _selectedDate = picked);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel("Jam Mulai"),
-                        _buildPickerTile(
-                          _selectedTime.format(context),
-                          Icons.access_time,
-                          () async {
-                            final picked = await showTimePicker(
-                              context: context,
-                              initialTime: _selectedTime,
-                            );
-                            if (picked != null)
-                              setState(() => _selectedTime = picked);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-
-              if (_selectedCategory != 'Event') ...[
-                _buildLabel("Durasi Bermain"),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 5,
-                    horizontal: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white10),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Tombol Minus
-                      IconButton(
-                        icon: const Icon(
-                          Icons.remove_circle_outline,
-                          color: Color(0xFF00E0C6),
-                        ),
-                        onPressed: () {
-                          if (_selectedDuration > 1) {
+                        // Tombol Plus
+                        IconButton(
+                          icon: const Icon(
+                            Icons.add_circle_outline,
+                            color: Color(0xFF00E0C6),
+                          ),
+                          onPressed: () {
                             setState(() {
-                              _selectedDuration--;
+                              _selectedDuration++;
                               _calculatePrice();
                             });
-                          }
-                        },
-                      ),
-
-                      // Angka Durasi
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 25),
-                        child: Column(
-                          children: [
-                            Text(
-                              "$_selectedDuration",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Text(
-                              "JAM",
-                              style: TextStyle(
-                                color: Colors.white54,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
+                          },
                         ),
-                      ),
-
-                      // Tombol Plus
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add_circle_outline,
-                          color: Color(0xFF00E0C6),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _selectedDuration++;
-                            _calculatePrice();
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              const Divider(color: Colors.white24, height: 40),
-
-              // --- 8. TOTAL PEMBAYARAN ---
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "TOTAL:",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                  Text(
-                    "Rp ${NumberFormat("#,###").format(_totalPrice)}",
-                    style: const TextStyle(
-                      color: Color(0xFF00E0C6),
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      ],
                     ),
                   ),
                 ],
-              ),
-            ],
+
+                const Divider(color: Colors.white24, height: 40),
+
+                // --- 8. TOTAL PEMBAYARAN ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "TOTAL:",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                    Text(
+                      "Rp ${NumberFormat("#,###").format(_totalPrice)}",
+                      style: const TextStyle(
+                        color: Color(0xFF00E0C6),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -418,6 +516,16 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
             backgroundColor: const Color(0xFF00E0C6),
           ),
           onPressed: () {
+            if (!_formKey.currentState!.validate()) return;
+
+            if (_selectedCategory != 'Event' && _selectedUnitId == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Silakan pilih Unit PS terlebih dahulu"),
+                ),
+              );
+              return;
+            }
             if (_selectedCategory != 'Event' && _selectedUnitId == null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -460,8 +568,20 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
               'duration': _selectedDuration,
               'total_price': _totalPrice,
               'is_paketan': _selectedCategory == 'Event',
-              'status': _selectedStatus, // ✅ 'walkin' atau 'booking'
+              'status': _selectedStatus,
             });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                backgroundColor: Color(0xFF00E0C6),
+                content: Center(
+                  child: Text(
+                    'Reservasi berhasil ditambahkan!',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ),
+                duration: Duration(seconds: 2),
+              ),
+            );
           },
           child: const Text(
             "SIMPAN",

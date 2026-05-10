@@ -38,7 +38,7 @@ class DialogSingout {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                backgroundColor: Colors.redAccent,
+                backgroundColor: Color.fromARGB(255, 226, 19, 136),
               ),
               onPressed: () {
                 Navigator.pop(context); 

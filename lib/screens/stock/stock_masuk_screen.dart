@@ -39,16 +39,34 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     // 1. Validasi Input
     if (selectedBahan == null || _stokController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Lengkapi data terlebih dahulu!")),
+        const SnackBar(
+          backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+          content: Center(
+            child: Text(
+              'Lengkapi data terlebih dahulu!',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+          duration: Duration(seconds: 2),
+        ),
       );
       return;
     }
 
     final double? qty = double.tryParse(_stokController.text);
     if (qty == null || qty <= 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Jumlah stok tidak valid!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+          content: Center(
+            child: Text(
+              'Jumlah stok tidak valid!',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
       return;
     }
 
@@ -69,9 +87,15 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.green,
-          content: Text("Stok ${selectedBahan!.nama} berhasil ditambahkan!"),
+        const SnackBar(
+          backgroundColor: Color(0xFF00E0C6),
+          content: Center(
+            child: Text(
+              'Stok berhasil ditambahkan!',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+          duration: Duration(seconds: 2),
         ),
       );
 
@@ -83,8 +107,14 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          backgroundColor: Colors.red,
-          content: Text("Gagal menambahkan stok. Coba lagi."),
+          backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+          content: Center(
+            child: Text(
+              'Gagal menambahkan stok. Coba lagi.',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+          duration: Duration(seconds: 2),
         ),
       );
     }

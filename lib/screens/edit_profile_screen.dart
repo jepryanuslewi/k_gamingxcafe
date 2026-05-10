@@ -105,10 +105,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void _showSnackbar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Center(
+          child: Text(
+            message,
+            style: const TextStyle(fontSize: 16, color: Colors.white),
+          ),
+        ),
         backgroundColor: isError
-            ? Colors.redAccent
-            : Colors.greenAccent.shade700,
+            ? Color.fromARGB(255, 226, 19, 136)
+            : Color(0xFF00E0C6),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -142,9 +147,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 1100, // 🔥 batas maksimal lebar tablet
-            ),
+            constraints: const BoxConstraints(maxWidth: 1100),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
               child: Row(
@@ -384,7 +387,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color.fromRGBO(11, 55, 50, 1),
+          backgroundColor: Color.fromARGB(255, 226, 19, 136),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),

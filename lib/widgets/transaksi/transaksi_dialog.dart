@@ -400,8 +400,17 @@ class TransactionDialog {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  backgroundColor: Colors.green,
-                                  content: Text("Transaksi Berhasil!"),
+                                  backgroundColor: Color(0xFF00E0C6),
+                                  content: Center(
+                                    child: Text(
+                                      'Transaksi berhasil disimpan!',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  duration: Duration(seconds: 2),
                                 ),
                               );
                             }

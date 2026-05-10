@@ -138,7 +138,7 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                        backgroundColor: Color(0xFF00E0C6),
                         content: Center(
                           child: Text(
                             'Bahan baku berhasil ditambahkan!',
@@ -272,7 +272,7 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      backgroundColor: Color(0xFF00E0C6),
                       content: Center(
                         child: Text(
                           'Bahan baku berhasil diperbarui!',
@@ -591,7 +591,7 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                  backgroundColor: Color(0xFF00E0C6),
                   content: Center(
                     child: Text(
                       'Bahan baku berhasil dihapus!',

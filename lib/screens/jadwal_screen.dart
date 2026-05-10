@@ -179,7 +179,16 @@ class _JadwalScreenState extends State<JadwalScreen> {
                   Navigator.pop(context);
                   context.read<JadwalProvider>().loadJadwalByView(currentView);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Jadwal berhasil dihapus")),
+                    const SnackBar(
+                      backgroundColor: Color(0xFF00E0C6),
+                      content: Center(
+                        child: Text(
+                          'Jadwal berhasil dihapus',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
                   );
                 }
               },
@@ -241,16 +250,20 @@ class _JadwalScreenState extends State<JadwalScreen> {
               ),
               onPressed: () async {
                 final provider = context.read<JadwalProvider>();
-                await provider.completeJadwal(
-                  item.id!,
-                  item.unitId,
-                ); // ✅ bukan deleteJadwal
+                await provider.completeJadwal(item.id!, item.unitId);
                 if (context.mounted) {
                   Navigator.pop(context);
                   provider.loadJadwalByView(currentView);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("Jadwal berhasil diselesaikan"),
+                      backgroundColor: Color(0xFF00E0C6),
+                      content: Center(
+                        child: Text(
+                          'Jadwal berhasil diselesaikan!',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                      duration: Duration(seconds: 2),
                     ),
                   );
                 }
@@ -310,8 +323,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
           result['start_time'],
         ).add(Duration(hours: result['duration'])).toIso8601String(),
         totalPrice: result['total_price'],
-        status:
-            result['status'],
+        status: result['status'],
       );
 
       await provider.addJadwal(newJadwal);
@@ -324,7 +336,6 @@ class _JadwalScreenState extends State<JadwalScreen> {
         );
       }
 
-  
       setState(
         () =>
             currentView = result['status'] == 'walkin' ? "WALK IN" : "BOOKING",
@@ -411,7 +422,6 @@ class _JadwalScreenState extends State<JadwalScreen> {
                   if (value == 'delete') {
                     _showConfirmDelete(context, item);
                   } else if (value == 'done') {
-                    // ✅ tambah ini
                     _showConfirmSelesai(context, item);
                   }
                 },
@@ -499,8 +509,6 @@ class _JadwalScreenState extends State<JadwalScreen> {
                             ),
                           ),
                         ),
-
-                        // ✅ Badge nomor telepon (jika ada)
                         if (item.customerPhone != null &&
                             item.customerPhone!.isNotEmpty)
                           Container(
@@ -566,8 +574,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
   Widget _buildHeader(BuildContext context) {
     final String username =
         context.read<AuthProvider>().user?.username ?? "Pegawai";
-    return
-    Container(
+    return Container(
       color: Colors.transparent,
       width: double.infinity,
       height: 100,

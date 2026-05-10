@@ -35,7 +35,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
     String selectedKategori = kategoriMenu[0];
     final formKey = GlobalKey<FormState>();
     resepInput = [];
-    String? errorResep; // ✅ tambah ini
+    String? errorResep;
 
     showDialog(
       context: context,
@@ -123,7 +123,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                   "bahan_id": null,
                                   "jumlah": TextEditingController(),
                                 });
-                                errorResep = null; // ✅ reset error saat tambah
+                                errorResep = null;
                               });
                             },
                             icon: const Icon(
@@ -135,7 +135,6 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                       ),
                       const Divider(color: Colors.white24),
 
-                      // ✅ Tampilkan error resep di dalam dialog
                       if (errorResep != null)
                         Container(
                           width: double.infinity,
@@ -208,7 +207,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                     }).toList(),
                                     onChanged: (val) => setModalState(() {
                                       resepInput[index]['bahan_id'] = val;
-                                      errorResep = null; // ✅ reset error
+                                      errorResep = null;
                                     }),
                                   ),
                                 ),
@@ -224,9 +223,8 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                     color: Colors.white,
                                     fontSize: 13,
                                   ),
-                                  onChanged: (_) => setModalState(
-                                    () => errorResep = null, // ✅ reset error
-                                  ),
+                                  onChanged: (_) =>
+                                      setModalState(() => errorResep = null),
                                   decoration: const InputDecoration(
                                     hintText: "Qty",
                                     hintStyle: TextStyle(
@@ -253,7 +251,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                 ),
                                 onPressed: () => setModalState(() {
                                   resepInput.removeAt(index);
-                                  errorResep = null; // ✅ reset error
+                                  errorResep = null;
                                 }),
                               ),
                             ],
@@ -333,7 +331,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      backgroundColor: Color(0xFF00E0C6),
                       content: Center(
                         child: Text(
                           'Menu baru berhasil ditambahkan!',
@@ -590,12 +588,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                                       ).showSnackBar(
                                                         const SnackBar(
                                                           backgroundColor:
-                                                              Color.fromRGBO(
-                                                                226,
-                                                                19,
-                                                                136,
-                                                                1.0,
-                                                              ),
+                                                              Color(0xFF00E0C6),
                                                           content: Center(
                                                             child: Text(
                                                               'Menu berhasil dihapus!',

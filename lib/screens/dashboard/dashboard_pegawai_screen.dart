@@ -41,7 +41,7 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+            backgroundColor: Color(0xFF00E0C6),
             content: Center(
               child: Text(
                 'User $username berhasil didaftarkan!',
@@ -59,7 +59,7 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
             backgroundColor: Color.fromRGBO(226, 19, 136, 100),
             content: Center(
               child: Text(
-                'Gagal mendaftarkan user baru',
+                'User sudah terdaftar atau terjadi kesalahan. Coba lagi.',
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
@@ -174,39 +174,36 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Memanggil instance database dari DatabaseService Anda
       final db = await DatabaseService.instance.database;
 
-      // Mengambil data dari tabel 'users' diurutkan berdasarkan ID terbaru
       final List<Map<String, dynamic>> userMaps = await db.query(
         'users',
         orderBy: 'id DESC',
       );
 
       setState(() {
-        // Mengonversi List Map menjadi List UserModel
         _allUsers = userMaps.map((map) => UserModel.fromMap(map)).toList();
         _isLoading = false;
       });
 
-      // Debugging untuk memastikan data terbaca (Opsional)
       print("Data user berhasil dimuat: ${_allUsers.length} orang");
     } catch (e) {
       print("Error fetching users: $e");
       setState(() => _isLoading = false);
 
-      // Memberi notifikasi jika terjadi error database
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Gagal memuat database: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+            content: Text("Gagal memuat database: $e"),
+          ),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Filter data berdasarkan input di Search Bar
     final filteredUsers = _allUsers.where((user) {
       final query = _searchQuery.toLowerCase();
       return user.username.toLowerCase().contains(query) ||
@@ -471,7 +468,6 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
       // Ambil data lama
       final oldUser = _allUsers.firstWhere((u) => u.id == id);
 
-      // ❌ Cegah downgrade admin terakhir
       if (oldUser.role == 'admin' && roleBaru != 'admin') {
         final totalAdmin = await DatabaseService.instance.getTotalAdmin();
 
@@ -491,7 +487,6 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
         }
       }
 
-      // ❌ Jika user ubah dirinya sendiri jadi bukan admin → logout
       bool isSelf = currentUser?.id == id;
 
       await db.update(
@@ -506,7 +501,7 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+            backgroundColor: Color(0xFF00E0C6),
             content: Center(
               child: Text(
                 'Data berhasil diperbarui!',
@@ -579,10 +574,26 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text("Batal"),
+                child: const Text(
+                  "Batal",
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
               TextButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Color(0xFF00E0C6),
+                      content: Center(
+                        child: Text(
+                          'User berhasil dihapus!',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  );
+                  Navigator.pop(context, true);
+                },
                 child: const Text(
                   "Hapus",
                   style: TextStyle(color: Colors.redAccent),

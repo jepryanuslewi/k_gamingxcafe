@@ -38,7 +38,16 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
   Future<void> _handleSimpan() async {
     if (selectedBahan == null || _stokController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Lengkapi data terlebih dahulu!")),
+        const SnackBar(
+          backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+          content: Center(
+            child: Text(
+              'Lengkapi data terlebih dahulu!',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+          duration: Duration(seconds: 2),
+        ),
       );
       return;
     }
@@ -46,7 +55,16 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
     final double? qty = double.tryParse(_stokController.text);
     if (qty == null || qty <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Jumlah pengurangan tidak valid!")),
+        const SnackBar(
+          backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+          content: Center(
+            child: Text(
+              'Jumlah pengurangan tidak valid!',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+          duration: Duration(seconds: 2),
+        ),
       );
       return;
     }
@@ -54,10 +72,14 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
     if ((selectedBahan?.stokSaatIni ?? 0) < qty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.redAccent,
-          content: Text(
-            "Stok tidak cukup! Sisa stok: ${selectedBahan?.stokSaatIni}",
+          backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+          content: Center(
+            child: Text(
+              'Stok tidak cukup! Sisa stok: ${selectedBahan?.stokSaatIni}',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
           ),
+          duration: Duration(seconds: 2),
         ),
       );
       return;
@@ -79,8 +101,13 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Color.fromRGBO(226, 19, 136, 100),
-          content: Text("Stok ${selectedBahan!.nama} berhasil dikurangi!"),
+          backgroundColor: Color(0xFF00E0C6),
+          content: Center(
+            child: Text(
+              "Stok ${selectedBahan!.nama} berhasil dikurangi!",
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
         ),
       );
       setState(() {

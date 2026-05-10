@@ -42,7 +42,7 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+        backgroundColor: Color(0xFF00E0C6),
         content: Center(
           child: Text(
             'Paket berhasil dihapus!',
@@ -108,7 +108,7 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      backgroundColor: Color(0xFF00E0C6),
                       content: Center(
                         child: Text(
                           'Paket baru berhasil ditambahkan!',
@@ -211,7 +211,7 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      backgroundColor: Color(0xFF00E0C6),
                       content: Center(
                         child: Text(
                           'Paket berhasil diperbarui!',

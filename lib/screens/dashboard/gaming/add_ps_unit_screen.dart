@@ -132,7 +132,7 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       duration: Duration(seconds: 2),
-                      backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+                      backgroundColor: Color(0xFF00E0C6),
                       content: Center(
                         child: Text(
                           'Unit berhasil diperbarui!',
@@ -236,7 +236,7 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       duration: Duration(seconds: 2),
-                      backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+                      backgroundColor: Color(0xFF00E0C6),
                       content: Center(
                         child: Text(
                           'Unit baru berhasil ditambahkan!',
@@ -487,7 +487,7 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
               deleteUnit(unit["id"]);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                  backgroundColor: Color(0xFF00E0C6),
                   content: Center(
                     child: Text(
                       'Unit berhasil dihapus!',

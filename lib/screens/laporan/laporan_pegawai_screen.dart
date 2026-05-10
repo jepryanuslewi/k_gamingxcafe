@@ -106,13 +106,13 @@ class _LaporanScreenState extends State<LaporanScreen> {
               if (isTableVisible && selectedKategori != null)
                 TabelLaporanWidget(
                   kategori: selectedKategori!,
-                  subKategori: selectedSubKategori, // Tambahkan ini
-                  tanggalAwal: tanggalAwal, // Tambahkan ini
-                  tanggalAkhir: tanggalAkhir, // Tambahkan ini
-                  karyawan: selectedKaryawan, // INI YANG PALING PENTING
+                  subKategori: selectedSubKategori,
+                  tanggalAwal: tanggalAwal,
+                  tanggalAkhir: tanggalAkhir,
+                  karyawan: selectedKaryawan,
                 ),
 
-              const SizedBox(height: 50), // Padding bawah agar tidak mepet
+              const SizedBox(height: 50),
             ],
           ),
         ),
@@ -315,8 +315,15 @@ class _LaporanScreenState extends State<LaporanScreen> {
                         selectedKategori == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text(
-                            "Lengkapi semua filter terlebih dahulu",
+                          backgroundColor: Color.fromARGB(255, 226, 19, 136),
+                          content: Center(
+                            child: Text(
+                              "Lengkapi semua filter terlebih dahulu",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
                       );
