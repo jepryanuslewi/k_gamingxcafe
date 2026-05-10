@@ -35,12 +35,12 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
     String selectedKategori = kategoriMenu[0];
     final formKey = GlobalKey<FormState>();
     resepInput = [];
+    String? errorResep; // ✅ tambah ini
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          // Mengambil data bahan dari provider secara reaktif
           final listBahan = context.watch<BahanProvider>().listBahan;
 
           return AlertDialog(
@@ -48,7 +48,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
             insetPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 24,
-            ), // Biar gak terlalu lebar ke samping
+            ),
             title: const Text(
               "Tambah Menu & Resep",
               style: TextStyle(
@@ -58,9 +58,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
               ),
             ),
             content: SizedBox(
-              width:
-                  MediaQuery.of(context).size.width *
-                  0.40, // Batasi lebar dialog
+              width: MediaQuery.of(context).size.width * 0.40,
               child: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -125,6 +123,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                   "bahan_id": null,
                                   "jumlah": TextEditingController(),
                                 });
+                                errorResep = null; // ✅ reset error saat tambah
                               });
                             },
                             icon: const Icon(
@@ -136,7 +135,27 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                       ),
                       const Divider(color: Colors.white24),
 
-                      // List Inputan Bahan Dinamis
+                      // ✅ Tampilkan error resep di dalam dialog
+                      if (errorResep != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.redAccent),
+                          ),
+                          child: Text(
+                            errorResep!,
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+
                       if (resepInput.isEmpty)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 10),
@@ -160,7 +179,6 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                           ),
                           child: Row(
                             children: [
-                              // Dropdown Pilih Bahan Baku
                               Expanded(
                                 flex: 3,
                                 child: DropdownButtonHideUnderline(
@@ -188,14 +206,14 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                         ),
                                       );
                                     }).toList(),
-                                    onChanged: (val) => setModalState(
-                                      () => resepInput[index]['bahan_id'] = val,
-                                    ),
+                                    onChanged: (val) => setModalState(() {
+                                      resepInput[index]['bahan_id'] = val;
+                                      errorResep = null; // ✅ reset error
+                                    }),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              // Input Jumlah
                               Expanded(
                                 flex: 2,
                                 child: TextFormField(
@@ -206,13 +224,16 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                     color: Colors.white,
                                     fontSize: 13,
                                   ),
-                                  decoration: InputDecoration(
+                                  onChanged: (_) => setModalState(
+                                    () => errorResep = null, // ✅ reset error
+                                  ),
+                                  decoration: const InputDecoration(
                                     hintText: "Qty",
-                                    hintStyle: const TextStyle(
+                                    hintStyle: TextStyle(
                                       color: Colors.grey,
                                       fontSize: 12,
                                     ),
-                                    contentPadding: const EdgeInsets.symmetric(
+                                    contentPadding: EdgeInsets.symmetric(
                                       vertical: 8,
                                     ),
                                     isDense: true,
@@ -230,9 +251,10 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                   color: Colors.redAccent,
                                   size: 20,
                                 ),
-                                onPressed: () => setModalState(
-                                  () => resepInput.removeAt(index),
-                                ),
+                                onPressed: () => setModalState(() {
+                                  resepInput.removeAt(index);
+                                  errorResep = null; // ✅ reset error
+                                }),
                               ),
                             ],
                           ),
@@ -259,21 +281,69 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                   ),
                 ),
                 onPressed: () async {
-                  if (formKey.currentState!.validate()) {
-                    final menuBaru = MenuModel(
-                      nama: namaController.text,
-                      harga: double.parse(hargaController.text),
-                      kategori: selectedKategori,
-                    );
+                  if (!formKey.currentState!.validate()) return;
 
-                    // Eksekusi Simpan di Provider
-                    await context.read<MenuProvider>().addMenuWithResep(
-                      menuBaru,
-                      resepInput,
+                  if (resepInput.isEmpty) {
+                    setModalState(
+                      () => errorResep = "Resep bahan tidak boleh kosong!",
                     );
-
-                    Navigator.pop(context);
+                    return;
                   }
+
+                  for (int i = 0; i < resepInput.length; i++) {
+                    final bahanId = resepInput[i]['bahan_id'];
+                    final controller =
+                        resepInput[i]['jumlah'] as TextEditingController;
+                    final qty = double.tryParse(controller.text);
+
+                    if (bahanId == null) {
+                      setModalState(
+                        () => errorResep = "Bahan ke-${i + 1} belum dipilih!",
+                      );
+                      return;
+                    }
+
+                    if (controller.text.isEmpty || qty == null || qty <= 0) {
+                      setModalState(
+                        () => errorResep = "Qty bahan ke-${i + 1} tidak valid!",
+                      );
+                      return;
+                    }
+                  }
+
+                  final bahanIds = resepInput
+                      .map((r) => r['bahan_id'])
+                      .toList();
+                  if (bahanIds.length != bahanIds.toSet().length) {
+                    setModalState(
+                      () => errorResep = "Ada bahan yang sama di resep!",
+                    );
+                    return;
+                  }
+
+                  final menuBaru = MenuModel(
+                    nama: namaController.text,
+                    harga: double.parse(hargaController.text),
+                    kategori: selectedKategori,
+                  );
+
+                  await context.read<MenuProvider>().addMenuWithResep(
+                    menuBaru,
+                    resepInput,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      content: Center(
+                        child: Text(
+                          'Menu baru berhasil ditambahkan!',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                  if (context.mounted) Navigator.pop(context);
                 },
                 child: const Text(
                   "Simpan",
@@ -481,7 +551,79 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                             color: Colors.red,
                                           ),
                                           onPressed: () {
-                                            menuProvider.removeMenu(menu.id!);
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                backgroundColor: const Color(
+                                                  0xff141c2f,
+                                                ),
+                                                title: const Text(
+                                                  "Hapus Menu?",
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                content: Text(
+                                                  "Yakin ingin menghapus menu '${menu.nama}'?\n\n"
+                                                  "⚠️ Resep bahan yang terkait akan ikut terhapus.",
+                                                  style: const TextStyle(
+                                                    color: Colors.white70,
+                                                  ),
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(context),
+                                                    child: const Text(
+                                                      "Batal",
+                                                      style: TextStyle(
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () async {
+                                                      await menuProvider
+                                                          .removeMenu(menu.id!);
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        const SnackBar(
+                                                          backgroundColor:
+                                                              Color.fromRGBO(
+                                                                226,
+                                                                19,
+                                                                136,
+                                                                1.0,
+                                                              ),
+                                                          content: Center(
+                                                            child: Text(
+                                                              'Menu berhasil dihapus!',
+                                                              style: TextStyle(
+                                                                fontSize: 16,
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          duration: Duration(
+                                                            seconds: 2,
+                                                          ),
+                                                        ),
+                                                      );
+                                                      if (context.mounted)
+                                                        Navigator.pop(context);
+                                                    },
+                                                    child: const Text(
+                                                      "Hapus",
+                                                      style: TextStyle(
+                                                        color: Colors.redAccent,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
                                           },
                                         ),
                                       ],
@@ -499,13 +641,13 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
   }
 
   void showEditMenuForm(MenuModel menu) async {
-    // 1. Inisialisasi Controller dengan data menu lama
     final namaController = TextEditingController(text: menu.nama);
     final hargaController = TextEditingController(
       text: menu.harga.toInt().toString(),
     );
     String selectedKategori = menu.kategori;
     final formKey = GlobalKey<FormState>();
+    String? errorResep;
 
     final resepLama = await DatabaseService.instance.getResepByProductId(
       menu.id!,
@@ -526,7 +668,6 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          // Di sini variabel ini digunakan untuk mengisi dropdown
           final listBahan = context.watch<BahanProvider>().listBahan;
 
           return AlertDialog(
@@ -561,7 +702,8 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                               .any(
                                 (m) =>
                                     m.nama.toLowerCase().trim() ==
-                                    v!.toLowerCase().trim(),
+                                        v!.toLowerCase().trim() &&
+                                    m.id != menu.id,
                               );
                           return sudahAda ? "Menu '$v' sudah ada!" : null;
                         },
@@ -609,6 +751,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                   "bahan_id": null,
                                   "jumlah": TextEditingController(),
                                 });
+                                errorResep = null;
                               });
                             },
                             icon: const Icon(
@@ -620,7 +763,26 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                       ),
                       const Divider(color: Colors.white24),
 
-                      // LIST INPUTAN BAHAN (Sama seperti di Add Menu)
+                      if (errorResep != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.redAccent),
+                          ),
+                          child: Text(
+                            errorResep!,
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+
                       if (resepInput.isEmpty)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 10),
@@ -670,9 +832,10 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                         ),
                                       );
                                     }).toList(),
-                                    onChanged: (val) => setModalState(
-                                      () => resepInput[index]['bahan_id'] = val,
-                                    ),
+                                    onChanged: (val) => setModalState(() {
+                                      resepInput[index]['bahan_id'] = val;
+                                      errorResep = null; // ✅ reset error
+                                    }),
                                   ),
                                 ),
                               ),
@@ -687,6 +850,8 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                     color: Colors.white,
                                     fontSize: 13,
                                   ),
+                                  onChanged: (_) =>
+                                      setModalState(() => errorResep = null),
                                   decoration: const InputDecoration(
                                     hintText: "Qty",
                                     hintStyle: TextStyle(
@@ -703,9 +868,10 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                   color: Colors.redAccent,
                                   size: 20,
                                 ),
-                                onPressed: () => setModalState(
-                                  () => resepInput.removeAt(index),
-                                ),
+                                onPressed: () => setModalState(() {
+                                  resepInput.removeAt(index);
+                                  errorResep = null; // ✅ reset error
+                                }),
                               ),
                             ],
                           ),
@@ -726,28 +892,79 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromRGBO(0, 224, 198, 100),
+                  backgroundColor: const Color.fromRGBO(0, 224, 198, 100),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 onPressed: () async {
-                  if (formKey.currentState!.validate()) {
-                    final menuUpdate = MenuModel(
-                      id: menu.id, // Pastikan ID lama disertakan
-                      nama: namaController.text,
-                      harga: double.parse(hargaController.text),
-                      kategori: selectedKategori,
-                      stok: menu.stok,
-                    );
+                  if (!formKey.currentState!.validate()) return;
 
-                    // Panggil fungsi update lengkap di Provider
-                    await context.read<MenuProvider>().updateMenuLengkap(
-                      menuUpdate,
-                      resepInput,
+                  if (resepInput.isEmpty) {
+                    setModalState(
+                      () => errorResep = "Resep bahan tidak boleh kosong!",
                     );
+                    return;
+                  }
 
-                    if (mounted) Navigator.pop(context);
+                  for (int i = 0; i < resepInput.length; i++) {
+                    final bahanId = resepInput[i]['bahan_id'];
+                    final controller =
+                        resepInput[i]['jumlah'] as TextEditingController;
+                    final qty = double.tryParse(controller.text);
+
+                    if (bahanId == null) {
+                      setModalState(
+                        () => errorResep = "Bahan ke-${i + 1} belum dipilih!",
+                      );
+                      return;
+                    }
+
+                    if (controller.text.isEmpty || qty == null || qty <= 0) {
+                      setModalState(
+                        () => errorResep = "Qty bahan ke-${i + 1} tidak valid!",
+                      );
+                      return;
+                    }
+                  }
+
+                  final bahanIds = resepInput
+                      .map((r) => r['bahan_id'])
+                      .toList();
+                  if (bahanIds.length != bahanIds.toSet().length) {
+                    setModalState(
+                      () => errorResep = "Ada bahan yang sama di resep!",
+                    );
+                    return;
+                  }
+
+                  final menuUpdate = MenuModel(
+                    id: menu.id,
+                    nama: namaController.text,
+                    harga: double.parse(hargaController.text),
+                    kategori: selectedKategori,
+                    stok: menu.stok,
+                  );
+
+                  await context.read<MenuProvider>().updateMenuLengkap(
+                    menuUpdate,
+                    resepInput,
+                  );
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                        content: Center(
+                          child: Text(
+                            'Menu berhasil diperbarui!',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    Navigator.pop(context);
                   }
                 },
                 child: const Text(

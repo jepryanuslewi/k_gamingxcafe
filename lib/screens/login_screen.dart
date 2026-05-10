@@ -51,7 +51,15 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Username atau Password salah!')),
+            const SnackBar(
+              backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+              content: Center(
+                child: Text(
+                  'Username atau Password salah!',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
+            ),
           );
         }
       }
@@ -88,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Image.asset(
                           "assets/images/bgLoginScreen.png",
-                          width: 180,
+                          width: 150,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -169,104 +177,116 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 15),
                         // Input Username
                         Padding(
-                          padding: EdgeInsetsGeometry.symmetric(horizontal: 50),
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                style: TextStyle(color: Colors.white),
-                                controller: _usernameController,
-                                decoration: const InputDecoration(
-                                  filled: true,
-                                  fillColor: Color.fromRGBO(44, 54, 75, 100),
-                                  hint: Text(
-                                    "Username",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
+                          padding: EdgeInsetsGeometry.symmetric(horizontal: 40),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  style: TextStyle(color: Colors.white),
+                                  controller: _usernameController,
+                                  decoration: const InputDecoration(
+                                    filled: true,
+                                    fillColor: Color.fromRGBO(44, 54, 75, 100),
+                                    hint: Text(
+                                      "Username",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(10),
+                                      ),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.person_2_outlined,
+                                      color: Color.fromRGBO(
+                                        112,
+                                        215,
+                                        2003,
+                                        100,
+                                      ),
                                     ),
                                   ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(10),
-                                    ),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.person_2_outlined,
-                                    color: Color.fromRGBO(112, 215, 2003, 100),
-                                  ),
+                                  validator: (value) => value!.isEmpty
+                                      ? "Username tidak boleh kosong"
+                                      : null,
                                 ),
-                                validator: (value) => value!.isEmpty
-                                    ? "Username tidak boleh kosong"
-                                    : null,
-                              ),
-                              const SizedBox(height: 10),
+                                const SizedBox(height: 15),
 
-                              // Input Password
-                              TextFormField(
-                                style: TextStyle(color: Colors.white),
-                                controller: _passwordController,
-                                obscureText: true,
-                                decoration: const InputDecoration(
-                                  filled: true,
-                                  fillColor: Color.fromRGBO(44, 54, 75, 100),
-                                  hint: Text(
-                                    "Password",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
+                                // Input Password
+                                TextFormField(
+                                  style: TextStyle(color: Colors.white),
+                                  controller: _passwordController,
+                                  obscureText: true,
+                                  decoration: const InputDecoration(
+                                    filled: true,
+                                    fillColor: Color.fromRGBO(44, 54, 75, 100),
+                                    hint: Text(
+                                      "Password",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(10),
+                                      ),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.lock_outlined,
+                                      color: Color.fromRGBO(
+                                        112,
+                                        215,
+                                        2003,
+                                        100,
+                                      ),
                                     ),
                                   ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(10),
-                                    ),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.lock_outlined,
-                                    color: Color.fromRGBO(112, 215, 2003, 100),
-                                  ),
+                                  validator: (value) => value!.isEmpty
+                                      ? "Password tidak boleh kosong"
+                                      : null,
                                 ),
-                                validator: (value) => value!.isEmpty
-                                    ? "Password tidak boleh kosong"
-                                    : null,
-                              ),
-                              const SizedBox(height: 20),
-                              // Tombol Login
-                              SizedBox(
-                                width: double.infinity,
-                                height: 50,
-                                child: ElevatedButton(
-                                  onPressed: _isLoading ? null : _handleLogin,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color.fromRGBO(
-                                      226,
-                                      19,
-                                      136,
-                                      90,
+                                const SizedBox(height: 20),
+                                // Tombol Login
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 50,
+                                  child: ElevatedButton(
+                                    onPressed: _isLoading ? null : _handleLogin,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color.fromRGBO(
+                                        226,
+                                        19,
+                                        136,
+                                        90,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: _isLoading
-                                      ? const CircularProgressIndicator(
-                                          color: Colors.white,
-                                        )
-                                      : const Text(
-                                          "SIGN IN",
-                                          style: TextStyle(
-                                            fontSize: 16,
+                                    child: _isLoading
+                                        ? const CircularProgressIndicator(
                                             color: Colors.white,
+                                          )
+                                        : const Text(
+                                            "SIGN IN",
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.white,
+                                            ),
                                           ),
-                                        ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],

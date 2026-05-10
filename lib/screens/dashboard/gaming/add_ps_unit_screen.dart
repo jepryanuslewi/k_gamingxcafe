@@ -129,6 +129,18 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
                     Navigator.pop(context);
                     loadUnits();
                   }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      duration: Duration(seconds: 2),
+                      backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+                      content: Center(
+                        child: Text(
+                          'Unit berhasil diperbarui!',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  );
                 }
               },
               child: const Text(
@@ -164,18 +176,7 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildTextField(
-                    nameController,
-                    "Nama Unit",
-                    extraValidator: (v) {
-                      final sudahAda = units.any(
-                        (u) =>
-                            u['name'].toString().toLowerCase().trim() ==
-                            v!.toLowerCase().trim(),
-                      );
-                      return sudahAda ? "Unit '$v' sudah ada!" : null;
-                    },
-                  ),
+                  _buildTextField(nameController, "Nama Unit"),
                   _buildTextField(
                     priceController,
                     "Harga per Jam",
@@ -232,6 +233,18 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
                     Navigator.pop(context);
                     loadUnits();
                   }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      duration: Duration(seconds: 2),
+                      backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+                      content: Center(
+                        child: Text(
+                          'Unit baru berhasil ditambahkan!',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  );
                 }
               },
               child: const Text(
@@ -410,6 +423,16 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
               onSelected: (value) {
                 if (value == 'edit') {
                   showEditUnitForm(Map<String, dynamic>.from(unit));
+                  const SnackBar(
+                    duration: Duration(seconds: 2),
+                    backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+                    content: Center(
+                      child: Text(
+                        'Unit baru berhasil diperbaharui!',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                  );
                 } else if (value == 'delete') {
                   _confirmDeleteUnit(unit);
                 }
@@ -461,7 +484,19 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              deleteUnit(unit["id"]); // sesuaikan fungsi kamu
+              deleteUnit(unit["id"]);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                  content: Center(
+                    child: Text(
+                      'Unit berhasil dihapus!',
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                  ),
+                  duration: Duration(seconds: 2),
+                ),
+              );
             },
             child: const Text(
               "Hapus",

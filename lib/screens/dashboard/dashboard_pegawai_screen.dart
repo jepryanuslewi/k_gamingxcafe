@@ -22,13 +22,11 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
   @override
   void initState() {
     super.initState();
-    _refreshUserList(); // Ambil data saat pertama kali buka
+    _refreshUserList();
   }
 
-  // 1. FUNGSI UNTUK MENAMBAH USER KE DATABASE ASLI
   Future<void> _addUser(String username, String password, String role) async {
     try {
-      // Mengambil instance database dari DatabaseService kamu
       final db = await DatabaseService.instance.database;
 
       await db.insert('users', {
@@ -38,12 +36,19 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
         'created_at': DateTime.now().toIso8601String(),
       });
 
-      // Refresh list agar user baru langsung muncul di tabel
       _refreshUserList();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("User $username berhasil didaftarkan!")),
+          SnackBar(
+            backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+            content: Center(
+              child: Text(
+                'User $username berhasil didaftarkan!',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -51,14 +56,19 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Gagal menambah user. Username mungkin sudah ada."),
+            backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+            content: Center(
+              child: Text(
+                'Gagal mendaftarkan user baru',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+            ),
           ),
         );
       }
     }
   }
 
-  // 2. FUNGSI UNTUK MENAMPILKAN DIALOG FORM REGISTRASI
   void _showAddUserDialog() {
     final TextEditingController userController = TextEditingController();
     final TextEditingController passController = TextEditingController();
@@ -160,7 +170,6 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
     );
   }
 
-  // FUNGSI UTAMA: Mengambil data dari Tabel 'users' asli dari DatabaseService
   Future<void> _refreshUserList() async {
     setState(() => _isLoading = true);
 
@@ -469,7 +478,13 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
         if (totalAdmin <= 1) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("Tidak bisa downgrade admin terakhir"),
+              backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+              content: Center(
+                child: Text(
+                  'Minimal 1 admin harus tetap ada. Ubah role ini setelah buat admin baru.  ',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
             ),
           );
           return;
@@ -490,7 +505,15 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Data berhasil diperbarui")),
+          const SnackBar(
+            backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+            content: Center(
+              child: Text(
+                'Data berhasil diperbarui!',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+            ),
+          ),
         );
       }
 
@@ -508,7 +531,15 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
 
     if (id == currentUserId) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Tidak bisa menghapus akun sendiri")),
+        const SnackBar(
+          backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+          content: Center(
+            child: Text(
+              'Tidak bisa menghapus akun sendiri',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+        ),
       );
       return;
     }
@@ -518,7 +549,15 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
 
       if (totalAdmin <= 1) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Minimal harus ada 1 admin")),
+          const SnackBar(
+            backgroundColor: Color.fromRGBO(226, 19, 136, 100),
+            content: Center(
+              child: Text(
+                'Minimal 1 admin harus tetap ada. Hapus akun ini setelah buat admin baru.',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+            ),
+          ),
         );
         return;
       }

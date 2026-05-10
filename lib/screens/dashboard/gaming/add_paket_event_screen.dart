@@ -39,6 +39,19 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
     await db.delete("package_menus", where: "package_id = ?", whereArgs: [id]);
     await db.delete("packages", where: "id = ?", whereArgs: [id]);
     loadPackages();
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+        content: Center(
+          child: Text(
+            'Paket berhasil dihapus!',
+            style: TextStyle(fontSize: 16, color: Colors.white),
+          ),
+        ),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   // ─────────────────────────────────────────────
@@ -50,7 +63,6 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
     final durationController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
-    // Daftar menu yang dipilih untuk paket ini: [{menu_id, qty: controller}]
     List<Map<String, dynamic>> menuInput = [];
 
     showDialog(
@@ -78,7 +90,6 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
                   "duration_hours": int.parse(durationController.text),
                 });
 
-                // 2. Insert relasi menu paket
                 for (final item in menuInput) {
                   if (item["menu_id"] != null) {
                     final qty =
@@ -95,6 +106,18 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
                 }
 
                 if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      content: Center(
+                        child: Text(
+                          'Paket baru berhasil ditambahkan!',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
                   Navigator.pop(context);
                   loadPackages();
                 }
@@ -186,6 +209,18 @@ class _AddPaketEventScreenState extends State<AddPaketEventScreen> {
                 }
 
                 if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      content: Center(
+                        child: Text(
+                          'Paket berhasil diperbarui!',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
                   Navigator.pop(context);
                   loadPackages();
                 }

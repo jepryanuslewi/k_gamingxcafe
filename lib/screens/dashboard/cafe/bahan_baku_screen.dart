@@ -136,6 +136,18 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                   );
 
                   if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                        content: Center(
+                          child: Text(
+                            'Bahan baku berhasil ditambahkan!',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
                     Navigator.pop(context);
                   }
                 }
@@ -257,6 +269,18 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                     updatedBahan,
                     username:
                         context.read<AuthProvider>().user?.username ?? "Admin",
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      content: Center(
+                        child: Text(
+                          'Bahan baku berhasil diperbarui!',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
                   );
                   Navigator.pop(context);
                 }
@@ -565,6 +589,18 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
             onPressed: () {
               provider.deleteBahan(bahan.id!);
               Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                  content: Center(
+                    child: Text(
+                      'Bahan baku berhasil dihapus!',
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                  ),
+                  duration: Duration(seconds: 2),
+                ),
+              );
             },
             child: const Text(
               "Hapus",
