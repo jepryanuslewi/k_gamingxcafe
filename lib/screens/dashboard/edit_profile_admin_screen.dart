@@ -75,12 +75,20 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: const Text('Pilih File'),
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              backgroundColor: Color(0xFF00E0C6),
+            ),
+            child: const Text(
+              'Pilih File',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -376,19 +384,19 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                                     onPressed: _doRestoreFromPicker,
                                     icon: const Icon(
                                       Icons.folder_open_outlined,
-                                      color: Colors.orange,
+                                      color: Color(0xFF00E0C6),
                                       size: 18,
                                     ),
                                     label: const Text(
                                       'Restore',
-                                      style: TextStyle(color: Colors.orange),
+                                      style: TextStyle(color: Colors.white),
                                     ),
                                     style: OutlinedButton.styleFrom(
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       side: const BorderSide(
-                                        color: Colors.orange,
+                                        color: Color(0xFF00E0C6),
                                       ),
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 12,
