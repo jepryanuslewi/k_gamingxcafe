@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
 
 class AddPsUnitScreen extends StatefulWidget {
@@ -402,7 +403,7 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
                 ),
                 const Spacer(),
                 Text(
-                  "Rp ${unit["price_per_hour"]}",
+                  "Rp ${NumberFormat("#,###", "id_ID").format(unit["price_per_hour"])}",
                   style: const TextStyle(color: Colors.white70),
                 ),
               ],

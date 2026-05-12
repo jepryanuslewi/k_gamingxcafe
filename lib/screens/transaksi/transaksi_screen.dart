@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/providers/cafe/menu_provider.dart';
 import 'package:k_gamingxcafe/widgets/transaksi/transaksi_dialog.dart';
@@ -317,7 +318,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                                             ),
                                             DataCell(
                                               Text(
-                                                "Rp ${data['total_harga']}",
+                                                "Rp ${NumberFormat("#,###", "id_ID").format(data['total_harga'])}",
                                                 style: _cellStyle,
                                               ),
                                             ),

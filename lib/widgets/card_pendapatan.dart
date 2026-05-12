@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class CardPendapatan extends StatelessWidget {
   final String text;
@@ -28,7 +29,7 @@ class CardPendapatan extends StatelessWidget {
           ),
           // Pendapatan
           Text(
-            'Rp. ${total.toString()}',
+            "Rp. ${NumberFormat("#,###", "id_ID").format(total)}",
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 24,

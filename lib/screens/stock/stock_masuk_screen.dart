@@ -74,7 +74,12 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
     final bahanProv = context.read<BahanProvider>();
     final String username = authProv.user?.username ?? "Unknown";
 
-    // 3. Eksekusi fungsi Provider
+    debugPrint("=== HANDLE SIMPAN STOK MASUK ===");
+    debugPrint("username: $username");
+    debugPrint("shiftName: ${widget.shiftName}");
+    debugPrint("bahanId: ${selectedBahan!.id}");
+    debugPrint("jumlah: ${qty * selectedBahan!.isiPerQty}");
+
     final success = await bahanProv.stokMasuk(
       bahanId: selectedBahan!.id!,
       jumlah: qty * selectedBahan!.isiPerQty,
@@ -82,6 +87,8 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
       namaShift: widget.shiftName,
       keterangan: _deskripsiController.text,
     );
+
+    debugPrint("success: $success");
 
     if (!mounted) return;
 

@@ -37,6 +37,7 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
   void initState() {
     super.initState();
     _loadData();
+    DatabaseService.instance.debugStockLaporan();
   }
 
   @override
@@ -158,39 +159,22 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     int totalMasuk = 0;
     int totalKeluar = 0;
 
-    // 🔥 GROUPING PER BAHAN
-    Map<String, double> akumulasi = {};
-    Map<String, Map<String, dynamic>> sampleRow = {};
-
-    for (var row in rawData) {
-      final namaBahan = row['nama_bahan'] ?? '-';
-      final tipe = row['tipe'] ?? '-';
-
-      final key = "$namaBahan-$tipe";
-
-      final jumlah = (row['jumlah'] as num?)?.toDouble() ?? 0;
-
-      akumulasi[key] = (akumulasi[key] ?? 0) + jumlah;
-      sampleRow[key] = row; // simpan contoh row untuk ambil data lain
-    }
-
     final List<List<String>> formatted = [];
 
-    akumulasi.forEach((key, totalJumlah) {
-      final row = sampleRow[key]!;
-
+    for (var row in rawData) {
+      final double jumlah = (row['jumlah'] as num?)?.toDouble() ?? 0;
       final double isiPerQty = (row['isi_per_qty'] as num?)?.toDouble() ?? 1;
+      final String tipe = row['tipe']?.toString() ?? "-";
 
-      final tipe = row['tipe']?.toString() ?? "-";
+      final int qty = isiPerQty > 0
+          ? (jumlah / isiPerQty).floor()
+          : jumlah.toInt();
 
-      final int hasil = totalJumlah >= isiPerQty
-          ? (totalJumlah / isiPerQty).floor()
-          : 0;
+      // ✅ Skip jika belum mencapai 1 qty
+      if (qty <= 0) continue;
 
-      if (hasil == 0) return;
-
-      if (tipe == 'masuk') totalMasuk += hasil;
-      if (tipe == 'keluar') totalKeluar += hasil;
+      if (tipe == 'masuk') totalMasuk += qty;
+      if (tipe == 'keluar') totalKeluar += qty;
 
       formatted.add([
         row['username']?.toString() ?? "-",
@@ -198,11 +182,11 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
         _formatTanggal(row['waktu']?.toString()),
         row['nama_bahan']?.toString() ?? "-",
         row['kategori']?.toString() ?? "-",
-        "$hasil pcs",
+        "$qty ${row['satuan'] ?? ''}",
         tipe.toUpperCase(),
         row['keterangan']?.toString() ?? "-",
       ]);
-    });
+    }
 
     if (mounted) {
       setState(() {
@@ -213,7 +197,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     }
   }
 
-  
   // FORMAT
   int _toInt(dynamic val) {
     if (val == null) return 0;
@@ -274,8 +257,7 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     }
   }
 
-  
-  // WARNA 
+  // WARNA
   Color _badgeColorJadwal(String teks) {
     if (teks.contains('BOOKING')) return Colors.orange;
     if (teks.contains('WALK IN')) return const Color(0xFF00E0C6);
@@ -307,8 +289,7 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     return Colors.white54;
   }
 
- 
-  // KOLOM HEADER 
+  // KOLOM HEADER
   List<DataColumn> _buildColumns() {
     const style = TextStyle(color: Colors.white70, fontWeight: FontWeight.bold);
     switch (widget.kategori) {
@@ -350,7 +331,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     }
   }
 
-  
   // BARIS DATA
 
   List<DataRow> _buildRows() {

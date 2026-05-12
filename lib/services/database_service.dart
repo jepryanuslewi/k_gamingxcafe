@@ -140,20 +140,6 @@ class DatabaseService {
         )
       ''');
 
-        /// LOG STOK (RIWAYAT MASUK/KELUAR)
-        await db.execute('''
-        CREATE TABLE log_stok (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          nama_menu TEXT NOT NULL,
-          kategori TEXT NOT NULL,
-          jumlah REAL NOT NULL,
-          tipe TEXT NOT NULL DEFAULT 'keluar', -- masuk (restock) / keluar (terjual)
-          username TEXT NOT NULL,
-          nama_shift TEXT NOT NULL,
-          waktu TEXT NOT NULL
-        )
-        ''');
-
         /// BAHAN BAKU
         await db.execute('''
         CREATE TABLE bahan (
@@ -259,11 +245,35 @@ class DatabaseService {
           'waktu': DateTime.now().toIso8601String(),
         });
       });
+
+      // ✅ Tambah debug setelah insert berhasil
+      final cek = await db.rawQuery(
+        'SELECT * FROM riwayat_bahan ORDER BY id DESC LIMIT 1',
+      );
+      debugPrint("Row terakhir di riwayat_bahan: $cek");
       return true;
     } catch (e) {
       debugPrint("Database Error: $e");
       return false;
     }
+  }
+
+  Future<void> debugStockLaporan() async {
+    final db = await instance.database;
+
+    // Cek semua users
+    final users = await db.query('users');
+    debugPrint('=== USERS: $users');
+
+    // Cek semua riwayat masuk
+    final masuk = await db.rawQuery('''
+    SELECT rb.*, b.nama as nama_bahan 
+    FROM riwayat_bahan rb
+    JOIN bahan b ON rb.bahan_id = b.id
+    WHERE rb.tipe = 'masuk'
+    ORDER BY rb.waktu DESC
+  ''');
+    debugPrint('=== RIWAYAT MASUK: $masuk');
   }
 
   Future<bool> stokKeluar({
@@ -335,19 +345,15 @@ class DatabaseService {
     final db = await instance.database;
     return await db.rawQuery('''
     SELECT 
-      r.id,
-      b.nama          AS nama_bahan,
-      b.kategori,
-      b.satuan,
-      b.isi_per_qty,   
-      r.jumlah,
-      r.username,
-      r.nama_shift,
-      r.waktu
-    FROM riwayat_bahan r
-    JOIN bahan b ON r.bahan_id = b.id
-    WHERE r.tipe = 'masuk'
-    ORDER BY r.waktu DESC
+      riwayat_bahan.*,
+      bahan.nama        AS nama_bahan,
+      bahan.kategori,
+      bahan.satuan,
+      bahan.isi_per_qty
+    FROM riwayat_bahan
+    JOIN bahan ON riwayat_bahan.bahan_id = bahan.id
+    WHERE riwayat_bahan.tipe = 'masuk'
+    ORDER BY riwayat_bahan.waktu DESC
   ''');
   }
 
@@ -762,9 +768,8 @@ class DatabaseService {
     }
 
     if (subKategori != null && subKategori != "Semua") {
-      final tipeDB = subKategori.toLowerCase();
       whereClauses.add("rb.tipe = ?");
-      whereArgs.add(tipeDB);
+      whereArgs.add(subKategori.toLowerCase());
     }
 
     if (namaKaryawan != null && namaKaryawan != "Semua") {
@@ -772,10 +777,11 @@ class DatabaseService {
       whereArgs.add(namaKaryawan);
     }
 
-    String whereString = whereClauses.isNotEmpty
+    final String whereString = whereClauses.isNotEmpty
         ? "WHERE ${whereClauses.join(' AND ')}"
         : "";
 
+    // ✅ Query yang benar, hapus debug dan '''...'''
     return await db.rawQuery('''
     SELECT 
       b.nama AS nama_bahan,

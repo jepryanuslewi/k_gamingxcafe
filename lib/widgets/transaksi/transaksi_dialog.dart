@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:k_gamingxcafe/models/cafe/menu_model.dart';
 import 'package:k_gamingxcafe/providers/cafe/menu_provider.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
@@ -520,7 +521,7 @@ class TransactionDialog {
       textAlign: TextAlign.center,
       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
-        hintText: "Total: Rp ${total.toInt()}",
+        hintText: "Total: Rp ${NumberFormat("#,###", "id_ID").format(total)}",
         hintStyle: const TextStyle(color: Color(0xFF00E0C6), fontSize: 16),
         filled: true,
         fillColor: const Color.fromRGBO(20, 28, 47, 1),
