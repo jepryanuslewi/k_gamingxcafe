@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
@@ -35,13 +34,11 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     _loadBackupList();
   }
 
-  // ─── Backup Methods ────────────────────────────────────────────
+  // --- Logic tetap sama ---
   Future<void> _loadBackupList() async {
     try {
       final files = await BackupService.getBackupList();
-      if (mounted) {
-        setState(() => _backupFiles = files);
-      }
+      if (mounted) setState(() => _backupFiles = files);
     } catch (e) {
       debugPrint('Error load backup list: $e');
     }
@@ -51,187 +48,37 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     setState(() => _isLoadingBackup = true);
     final result = await BackupService.backupToLocal();
     setState(() => _isLoadingBackup = false);
-
-    _showBackupSnackbar(result);
+    _snack(result.message, !result.isSuccess);
     if (result.isSuccess) await _loadBackupList();
   }
 
   Future<void> _doRestoreFromPicker() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xff141c2f),
-        title: const Text(
-          'Restore dari File',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'Anda akan memilih file backup (.db) dari penyimpanan.\n\n'
-          '⚠️ Data saat ini akan diganti!\n'
-          'Pastikan sudah backup data terbaru.\n\n'
-          'Lanjutkan?',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              backgroundColor: Color(0xFF00E0C6),
-            ),
-            child: const Text(
-              'Pilih File',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-
+    final confirm = await _showConfirmDialog("Restore dari File");
     if (confirm != true) return;
-
     setState(() => _isLoadingBackup = true);
-
     final result = await BackupService.restoreFromPicker(
-      onBeforeRestore: () async {
-        final db = await DatabaseService.instance.database;
-        await db.close();
-        DatabaseService.resetDatabase();
-      },
+      onBeforeRestore: _resetDb,
     );
-
     setState(() => _isLoadingBackup = false);
-    _showBackupSnackbar(result);
+    _snack(result.message, !result.isSuccess);
   }
 
   Future<void> _doRestore(String filePath) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xff141c2f),
-        title: const Text(
-          'Konfirmasi Restore',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'Data saat ini akan diganti dengan data backup.\n'
-          'Pastikan Anda sudah backup data terbaru!\n\n'
-          'Lanjutkan?',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromRGBO(226, 19, 136, 1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Restore', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
+    final confirm = await _showConfirmDialog("Konfirmasi Restore");
     if (confirm != true) return;
-
     setState(() => _isLoadingBackup = true);
-
     final result = await BackupService.restoreFromFile(
       filePath,
-      onBeforeRestore: () async {
-        final db = await DatabaseService.instance.database;
-        await db.close();
-        DatabaseService.resetDatabase();
-      },
+      onBeforeRestore: _resetDb,
     );
-
     setState(() => _isLoadingBackup = false);
-    _showBackupSnackbar(result);
+    _snack(result.message, !result.isSuccess);
   }
 
-  void _showBackupSnackbar(BackupResult result) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(result.message),
-        backgroundColor: result.isSuccess ? Colors.green : Colors.red,
-        duration: const Duration(seconds: 4),
-      ),
-    );
-  }
-
-  String _formatFileName(String path) {
-    final name = path.split('/').last.replaceAll('.db', '');
-    final parts = name.split('_');
-    if (parts.length < 5) return name;
-
-    final dateStr = parts[3];
-    final timeStr = parts[4];
-
-    try {
-      final date = DateFormat('yyyyMMdd').parse(dateStr);
-      final formattedDate = DateFormat('dd MMM yyyy', 'id').format(date);
-      final time =
-          '${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}:${timeStr.substring(4)}';
-      return '$formattedDate  $time';
-    } catch (_) {
-      return name;
-    }
-  }
-
-  // ─── Profile Methods ───────────────────────────────────────────
-  Future<void> _simpanUsername() async {
-    final authProvider = context.read<AuthProvider>();
-    final newUsername = _usernameController.text.trim();
-
-    if (newUsername.isEmpty) {
-      _snack("Username tidak boleh kosong", true);
-      return;
-    }
-
-    setState(() => _isLoadingUsername = true);
-    final error = await authProvider.updateUsername(newUsername);
-    setState(() => _isLoadingUsername = false);
-
-    _snack(error ?? "Username berhasil diubah", error != null);
-  }
-
-  Future<void> _simpanPassword() async {
-    final userId = context.read<AuthProvider>().user?.id;
-    if (userId == null) return;
-
-    final newPw = _newPasswordController.text;
-    final confirmPw = _confirmPasswordController.text;
-
-    if (newPw != confirmPw) {
-      _snack("Password tidak cocok", true);
-      return;
-    }
-
-    setState(() => _isLoadingPassword = true);
-    final error = await DatabaseService.instance.updatePassword(
-      userId: userId,
-      newPassword: newPw,
-    );
-    setState(() => _isLoadingPassword = false);
-
-    if (error == null) {
-      _newPasswordController.clear();
-      _confirmPasswordController.clear();
-    }
-
-    _snack(error ?? "Password berhasil diubah", error != null);
+  Future<void> _resetDb() async {
+    final db = await DatabaseService.instance.database;
+    await db.close();
+    DatabaseService.resetDatabase();
   }
 
   void _snack(String msg, bool error) {
@@ -243,6 +90,71 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     );
   }
 
+  String _formatFileName(String path) {
+    final name = path.split('/').last.replaceAll('.db', '');
+    final parts = name.split('_');
+    if (parts.length < 5) return name;
+    try {
+      final date = DateFormat('yyyyMMdd').parse(parts[3]);
+      return "${DateFormat('dd MMM yyyy', 'id').format(date)} ${parts[4].substring(0, 2)}:${parts[4].substring(2, 4)}";
+    } catch (_) {
+      return name;
+    }
+  }
+
+  Future<void> _simpanUsername() async {
+    setState(() => _isLoadingUsername = true);
+    final error = await context.read<AuthProvider>().updateUsername(
+      _usernameController.text.trim(),
+    );
+    setState(() => _isLoadingUsername = false);
+    _snack(error ?? "Username diubah", error != null);
+  }
+
+  Future<void> _simpanPassword() async {
+    final userId = context.read<AuthProvider>().user?.id;
+    if (userId == null) return;
+    setState(() => _isLoadingPassword = true);
+    final error = await DatabaseService.instance.updatePassword(
+      userId: userId,
+      newPassword: _newPasswordController.text,
+    );
+    setState(() => _isLoadingPassword = false);
+    _snack(error ?? "Password diubah", error != null);
+  }
+
+  Future<bool?> _showConfirmDialog(String title) {
+    return showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xff141c2f),
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        content: const Text(
+          "Data akan diganti. Lanjutkan?",
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xffe21388),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Ya", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- UI Layout (No Scroll, Fixed Height) ---
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
@@ -250,288 +162,160 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
       appBar: AppBar(
-        backgroundColor: const Color(0xff0b1220),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
           "Admin Profile",
           style: TextStyle(color: Colors.white),
         ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 700),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(30),
-            child: Column(
-              children: [
-                _profileHeader(user),
-                const SizedBox(height: 25),
-
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // USERNAME
-                    Expanded(
-                      child: _card(
-                        "Ubah Username",
-                        Icons.person,
-                        Column(
-                          children: [
-                            _input(_usernameController, "Username"),
-                            const SizedBox(height: 15),
-                            _button(
-                              "SIMPAN USERNAME",
-                              _isLoadingUsername,
-                              _simpanUsername,
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(30, 0, 30, 30),
+        child: Column(
+          children: [
+            _profileHeader(user),
+            const SizedBox(height: 20),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment
+                    .stretch, // Menyamakan tinggi kolom kiri & kanan
+                children: [
+                  // KOLOM KIRI
+                  Expanded(
+                    child: _card(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _sectionTitle(Icons.person, "Ubah Username"),
+                          const SizedBox(height: 8),
+                          _input(_usernameController, "Username"),
+                          const SizedBox(height: 8),
+                          _button(
+                            "SIMPAN USERNAME",
+                            _isLoadingUsername,
+                            _simpanUsername,
+                          ),
+                          const Spacer(), // Memberi jarak fleksibel antar section
+                          _sectionTitle(Icons.lock, "Ubah Password"),
+                          const SizedBox(height: 8),
+                          _input(
+                            _newPasswordController,
+                            "Password Baru",
+                            isPassword: true,
+                            show: _showNewPassword,
+                            toggle: () => setState(
+                              () => _showNewPassword = !_showNewPassword,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 8),
+                          _input(
+                            _confirmPasswordController,
+                            "Konfirmasi Password",
+                            isPassword: true,
+                            show: _showConfirmPassword,
+                            toggle: () => setState(
+                              () =>
+                                  _showConfirmPassword = !_showConfirmPassword,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _button(
+                            "SIMPAN PASSWORD",
+                            _isLoadingPassword,
+                            _simpanPassword,
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    // PASSWORD
-                    Expanded(
-                      child: _card(
-                        "Ubah Password",
-                        Icons.lock,
-                        Column(
-                          children: [
-                            _input(
-                              _newPasswordController,
-                              "Password Baru",
-                              isPassword: true,
-                              show: _showNewPassword,
-                              toggle: () => setState(
-                                () => _showNewPassword = !_showNewPassword,
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-                            _input(
-                              _confirmPasswordController,
-                              "Konfirmasi Password",
-                              isPassword: true,
-                              show: _showConfirmPassword,
-                              toggle: () => setState(
-                                () => _showConfirmPassword =
-                                    !_showConfirmPassword,
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-                            _button(
-                              "SIMPAN PASSWORD",
-                              _isLoadingPassword,
-                              _simpanPassword,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // BACKUP & RESTORE
-                _card(
-                  "Backup & Restore Database",
-                  Icons.backup,
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // ─── 2 Tombol Utama ───────────────────────
-                      _isLoadingBackup
-                          ? const Center(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 12),
-                                child: CircularProgressIndicator(),
-                              ),
-                            )
-                          : Row(
-                              children: [
-                                // Tombol Backup
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: _doBackup,
-                                    icon: const Icon(
-                                      Icons.backup_outlined,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                    label: const Text(
-                                      'Backup',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Color.fromRGBO(
-                                        226,
-                                        19,
-                                        136,
-                                        1,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-
-                                // Tombol Restore dari file picker
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: _doRestoreFromPicker,
-                                    icon: const Icon(
-                                      Icons.folder_open_outlined,
-                                      color: Color(0xFF00E0C6),
-                                      size: 18,
-                                    ),
-                                    label: const Text(
-                                      'Restore',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      side: const BorderSide(
-                                        color: Color(0xFF00E0C6),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                      const SizedBox(height: 6),
-                      const Text(
-                        '📁 Backup disimpan di: Download/KGamingBackup/',
-                        style: TextStyle(fontSize: 11, color: Colors.white38),
-                        textAlign: TextAlign.center,
-                      ),
-                      const Divider(color: Colors.white12, height: 32),
-
-                      // ─── Riwayat Backup ───────────────────────
-                      const Text(
-                        'Riwayat Backup',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      _backupFiles.isEmpty
-                          ? const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Text(
-                                'Belum ada backup tersimpan',
-                                style: TextStyle(color: Colors.white38),
-                                textAlign: TextAlign.center,
-                              ),
-                            )
-                          : ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _backupFiles.length,
-                              separatorBuilder: (_, __) => const Divider(
-                                color: Colors.white12,
-                                height: 1,
-                              ),
-                              itemBuilder: (context, index) {
-                                final file = _backupFiles[index];
-                                final label = _formatFileName(file.path);
-
-                                return ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: const Icon(
-                                    Icons.storage,
-                                    color: Color.fromRGBO(226, 19, 136, 1),
-                                  ),
-                                  title: Text(
-                                    label,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  subtitle: index == 0
-                                      ? const Text(
-                                          'Terbaru',
-                                          style: TextStyle(
-                                            color: Colors.greenAccent,
-                                            fontSize: 11,
-                                          ),
-                                        )
-                                      : null,
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Tombol restore dari list
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.restore,
-                                          color: Color.fromRGBO(
-                                            226,
-                                            19,
-                                            136,
-                                            1,
-                                          ),
-                                        ),
-                                        tooltip: 'Restore file ini',
-                                        onPressed: () => _doRestore(file.path),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(width: 20),
+                  // KOLOM KANAN
+                  Expanded(
+                    child: _card(
+                      child: Column(
+                        children: [
+                          _sectionTitle(
+                            Icons.cloud_upload,
+                            "Backup & Restore Database",
+                            center: true,
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _actionBtn(
+                                  "Backup",
+                                  Icons.cloud_upload,
+                                  const Color(0xffe21388),
+                                  _doBackup,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _actionBtn(
+                                  "Restore",
+                                  Icons.folder,
+                                  Colors.transparent,
+                                  _doRestoreFromPicker,
+                                  isOutline: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          const Divider(color: Colors.white12),
+                          const Text(
+                            "Riwayat Backup",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Expanded(
+                            child:
+                                _backupHistoryList(), // ListView akan mengisi sisa tinggi yang tersedia
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  // ─── Widgets ───────────────────────────────────────────────────
   Widget _profileHeader(user) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: const Color(0xff141c2f),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.admin_panel_settings,
-            size: 50,
-            color: Color(0xFF00E0C6),
-          ),
+          const Icon(Icons.shield, size: 30, color: Color(0xFF00E0C6)),
           const SizedBox(width: 15),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                user?.username ?? "-",
+                user?.username ?? "admin",
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 5),
               Text(
-                (user?.role ?? "-").toUpperCase(),
-                style: const TextStyle(color: Colors.cyanAccent),
+                (user?.role ?? "ADMIN").toUpperCase(),
+                style: const TextStyle(color: Color(0xFF00E0C6), fontSize: 11),
               ),
             ],
           ),
@@ -540,32 +324,35 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     );
   }
 
-  Widget _card(String title, IconData icon, Widget child) {
+  Widget _card({required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xff141c2f),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white10),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: Colors.cyanAccent),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+      child: child,
+    );
+  }
+
+  Widget _sectionTitle(IconData icon, String title, {bool center = false}) {
+    return Row(
+      mainAxisAlignment: center
+          ? MainAxisAlignment.center
+          : MainAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xFF00E0C6), size: 18),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 15),
-          child,
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -573,28 +360,40 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     TextEditingController c,
     String hint, {
     bool isPassword = false,
-    bool show = false,
+    bool? show,
     VoidCallback? toggle,
   }) {
-    return TextField(
-      controller: c,
-      obscureText: isPassword && !show,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white38),
-        suffixIcon: isPassword
-            ? IconButton(
-                icon: Icon(
-                  show ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.white38,
-                ),
-                onPressed: toggle,
-              )
-            : null,
-        filled: true,
-        fillColor: const Color(0xff1c273d),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+    return SizedBox(
+      height: 45,
+      child: TextField(
+        controller: c,
+        obscureText: isPassword && !(show ?? false),
+        style: const TextStyle(color: Colors.white, fontSize: 13),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.white38),
+          filled: true,
+          fillColor: const Color(0xff0b1220),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+          suffixIcon: isPassword
+              ? IconButton(
+                  icon: Icon(
+                    show! ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.white38,
+                    size: 18,
+                  ),
+                  onPressed: toggle,
+                )
+              : null,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Colors.white12),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFF00E0C6)),
+          ),
+        ),
       ),
     );
   }
@@ -602,16 +401,113 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
   Widget _button(String text, bool loading, VoidCallback onTap) {
     return SizedBox(
       width: double.infinity,
-      height: 45,
+      height: 40,
       child: ElevatedButton(
         onPressed: loading ? null : onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xff00e0c6),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         child: loading
-            ? const CircularProgressIndicator(color: Colors.black)
-            : Text(text, style: const TextStyle(color: Colors.black)),
+            ? const SizedBox(
+                height: 15,
+                width: 15,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.black,
+                ),
+              )
+            : Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
       ),
+    );
+  }
+
+  Widget _actionBtn(
+    String text,
+    IconData icon,
+    Color color,
+    VoidCallback onTap, {
+    bool isOutline = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(15),
+          border: isOutline ? Border.all(color: Colors.orangeAccent) : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isOutline ? Colors.orangeAccent : Colors.white,
+              size: 16,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              text,
+              style: TextStyle(
+                color: isOutline ? Colors.orangeAccent : Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _backupHistoryList() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xff0b1220).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: _backupFiles.isEmpty
+          ? const Center(
+              child: Text(
+                "Kosong",
+                style: TextStyle(color: Colors.white24, fontSize: 12),
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(5),
+              itemCount: _backupFiles.length,
+              separatorBuilder: (_, __) =>
+                  const Divider(color: Colors.white10, height: 1),
+              itemBuilder: (context, index) {
+                final file = _backupFiles[index];
+                return ListTile(
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  title: Text(
+                    _formatFileName(file.path),
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(
+                      Icons.restore,
+                      color: Color(0xffe21388),
+                      size: 18,
+                    ),
+                    onPressed: () => _doRestore(file.path),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

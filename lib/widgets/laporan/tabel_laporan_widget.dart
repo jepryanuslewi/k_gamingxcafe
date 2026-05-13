@@ -147,7 +147,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
   }
 
   // ── STOCK ────────────────────────────────────
-
   Future<void> _loadStock() async {
     final rawData = await DatabaseService.instance.getStockLaporan(
       tglAwal: widget.tanggalAwal,
@@ -158,23 +157,22 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
 
     int totalMasuk = 0;
     int totalKeluar = 0;
-
     final List<List<String>> formatted = [];
 
-    for (var row in rawData) {
+    // ✅ Pisahkan masuk dan keluar
+    final masukRows = rawData.where((r) => r['tipe'] == 'masuk').toList();
+    final keluarRows = rawData.where((r) => r['tipe'] == 'keluar').toList();
+
+    // ── Tampilkan MASUK per row biasa ──────────────
+    for (var row in masukRows) {
       final double jumlah = (row['jumlah'] as num?)?.toDouble() ?? 0;
       final double isiPerQty = (row['isi_per_qty'] as num?)?.toDouble() ?? 1;
-      final String tipe = row['tipe']?.toString() ?? "-";
-
       final int qty = isiPerQty > 0
           ? (jumlah / isiPerQty).floor()
           : jumlah.toInt();
 
-      // ✅ Skip jika belum mencapai 1 qty
       if (qty <= 0) continue;
-
-      if (tipe == 'masuk') totalMasuk += qty;
-      if (tipe == 'keluar') totalKeluar += qty;
+      totalMasuk += qty;
 
       formatted.add([
         row['username']?.toString() ?? "-",
@@ -183,10 +181,46 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
         row['nama_bahan']?.toString() ?? "-",
         row['kategori']?.toString() ?? "-",
         "$qty ${row['satuan'] ?? ''}",
-        tipe.toUpperCase(),
+        "MASUK",
         row['keterangan']?.toString() ?? "-",
       ]);
     }
+
+    // ── Akumulasi KELUAR per bahan ─────────────────
+    // Karena auto-cut per pesanan bisa < isiPerQty,
+    // kita akumulasi dulu totalnya baru hitung qty
+    final Map<String, double> akumulasiKeluar = {};
+    final Map<String, Map<String, dynamic>> sampleKeluar = {};
+
+    for (var row in keluarRows) {
+      final String namaBahan = row['nama_bahan']?.toString() ?? '-';
+      final double jumlah = (row['jumlah'] as num?)?.toDouble() ?? 0;
+      akumulasiKeluar[namaBahan] = (akumulasiKeluar[namaBahan] ?? 0) + jumlah;
+      sampleKeluar[namaBahan] = row; // ambil data terakhir sebagai referensi
+    }
+
+    akumulasiKeluar.forEach((namaBahan, totalJumlah) {
+      final row = sampleKeluar[namaBahan]!;
+      final double isiPerQty = (row['isi_per_qty'] as num?)?.toDouble() ?? 1;
+      final int qty = isiPerQty > 0
+          ? (totalJumlah / isiPerQty).floor()
+          : totalJumlah.toInt();
+
+      // ✅ Hanya tampilkan jika sudah >= 1 qty
+      if (qty <= 0) return;
+      totalKeluar += qty;
+
+      formatted.add([
+        row['username']?.toString() ?? "-",
+        row['nama_shift']?.toString() ?? "-",
+        _formatTanggal(row['waktu']?.toString()),
+        namaBahan,
+        row['kategori']?.toString() ?? "-",
+        "$qty " + (row['satuan'] == "ml" ? "PCS" : row['satuan']),
+        "KELUAR",
+        row['keterangan']?.toString() ?? "-",
+      ]);
+    });
 
     if (mounted) {
       setState(() {
