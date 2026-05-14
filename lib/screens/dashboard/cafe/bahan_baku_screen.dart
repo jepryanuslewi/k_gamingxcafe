@@ -165,13 +165,20 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
 
   // ================= FORM EDIT =================
   void showEditBahanForm(Bahan bahan) {
+    final double qtyAwal = bahan.isiPerQty > 0
+        ? bahan.stokSaatIni / bahan.isiPerQty
+        : bahan.stokSaatIni;
+
     final namaController = TextEditingController(text: bahan.nama);
     final kategoriController = TextEditingController(text: bahan.kategori);
     final stokController = TextEditingController(
-      text: bahan.stokSaatIni.toString(),
+      // ✅ Tampilkan qty bukan satuan dasar
+      text: qtyAwal % 1 == 0 ? qtyAwal.toInt().toString() : qtyAwal.toString(),
     );
     final isiPerQtyController = TextEditingController(
-      text: bahan.isiPerQty.toString(), // Load data lama
+      text: bahan.isiPerQty % 1 == 0
+          ? bahan.isiPerQty.toInt().toString()
+          : bahan.isiPerQty.toString(),
     );
     String selectedSatuan = bahan.satuan;
     final formKey = GlobalKey<FormState>();
@@ -253,36 +260,42 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: () {
+              onPressed: () async {
                 if (formKey.currentState!.validate()) {
+                  final double qty = double.tryParse(stokController.text) ?? 0;
+                  final double isi =
+                      double.tryParse(isiPerQtyController.text) ?? 1;
+
                   final updatedBahan = Bahan(
                     id: bahan.id,
                     nama: namaController.text,
                     kategori: kategoriController.text,
                     satuan: selectedSatuan,
-                    stokSaatIni: double.tryParse(stokController.text) ?? 0,
-                    isiPerQty:
-                        double.tryParse(isiPerQtyController.text) ??
-                        1, // UPDATE DATA
+                    stokSaatIni: qty * isi, // ✅ simpan hasil perkalian
+                    isiPerQty: isi,
                   );
-                  context.read<BahanProvider>().updateBahan(
+
+                  await context.read<BahanProvider>().updateBahan(
                     updatedBahan,
                     username:
                         context.read<AuthProvider>().user?.username ?? "Admin",
                   );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      backgroundColor: Color(0xFF00E0C6),
-                      content: Center(
-                        child: Text(
-                          'Bahan baku berhasil diperbarui!',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Color(0xFF00E0C6),
+                        content: Center(
+                          child: Text(
+                            'Bahan baku berhasil diperbarui!',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                         ),
+                        duration: Duration(seconds: 2),
                       ),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                  Navigator.pop(context);
+                    );
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: const Text(

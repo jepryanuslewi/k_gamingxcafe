@@ -153,8 +153,6 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     );
   }
 
-  // --- UI Layout (No Scroll, Fixed Height) ---
-
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;

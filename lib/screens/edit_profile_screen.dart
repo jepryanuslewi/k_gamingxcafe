@@ -38,24 +38,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _simpanUsername() async {
     final authProvider = context.read<AuthProvider>();
     final newUsername = _usernameController.text.trim();
-
     if (newUsername.isEmpty) {
       _showSnackbar('Username tidak boleh kosong', isError: true);
       return;
     }
-
-    if (newUsername == authProvider.user?.username) {
-      _showSnackbar('Username sama dengan sebelumnya', isError: true);
-      return;
-    }
-
     setState(() => _isLoadingUsername = true);
-
     final error = await authProvider.updateUsername(newUsername);
-
     if (!mounted) return;
     setState(() => _isLoadingUsername = false);
-
     if (error != null) {
       _showSnackbar(error, isError: true);
     } else {
@@ -66,16 +56,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _simpanPassword() async {
     final userId = context.read<AuthProvider>().user?.id;
     if (userId == null) return;
-
     final newPw = _newPasswordController.text;
     final confirmPw = _confirmPasswordController.text;
 
     if (newPw.isEmpty || confirmPw.isEmpty) {
       _showSnackbar('Semua kolom password harus diisi', isError: true);
-      return;
-    }
-    if (newPw.length < 4) {
-      _showSnackbar('Password minimal 4 karakter', isError: true);
       return;
     }
     if (newPw != confirmPw) {
@@ -84,12 +69,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     setState(() => _isLoadingPassword = true);
-
     final error = await DatabaseService.instance.updatePassword(
       userId: userId,
       newPassword: newPw,
     );
-
     if (!mounted) return;
     setState(() => _isLoadingPassword = false);
 
@@ -106,14 +89,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Center(
-          child: Text(
-            message,
-            style: const TextStyle(fontSize: 16, color: Colors.white),
-          ),
+          child: Text(message, style: const TextStyle(color: Colors.white)),
         ),
         backgroundColor: isError
-            ? Color.fromARGB(255, 226, 19, 136)
-            : Color(0xFF00E0C6),
+            ? const Color(0xFFE21388)
+            : const Color(0xFF00E0C6),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -122,9 +102,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
-    if (_usernameController.text != (user?.username ?? '')) {
-      _usernameController.text = user?.username ?? '';
-    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B1220),
@@ -139,10 +116,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: Colors.white10, height: 1),
-        ),
       ),
       body: SafeArea(
         child: Center(
@@ -151,32 +124,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                // 1. CrossAxisAlignment.stretch membuat kolom kiri & kanan sama tinggi
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // KOLOM KIRI
                   Expanded(
                     child: Column(
                       children: [
                         _buildProfileInfo(user),
                         const SizedBox(height: 20),
-
-                        _buildCard(
-                          title: 'Ubah Username',
-                          icon: Icons.person_outline,
-                          child: Column(
-                            children: [
-                              _buildTextField(
-                                controller: _usernameController,
-                                label: 'Username Baru',
-                                hint: 'Masukkan username baru',
-                                icon: Icons.person,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildButton(
-                                label: 'SIMPAN USERNAME',
-                                isLoading: _isLoadingUsername,
-                                onPressed: _simpanUsername,
-                              ),
-                            ],
+                        // 2. Expanded di sini membuat kartu Username mengisi sisa ruang
+                        Expanded(
+                          child: _buildCard(
+                            title: 'Ubah Username',
+                            icon: Icons.person_outline,
+                            child: Column(
+                              children: [
+                                _buildTextField(
+                                  controller: _usernameController,
+                                  label: 'Username Baru',
+                                  hint: 'Masukkan username baru',
+                                  icon: Icons.person,
+                                ),
+                                // 3. Spacer memicu tombol untuk turun ke bawah
+                                const Spacer(),
+                                _buildButton(
+                                  label: 'SIMPAN USERNAME',
+                                  isLoading: _isLoadingUsername,
+                                  onPressed: _simpanUsername,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -185,6 +163,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   const SizedBox(width: 40),
 
+                  // KOLOM KANAN
                   Expanded(
                     child: _buildCard(
                       title: 'Ubah Password',
@@ -215,7 +194,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   _showConfirmPassword = !_showConfirmPassword,
                             ),
                           ),
-                          const SizedBox(height: 43),
+                          // 3. Spacer memicu tombol untuk turun ke bawah agar sejajar dengan kiri
+                          const Spacer(),
                           _buildButton(
                             label: 'SIMPAN PASSWORD',
                             isLoading: _isLoadingPassword,
@@ -230,6 +210,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Modifikasi sedikit pada _buildCard untuk mendukung tinggi maksimal (Expanded)
+  Widget _buildCard({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141C2F),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFF00E0C6), size: 20),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const Divider(color: Colors.white10, height: 28),
+          // Wrap child dengan Expanded agar Column di dalamnya bisa menggunakan Spacer()
+          Expanded(child: child),
+        ],
       ),
     );
   }
@@ -282,42 +300,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCard({
-    required String title,
-    required IconData icon,
-    required Widget child,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141C2F),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: const Color(0xFF00E0C6), size: 20),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const Divider(color: Colors.white10, height: 28),
-          child,
         ],
       ),
     );
@@ -387,7 +369,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color.fromARGB(255, 226, 19, 136),
+          backgroundColor: const Color(0xFFE21388),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -399,7 +381,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFF0B1220),
+                  color: Colors.white,
                 ),
               )
             : Text(
