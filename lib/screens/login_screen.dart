@@ -67,237 +67,218 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color.fromRGBO(11, 18, 32, 100),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Image.asset(
+Widget build(BuildContext context) {
+  final size = MediaQuery.of(context).size;
+  final isTablet = size.width > 600;
+
+  return Scaffold(
+    backgroundColor: const Color.fromRGBO(11, 18, 32, 100),
+    body: SafeArea(
+      child: Stack(
+        children: [
+          // Background
+          Positioned.fill(
+            child: Image.asset(
               "assets/images/bgLoginScreen.png",
               fit: BoxFit.cover,
-              width: double.infinity,
             ),
-            Center(
+          ),
+
+         
+          Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                vertical: 20,
+                horizontal: isTablet ? size.width * 0.25 : 20,
+              ),
               child: Container(
-                margin: EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  color: Color.fromRGBO(20, 28, 47, 100),
+                  color: const Color.fromRGBO(20, 28, 47, 100),
                 ),
-                height: 748,
-                width: 450,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          "assets/images/bgLoginScreen.png",
-                          width: 150,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "GAMING",
-                              style: TextStyle(
-                                color: Color.fromRGBO(226, 19, 136, 100),
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: "Poppins",
-                              ),
+                
+                width: isTablet ? 500 : double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 40,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        "assets/images/bgLoginScreen.png",
+                        width: isTablet ? 180 : 150,
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "GAMING",
+                            style: TextStyle(
+                              color: const Color.fromRGBO(226, 19, 136, 100),
+                              fontSize: isTablet ? 34 : 30,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: "Poppins",
                             ),
-                            const SizedBox(width: 16),
-                            const Text(
-                              "X",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: "Poppins",
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            const Text(
-                              "CAFE",
-                              style: TextStyle(
-                                color: Color.fromRGBO(0, 224, 198, 100),
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: "Poppins",
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          width: 290,
-                          child: Divider(color: Colors.white, thickness: 2),
-                        ),
-                        const SizedBox(height: 5),
-                        const Text(
-                          "WELCOME",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.normal,
-                            fontFamily: "Poppins",
                           ),
+                          const SizedBox(width: 16),
+                          Text(
+                            "X",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isTablet ? 36 : 32,
+                              fontFamily: "Poppins",
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            "CAFE",
+                            style: TextStyle(
+                              color: const Color.fromRGBO(0, 224, 198, 100),
+                              fontSize: isTablet ? 34 : 30,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: "Poppins",
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        width: 290,
+                        child: Divider(color: Colors.white, thickness: 2),
+                      ),
+                      const SizedBox(height: 5),
+                      const Text(
+                        "WELCOME",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontFamily: "Poppins",
                         ),
-                        const SizedBox(height: 5),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 70,
-                              child: Divider(
-                                color: Color.fromRGBO(112, 215, 2003, 100),
-                                thickness: 2,
-                              ),
+                      ),
+                      const SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 70,
+                            child: Divider(
+                              color: const Color.fromRGBO(112, 215, 2003, 100),
+                              thickness: 2,
                             ),
-                            const SizedBox(width: 20),
-                            const Text(
-                              "Please Sign In To Continue",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: "Poppins",
-                              ),
+                          ),
+                          const SizedBox(width: 20),
+                          const Text(
+                            "Please Sign In To Continue",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontFamily: "Poppins",
                             ),
-                            const SizedBox(width: 20),
-                            SizedBox(
-                              width: 70,
-                              child: Divider(
-                                color: Color.fromRGBO(226, 19, 136, 100),
-                                thickness: 2,
-                              ),
+                          ),
+                          const SizedBox(width: 20),
+                          SizedBox(
+                            width: 70,
+                            child: Divider(
+                              color: const Color.fromRGBO(226, 19, 136, 100),
+                              thickness: 2,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 15),
-                        // Input Username
-                        Padding(
-                          padding: EdgeInsetsGeometry.symmetric(horizontal: 40),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                TextFormField(
-                                  style: TextStyle(color: Colors.white),
-                                  controller: _usernameController,
-                                  decoration: const InputDecoration(
-                                    filled: true,
-                                    fillColor: Color.fromRGBO(44, 54, 75, 100),
-                                    hint: Text(
-                                      "Username",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(10),
-                                      ),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.person_2_outlined,
-                                      color: Color.fromRGBO(
-                                        112,
-                                        215,
-                                        2003,
-                                        100,
-                                      ),
-                                    ),
-                                  ),
-                                  validator: (value) => value!.isEmpty
-                                      ? "Username tidak boleh kosong"
-                                      : null,
-                                ),
-                                const SizedBox(height: 15),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
 
-                                // Input Password
-                                TextFormField(
-                                  style: TextStyle(color: Colors.white),
-                                  controller: _passwordController,
-                                  obscureText: true,
-                                  decoration: const InputDecoration(
-                                    filled: true,
-                                    fillColor: Color.fromRGBO(44, 54, 75, 100),
-                                    hint: Text(
-                                      "Password",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(10),
-                                      ),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.lock_outlined,
-                                      color: Color.fromRGBO(
-                                        112,
-                                        215,
-                                        2003,
-                                        100,
-                                      ),
-                                    ),
-                                  ),
-                                  validator: (value) => value!.isEmpty
-                                      ? "Password tidak boleh kosong"
-                                      : null,
-                                ),
-                                const SizedBox(height: 20),
-                                // Tombol Login
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 50,
-                                  child: ElevatedButton(
-                                    onPressed: _isLoading ? null : _handleLogin,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Color.fromRGBO(
-                                        226,
-                                        19,
-                                        136,
-                                        90,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    child: _isLoading
-                                        ? const CircularProgressIndicator(
-                                            color: Colors.white,
-                                          )
-                                        : const Text(
-                                            "SIGN IN",
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                      // Username
+                      TextFormField(
+                        style: const TextStyle(color: Colors.white),
+                        controller: _usernameController,
+                        decoration: const InputDecoration(
+                          filled: true,
+                          fillColor: Color.fromRGBO(44, 54, 75, 100),
+                          hintText: "Username",
+                          hintStyle: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            borderSide: BorderSide.none,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.person_2_outlined,
+                            color: Color.fromRGBO(112, 215, 2003, 100),
                           ),
                         ),
-                      ],
-                    ),
+                        validator: (value) => value!.isEmpty
+                            ? "Username tidak boleh kosong"
+                            : null,
+                      ),
+                      const SizedBox(height: 15),
+
+                      // Password
+                      TextFormField(
+                        style: const TextStyle(color: Colors.white),
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          filled: true,
+                          fillColor: Color.fromRGBO(44, 54, 75, 100),
+                          hintText: "Password",
+                          hintStyle: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            borderSide: BorderSide.none,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.lock_outlined,
+                            color: Color.fromRGBO(112, 215, 2003, 100),
+                          ),
+                        ),
+                        validator: (value) => value!.isEmpty
+                            ? "Password tidak boleh kosong"
+                            : null,
+                      ),
+                      const SizedBox(height: 25),
+
+                      // Tombol Login
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromRGBO(226, 19, 136, 90),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : const Text(
+                                  "SIGN IN",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

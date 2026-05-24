@@ -159,6 +159,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -193,7 +194,8 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                             _isLoadingUsername,
                             _simpanUsername,
                           ),
-                          const Spacer(), // Memberi jarak fleksibel antar section
+                          // Memberi jarak fleksibel antar section
+                          const SizedBox(height: 20), // Jarak tetap sebelum section berikutnya
                           _sectionTitle(Icons.lock, "Ubah Password"),
                           const SizedBox(height: 8),
                           _input(
@@ -222,6 +224,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                             _isLoadingPassword,
                             _simpanPassword,
                           ),
+                          const Spacer(), 
                         ],
                       ),
                     ),
@@ -330,7 +333,20 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white10),
       ),
-      child: child,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight, // Menjaga Spacer() tetap bekerja saat normal
+              ),
+              child: IntrinsicHeight(
+                child: child, // Menampung isi Form kiri atau Riwayat kanan
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

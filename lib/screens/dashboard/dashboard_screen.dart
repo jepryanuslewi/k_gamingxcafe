@@ -31,7 +31,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     EditProfileAdminScreen(),
   ];
 
-  // --- FUNGSI LOGOUT DENGAN KONFIRMASI ---
   void _logout() {
     showDialog(
       context: context,
@@ -49,7 +48,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           TextButton(
             onPressed: () {
-              // Hapus semua route dan kembali ke Login
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -77,181 +75,202 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: SafeArea(
         child: Row(
           children: [
-            NavigationRail(
-              extended: _isExpanded,
-              backgroundColor: primaryBg,
-              unselectedIconTheme: const IconThemeData(
-                color: Colors.white54,
-                size: 24,
-              ),
-              selectedIconTheme: const IconThemeData(
-                color: accentColor,
-                size: 28,
-              ),
-              unselectedLabelTextStyle: const TextStyle(
-                color: Colors.white54,
-                fontSize: 13,
-              ),
-              selectedLabelTextStyle: const TextStyle(
-                color: accentColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-              indicatorColor: accentColor.withOpacity(0.1),
-
-              // --- HEADER ---
-              leading: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: _isExpanded ? 16 : 8,
+            // ✅ Bungkus NavigationRail dengan SingleChildScrollView
+            SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
+                ),
+                child: IntrinsicHeight(
+                  child: NavigationRail(
+                    extended: _isExpanded,
+                    backgroundColor: primaryBg,
+                    unselectedIconTheme: const IconThemeData(
+                      color: Colors.white54,
+                      size: 24,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                    selectedIconTheme: const IconThemeData(
+                      color: accentColor,
+                      size: 28,
+                    ),
+                    unselectedLabelTextStyle: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13,
+                    ),
+                    selectedLabelTextStyle: const TextStyle(
+                      color: accentColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    indicatorColor: accentColor.withOpacity(0.1),
+
+                    // --- HEADER ---
+                    leading: Column(
                       children: [
-                        Container(
-                          height: 40,
-                          width: 40,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: _isExpanded ? 16 : 8,
                           ),
-                          child: Image.asset("assets/images/bgLoginScreen.png"),
-                        ),
-                        if (_isExpanded) ...[
-                          const SizedBox(width: 12),
-                          Row(
-                            children: const [
-                              Text(
-                                "GAMING",
-                                style: TextStyle(
-                                  color: Color.fromRGBO(226, 19, 136, 100),
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: "Poppins",
-                                ),
-                              ),
-                              SizedBox(width: 5),
-                              Text(
-                                "X",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.normal,
-                                  fontFamily: "Poppins",
-                                ),
-                              ),
-                              SizedBox(width: 5),
-                              Text(
-                                "CAFE",
-                                style: TextStyle(
-                                  color: Color.fromRGBO(0, 224, 198, 100),
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: "Poppins",
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Divider(
-                    color: Colors.white10,
-                    thickness: 1,
-                    indent: 10,
-                    endIndent: 10,
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      _isExpanded ? Icons.keyboard_arrow_left : Icons.menu,
-                      color: Colors.white70,
-                    ),
-                    onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                  ),
-                ],
-              ),
-
-              // --- MENU UTAMA ---
-              destinations: const [
-                NavigationRailDestination(
-                  icon: Icon(Icons.grid_view_rounded),
-                  label: Text("Dashboard"),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.badge_outlined),
-                  label: Text("Pegawai"),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.videogame_asset_outlined),
-                  label: Text("PS Units"),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.event_note),
-                  label: Text("Paket Promo"),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.inventory_2_rounded),
-                  label: Text("Kelola Bahan Baku"),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.restaurant_menu_rounded),
-                  label: Text("Kelola Menu Cafe"),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.bar_chart_rounded),
-                  label: Text("Kelola Laporan"),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.settings),
-                  label: Text("Setting"),
-                ),
-              ],
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) {
-                setState(() => _selectedIndex = index);
-              },
-
-              // --- TOMBOL LOGOUT (TRAILING) ---
-              trailing: Expanded(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 20.0),
-                    child: _isExpanded
-                        ? SizedBox(
-                            width: 200,
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 40,
+                                width: 40,
+                                decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-
-                                foregroundColor: Colors.white,
-                                backgroundColor: Color.fromRGBO(
-                                  226,
-                                  19,
-                                  136,
-                                  100,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                                child: Image.asset(
+                                  "assets/images/bgLoginScreen.png",
                                 ),
                               ),
-                              onPressed: _logout,
-                              icon: const Icon(Icons.logout),
-                              label: const Text("SIGN OUT"),
-                            ),
-                          )
-                        : IconButton(
-                            icon: const Icon(
-                              Icons.logout,
-                              color: Colors.redAccent,
-                            ),
-                            onPressed: _logout,
+                              if (_isExpanded) ...[
+                                const SizedBox(width: 12),
+                                Row(
+                                  children: const [
+                                    Text(
+                                      "GAMING",
+                                      style: TextStyle(
+                                        color: Color.fromRGBO(
+                                          226,
+                                          19,
+                                          136,
+                                          100,
+                                        ),
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: "Poppins",
+                                      ),
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      "X",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.normal,
+                                        fontFamily: "Poppins",
+                                      ),
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      "CAFE",
+                                      style: TextStyle(
+                                        color: Color.fromRGBO(0, 224, 198, 100),
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: "Poppins",
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
                           ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Divider(
+                          color: Colors.white10,
+                          thickness: 1,
+                          indent: 10,
+                          endIndent: 10,
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            _isExpanded
+                                ? Icons.keyboard_arrow_left
+                                : Icons.menu,
+                            color: Colors.white70,
+                          ),
+                          onPressed: () =>
+                              setState(() => _isExpanded = !_isExpanded),
+                        ),
+                      ],
+                    ),
+
+                    // --- MENU UTAMA (✅ 8 item sesuai _pages) ---
+                    destinations: const [
+                      NavigationRailDestination(
+                        icon: Icon(Icons.grid_view_rounded),
+                        label: Text("Dashboard"),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.badge_outlined),
+                        label: Text("Pegawai"),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.videogame_asset_outlined),
+                        label: Text("PS Units"),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.event_note),
+                        label: Text("Paket Promo"),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.inventory_2_rounded),
+                        label: Text("Kelola Bahan"),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.restaurant_menu_rounded),
+                        label: Text("Kelola Menu"),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.bar_chart_rounded),
+                        label: Text("Laporan"),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.settings),
+                        label: Text("Setting"),
+                      ),
+                    ],
+                    selectedIndex: _selectedIndex,
+                    onDestinationSelected: (index) {
+                      setState(() => _selectedIndex = index);
+                    },
+                    // --- TOMBOL LOGOUT ---
+                    trailing: Expanded(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 20.0),
+                          child: _isExpanded
+                              ? SizedBox(
+                                  width: 200,
+                                  child: OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      foregroundColor: Colors.white,
+                                      backgroundColor: const Color.fromRGBO(
+                                        226,
+                                        19,
+                                        136,
+                                        100,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onPressed: _logout,
+                                    icon: const Icon(Icons.logout),
+                                    label: const Text("SIGN OUT"),
+                                  ),
+                                )
+                              : IconButton(
+                                  icon: const Icon(
+                                    Icons.logout,
+                                    color: Colors.redAccent,
+                                  ),
+                                  onPressed: _logout,
+                                ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

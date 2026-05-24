@@ -11,6 +11,7 @@ import 'package:k_gamingxcafe/screens/transaksi/transaksi_screen.dart';
 import 'package:k_gamingxcafe/widgets/card_button.dart';
 import 'package:k_gamingxcafe/widgets/card_pendapatan.dart';
 import 'package:k_gamingxcafe/widgets/dialog/dialog_singout.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -34,6 +35,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final authprovider = context.watch<AuthProvider>();
     final String username = authprovider.user?.username ?? "";
     final pendapatanProv = context.watch<PendapatanProvider>();
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
+    final hPad = isTablet ? size.width * 0.08 : 20.0;
 
     return PopScope(
       canPop: false,
@@ -50,314 +54,329 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       child: Scaffold(
         backgroundColor: const Color.fromRGBO(11, 18, 32, 100),
         body: SafeArea(
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50),
-                child: Column(
-                  children: [
-                    Container(
-                      color: Colors.transparent,
-                      width: double.infinity,
-                      height: 100,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 16),
+            child: Column(
+              children: [
+                // ── HEADER ─────────────────────────────────────
+                SizedBox(
+                  height: 80,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
                         children: [
-                          Row(
+                          Image.asset(
+                            "assets/images/bgLoginScreen.png",
+                            height: 60,
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.asset("assets/images/bgLoginScreen.png"),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
+                              Row(
                                 children: [
-                                  Row(
-                                    children: const [
-                                      Text(
-                                        "GAMING",
-                                        style: TextStyle(
-                                          color: Color.fromRGBO(
-                                            226,
-                                            19,
-                                            136,
-                                            100,
-                                          ),
-                                          fontSize: 35,
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: "Poppins",
-                                        ),
-                                      ),
-                                      SizedBox(width: 16),
-                                      Text(
-                                        "X",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 35,
-                                          fontWeight: FontWeight.normal,
-                                          fontFamily: "Poppins",
-                                        ),
-                                      ),
-                                      SizedBox(width: 16),
-                                      Text(
-                                        "CAFE",
-                                        style: TextStyle(
-                                          color: Color.fromRGBO(
-                                            0,
-                                            224,
-                                            198,
-                                            100,
-                                          ),
-                                          fontSize: 35,
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: "Poppins",
-                                        ),
-                                      ),
-                                    ],
+                                  Text(
+                                    "GAMING",
+                                    style: TextStyle(
+                                      color: const Color.fromRGBO(226, 19, 136, 100),
+                                      fontSize: isTablet ? 28 : 22,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: "Poppins",
+                                    ),
                                   ),
-                                  const Text(
-                                    "Booking & Transaction App",
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "X",
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 20,
+                                      fontSize: isTablet ? 28 : 22,
+                                      fontFamily: "Poppins",
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "CAFE",
+                                    style: TextStyle(
+                                      color: const Color.fromRGBO(0, 224, 198, 100),
+                                      fontSize: isTablet ? 28 : 22,
                                       fontWeight: FontWeight.bold,
+                                      fontFamily: "Poppins",
                                     ),
                                   ),
                                 ],
                               ),
+                              Text(
+                                "Booking & Transaction App",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: isTablet ? 16 : 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromRGBO(
-                                11,
-                                18,
-                                32,
-                                100,
-                              ),
+                        ],
+                      ),
+                      // Profile Button
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromRGBO(11, 18, 32, 100),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditProfileScreen(),
                             ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => EditProfileScreen(),
-                                ),
-                              );
-                            },
-                            child: Row(
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      username,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      widget.shiftName,
-                                      style: const TextStyle(
-                                        color: Color(0xFF00E0C6),
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  username,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: isTablet ? 18 : 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                const SizedBox(width: 10),
-                                const Icon(
-                                  Icons.person_pin,
-                                  size: 50,
-                                  color: Color(0xFF00E0C6),
+                                Text(
+                                  widget.shiftName,
+                                  style: TextStyle(
+                                    color: const Color(0xFF00E0C6),
+                                    fontSize: isTablet ? 13 : 11,
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(20, 28, 47, 100),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color.fromRGBO(0, 224, 198, 100),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.person_pin,
+                              size: isTablet ? 50 : 40,
+                              color: const Color(0xFF00E0C6),
+                            ),
+                          ],
                         ),
                       ),
-                      padding: const EdgeInsets.only(
-                        left: 50,
-                        right: 50,
-                        top: 20,
-                      ),
-                      height: 420,
-                      width: double.infinity,
-                      child: Column(
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 50),
+
+                // ── MAIN CARD ───────────────────────────────────
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(20, 28, 47, 100),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color.fromRGBO(0, 224, 198, 100),
+                    ),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? 50 : 20,
+                    vertical: 20,
+                  ),
+                  width: double.infinity,
+                  child: Column(
+                    children: [
+                      // Tanggal & Sapaan
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Semangat, $username',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                '${tanggal.day}/${tanggal.month}/${tanggal.year}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            'Semangat, $username',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isTablet ? 20 : 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          const SizedBox(height: 20),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              CardPendapatan(
-                                text: 'Gaming Hari Ini',
-                                total: pendapatanProv.totalGaming,
-                              ),
-                              CardPendapatan(
-                                text: 'Cafe Hari Ini',
-                                total: pendapatanProv.totalCafe,
-                              ),
-                              CardPendapatan(
-                                text: 'Gaming x Cafe Hari Ini',
-                                total: pendapatanProv.totalGabungan,
-                              ),
-                            ],
-                          ),
-
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  CardButton(
-                                    text: "JADWAL",
-                                    icon: Icons.calendar_month,
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => JadwalScreen(
-                                            shiftName: widget.shiftName,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  CardButton(
-                                    text: "TRANSAKSI",
-                                    icon: Icons.payment,
-                                    onTap: () async {
-                                      await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => TransaksiScreen(
-                                            shiftName: widget.shiftName,
-                                          ),
-                                        ),
-                                      );
-
-                                      if (context.mounted) {
-                                        context
-                                            .read<PendapatanProvider>()
-                                            .fetchSemua();
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  CardButton(
-                                    text: "STOCK",
-                                    icon: Icons.calendar_month,
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => StockScreen(
-                                            shiftName: widget.shiftName,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  CardButton(
-                                    text: "LAPORAN",
-                                    icon: Icons.bar_chart_sharp,
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => LaporanScreen(
-                                            shiftName: widget.shiftName,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          // ── TOMBOL SIGN OUT ───────────────────────────
-                          SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                backgroundColor: const Color.fromRGBO(
-                                  226,
-                                  19,
-                                  136,
-                                  100,
-                                ),
-                              ),
-                              onPressed: () {
-                                DialogSingout.showLogoutDialog(
-                                  context,
-                                  onConfirm: () => _processLogout(context),
-                                );
-                              },
-                              child: const Text(
-                                "SIGN OUT",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                          Text(
+                            '${tanggal.day}/${tanggal.month}/${tanggal.year}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isTablet ? 20 : 16,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 20),
+
+                      // ── Card Pendapatan ─────────────────────
+                      isTablet
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: CardPendapatan(
+                                    text: 'Gaming Hari Ini',
+                                    total: pendapatanProv.totalGaming,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: CardPendapatan(
+                                    text: 'Cafe Hari Ini',
+                                    total: pendapatanProv.totalCafe,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: CardPendapatan(
+                                    text: 'Gaming x Cafe',
+                                    total: pendapatanProv.totalGabungan,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                CardPendapatan(
+                                  text: 'Gaming Hari Ini',
+                                  total: pendapatanProv.totalGaming,
+                                ),
+                                const SizedBox(height: 8),
+                                CardPendapatan(
+                                  text: 'Cafe Hari Ini',
+                                  total: pendapatanProv.totalCafe,
+                                ),
+                                const SizedBox(height: 8),
+                                CardPendapatan(
+                                  text: 'Gaming x Cafe',
+                                  total: pendapatanProv.totalGabungan,
+                                ),
+                              ],
+                            ),
+
+                      const SizedBox(height: 20),
+
+                      // ── Menu Buttons ────────────────────────
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CardButton(
+                              text: "JADWAL",
+                              icon: Icons.calendar_month,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => JadwalScreen(
+                                      shiftName: widget.shiftName,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: CardButton(
+                              text: "TRANSAKSI",
+                              icon: Icons.payment,
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TransaksiScreen(
+                                      shiftName: widget.shiftName,
+                                    ),
+                                  ),
+                                );
+                                if (context.mounted) {
+                                  context
+                                      .read<PendapatanProvider>()
+                                      .fetchSemua();
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CardButton(
+                              text: "STOCK",
+                              icon: Icons.inventory_2_outlined,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => StockScreen(
+                                      shiftName: widget.shiftName,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: CardButton(
+                              text: "LAPORAN",
+                              icon: Icons.bar_chart_sharp,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => LaporanScreen(
+                                      shiftName: widget.shiftName,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // ── SIGN OUT ────────────────────────────
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            backgroundColor:
+                                const Color.fromRGBO(226, 19, 136, 100),
+                          ),
+                          onPressed: () {
+                            DialogSingout.showLogoutDialog(
+                              context,
+                              onConfirm: () => _processLogout(context),
+                            );
+                          },
+                          child: const Text(
+                            "SIGN OUT",
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -381,9 +400,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Gagal logout: $e")));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Gagal logout: $e")));
       }
     }
   }

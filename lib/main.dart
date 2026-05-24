@@ -10,31 +10,23 @@ import 'package:k_gamingxcafe/screens/login_screen.dart';
 import 'package:k_gamingxcafe/screens/main_menu_screen.dart';
 import 'package:k_gamingxcafe/screens/shift_screen.dart';
 import 'package:provider/provider.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   
   final authProvider = AuthProvider();
   final shiftProvider = ShiftProvider();
 
- 
   await authProvider.checkLoginStatus();
   await shiftProvider.loadActiveShift();
 
   runApp(
     MultiProvider(
       providers: [
-        
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider.value(value: shiftProvider),
-
-        
         ChangeNotifierProvider(create: (_) => JadwalProvider()),
         ChangeNotifierProvider(create: (_) => BahanProvider()),
-        ChangeNotifierProvider(create: (_) => MenuProvider()),
-
-        
+        ChangeNotifierProvider(create: (_) => MenuProvider()),    
         ChangeNotifierProvider(
           create: (_) => PendapatanProvider()..startRealtime(),
         ),
@@ -59,7 +51,6 @@ class MyApp extends StatelessWidget {
         home: LoginScreen(),
       );
     }
-
     
     if (auth.user?.role == 'admin') {
       return const MaterialApp(
@@ -67,7 +58,6 @@ class MyApp extends StatelessWidget {
         home: DashboardScreen(), 
       );
     }
-
     
     if (shift.activeShift == null) {
       return MaterialApp(

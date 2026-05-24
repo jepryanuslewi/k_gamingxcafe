@@ -89,52 +89,54 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
           ),
           content: Form(
             key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: userController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: "Username",
-                    labelStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.person, color: Color(0xffe21388)),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: userController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: "Username",
+                      labelStyle: TextStyle(color: Colors.grey),
+                      prefixIcon: Icon(Icons.person, color: Color(0xffe21388)),
+                    ),
+                    validator: (v) =>
+                        v!.isEmpty ? "Username tidak boleh kosong" : null,
                   ),
-                  validator: (v) =>
-                      v!.isEmpty ? "Username tidak boleh kosong" : null,
-                ),
-                TextFormField(
-                  controller: passController,
-                  obscureText: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: "Password",
-                    labelStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.lock, color: Color(0xffe21388)),
+                  TextFormField(
+                    controller: passController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: "Password",
+                      labelStyle: TextStyle(color: Colors.grey),
+                      prefixIcon: Icon(Icons.lock, color: Color(0xffe21388)),
+                    ),
+                    validator: (v) =>
+                        v!.length < 3 ? "Password minimal 3 karakter" : null,
                   ),
-                  validator: (v) =>
-                      v!.length < 3 ? "Password minimal 3 karakter" : null,
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  dropdownColor: const Color.fromRGBO(20, 28, 47, 1),
-                  value: selectedRole,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: "Role Akses",
-                    labelStyle: TextStyle(color: Colors.grey),
+                  const SizedBox(height: 20),
+                  DropdownButtonFormField<String>(
+                    dropdownColor: const Color.fromRGBO(20, 28, 47, 1),
+                    value: selectedRole,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: "Role Akses",
+                      labelStyle: TextStyle(color: Colors.grey),
+                    ),
+                    items: ['admin', 'staff']
+                        .map(
+                          (role) => DropdownMenuItem(
+                            value: role,
+                            child: Text(role.toUpperCase()),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) => setModalState(() => selectedRole = val!),
                   ),
-                  items: ['admin', 'staff']
-                      .map(
-                        (role) => DropdownMenuItem(
-                          value: role,
-                          child: Text(role.toUpperCase()),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (val) => setModalState(() => selectedRole = val!),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           actions: [

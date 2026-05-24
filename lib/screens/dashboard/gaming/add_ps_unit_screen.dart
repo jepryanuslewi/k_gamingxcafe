@@ -61,43 +61,45 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
             width: MediaQuery.of(context).size.width * 0.30,
             child: Form(
               key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      labelText: "Nama Unit",
-                      labelStyle: TextStyle(color: Colors.grey),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: "Nama Unit",
+                        labelStyle: TextStyle(color: Colors.grey),
+                      ),
+                      validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
                     ),
-                    validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
-                  ),
-                  TextFormField(
-                    controller: priceController,
-                    style: const TextStyle(color: Colors.white),
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Harga per Jam",
-                      labelStyle: TextStyle(color: Colors.grey),
+                    TextFormField(
+                      controller: priceController,
+                      style: const TextStyle(color: Colors.white),
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Harga per Jam",
+                        labelStyle: TextStyle(color: Colors.grey),
+                      ),
+                      validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
                     ),
-                    validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
-                  ),
-                  const SizedBox(height: 15),
-                  DropdownButtonFormField<String>(
-                    dropdownColor: const Color(0xff141c2f),
-                    value: type,
-                    style: const TextStyle(color: Colors.white),
-                    items: ["REGULAR", "VIP 1", "VIP 2"]
-                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                        .toList(),
-                    onChanged: (val) => setModalState(() => type = val!),
-                    decoration: const InputDecoration(
-                      labelText: "Tipe",
-                      labelStyle: TextStyle(color: Colors.grey),
+                    const SizedBox(height: 15),
+                    DropdownButtonFormField<String>(
+                      dropdownColor: const Color(0xff141c2f),
+                      value: type,
+                      style: const TextStyle(color: Colors.white),
+                      items: ["REGULAR", "VIP 1", "VIP 2"]
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
+                      onChanged: (val) => setModalState(() => type = val!),
+                      decoration: const InputDecoration(
+                        labelText: "Tipe",
+                        labelStyle: TextStyle(color: Colors.grey),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -165,6 +167,7 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => AlertDialog(
+          scrollable: true,
           backgroundColor: const Color(0xff141c2f),
           title: const Text(
             "Tambah Unit Baru",
@@ -174,38 +177,40 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
             width: MediaQuery.of(context).size.width * 0.30,
             child: Form(
               key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildTextField(nameController, "Nama Unit"),
-                  _buildTextField(
-                    priceController,
-                    "Harga per Jam",
-                    isNumber: true,
-                    extraValidator: (v) {
-                      final harga = int.tryParse(v!);
-                      if (harga == null || harga <= 0) {
-                        return "Harga harus lebih dari 0";
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 15),
-                  DropdownButtonFormField<String>(
-                    dropdownColor: const Color(0xff141c2f),
-                    value: type,
-                    style: const TextStyle(color: Colors.white),
-                    items: ["REGULAR", "VIP 1", "VIP 2"]
-                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                        .toList(),
-                    onChanged: (val) => setModalState(() => type = val!),
-                    decoration: const InputDecoration(
-                      labelText: "Tipe",
-                      labelStyle: TextStyle(color: Colors.grey),
+             
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTextField(nameController, "Nama Unit"),
+                    _buildTextField(
+                      priceController,
+                      "Harga per Jam",
+                      isNumber: true,
+                      extraValidator: (v) {
+                        final harga = int.tryParse(v!);
+                        if (harga == null || harga <= 0) {
+                          return "Harga harus lebih dari 0";
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      dropdownColor: const Color(0xff141c2f),
+                      value: type,
+                      style: const TextStyle(color: Colors.white),
+                      items: ["REGULAR", "VIP 1", "VIP 2"]
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
+                      onChanged: (val) => setModalState(() => type = val!),
+                      decoration: const InputDecoration(
+                        labelText: "Tipe",
+                        labelStyle: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  ],
+                ),
+              
             ),
           ),
           actions: [
@@ -285,88 +290,91 @@ class _AddPsUnitScreenState extends State<AddPsUnitScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
+      resizeToAvoidBottomInset: false,
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.only(top: 16, left: 20, right: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 10),
-                  const Text(
-                    "Manajemen Unit PS",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    children: const [
-                      Text(
-                        "GAMING",
-                        style: TextStyle(
-                          color: Color.fromRGBO(226, 19, 136, 100),
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: "Poppins",
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        "X",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.normal,
-                          fontFamily: "Poppins",
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        "CAFE",
-                        style: TextStyle(
-                          color: Color.fromRGBO(0, 224, 198, 100),
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: "Poppins",
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(color: Colors.white10, thickness: 1, height: 32),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xffe21388),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: showAddUnitForm,
-                      child: Text(
-                        "Tambah Unit PS",
-                        style: TextStyle(color: Colors.white),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10),
+                    const Text(
+                      "Manajemen Unit PS",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.only(top: 16),
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 220,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.2,
+                    SizedBox(height: 10),
+                    Row(
+                      children: const [
+                        Text(
+                          "GAMING",
+                          style: TextStyle(
+                            color: Color.fromRGBO(226, 19, 136, 100),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: "Poppins",
+                          ),
                         ),
-                    itemCount: units.length,
-                    itemBuilder: (context, index) => unitCard(units[index]),
-                  ),
-                ],
+                        SizedBox(width: 5),
+                        Text(
+                          "X",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
+                            fontFamily: "Poppins",
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          "CAFE",
+                          style: TextStyle(
+                            color: Color.fromRGBO(0, 224, 198, 100),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: "Poppins",
+                          ),
+                        ),
+                      ],
+                    ),
+                    Divider(color: Colors.white10, thickness: 1, height: 32),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xffe21388),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: showAddUnitForm,
+                        child: Text(
+                          "Tambah Unit PS",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.only(top: 16),
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 220,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 1.2,
+                          ),
+                      itemCount: units.length,
+                      itemBuilder: (context, index) => unitCard(units[index]),
+                    ),
+                  ],
+                ),
               ),
             ),
     );

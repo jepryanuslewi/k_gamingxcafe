@@ -91,9 +91,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         content: Center(
           child: Text(message, style: const TextStyle(color: Colors.white)),
         ),
-        backgroundColor: isError
-            ? const Color(0xFFE21388)
-            : const Color(0xFF00E0C6),
+        backgroundColor: isError ? const Color(0xFFE21388) : const Color(0xFF00E0C6),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -105,6 +103,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B1220),
+      // Mencegah overflow layout background saat keyboard di layar landscape muncul
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: const Color(0xFF141C2F),
         title: const Text(
@@ -124,16 +124,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
               child: Row(
-                // 1. CrossAxisAlignment.stretch membuat kolom kiri & kanan sama tinggi
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // KOLOM KIRI
+                  // KOLOM KIRI (Info Profil & Ubah Username)
                   Expanded(
                     child: Column(
                       children: [
                         _buildProfileInfo(user),
                         const SizedBox(height: 20),
-                        // 2. Expanded di sini membuat kartu Username mengisi sisa ruang
                         Expanded(
                           child: _buildCard(
                             title: 'Ubah Username',
@@ -146,7 +144,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   hint: 'Masukkan username baru',
                                   icon: Icons.person,
                                 ),
-                                // 3. Spacer memicu tombol untuk turun ke bawah
                                 const Spacer(),
                                 _buildButton(
                                   label: 'SIMPAN USERNAME',
@@ -163,7 +160,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   const SizedBox(width: 40),
 
-                  // KOLOM KANAN
+                  // KOLOM KANAN (Ubah Password)
                   Expanded(
                     child: _buildCard(
                       title: 'Ubah Password',
@@ -190,11 +187,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             isPassword: true,
                             showPassword: _showConfirmPassword,
                             onToggleVisibility: () => setState(
-                              () =>
-                                  _showConfirmPassword = !_showConfirmPassword,
+                              () => _showConfirmPassword = !_showConfirmPassword,
                             ),
                           ),
-                          // 3. Spacer memicu tombol untuk turun ke bawah agar sejajar dengan kiri
                           const Spacer(),
                           _buildButton(
                             label: 'SIMPAN PASSWORD',
@@ -214,7 +209,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  // Modifikasi sedikit pada _buildCard untuk mendukung tinggi maksimal (Expanded)
   Widget _buildCard({
     required String title,
     required IconData icon,
@@ -245,8 +239,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ],
           ),
           const Divider(color: Colors.white10, height: 28),
-          // Wrap child dengan Expanded agar Column di dalamnya bisa menggunakan Spacer()
-          Expanded(child: child),
+          // Menggunakan LayoutBuilder & SingleChildScrollView internal di dalam card.
+          // Ini trik krusial agar Spacer() tetap bekerja saat layar luas, 
+          // namun bisa di-scroll tanpa memicu overflow jika keyboard naik.
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(child: child),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -264,41 +271,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: [
           const Icon(Icons.person_pin, size: 56, color: Color(0xFF00E0C6)),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                user?.username ?? '-',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00E0C6).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFF00E0C6),
-                    width: 0.5,
-                  ),
-                ),
-                child: Text(
-                  (user?.role ?? '-').toUpperCase(),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user?.username ?? '-',
                   style: const TextStyle(
-                    color: Color(0xFF00E0C6),
-                    fontSize: 11,
+                    color: Colors.white,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00E0C6).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF00E0C6), width: 0.5),
+                  ),
+                  child: Text(
+                    (user?.role ?? '-').toUpperCase(),
+                    style: const TextStyle(
+                      color: Color(0xFF00E0C6),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -317,10 +321,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white70, fontSize: 13),
-        ),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13)),
         const SizedBox(height: 8),
         Container(
           height: 52,
@@ -337,10 +338,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               hintText: hint,
               hintStyle: const TextStyle(color: Colors.white30),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               prefixIcon: Icon(icon, color: const Color(0xFF00E0C6), size: 20),
               suffixIcon: isPassword
                   ? IconButton(
@@ -370,9 +368,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFE21388),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
         onPressed: isLoading ? null : onPressed,
         child: isLoading

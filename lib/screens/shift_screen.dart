@@ -47,7 +47,7 @@ class ShiftScreen extends StatelessWidget {
                     const Color(0xFFFFA726),
                     1,
                   ),
-                  const SizedBox(width: 40),
+                  const SizedBox(width: 100),
                   _buildShiftButton(
                     context,
                     "SHIFT MALAM",
