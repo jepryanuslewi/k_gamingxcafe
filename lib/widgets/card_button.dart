@@ -13,17 +13,17 @@ class CardButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 10),
+        margin: EdgeInsets.symmetric(vertical: 5),
         padding: EdgeInsets.symmetric(horizontal: 15),
-        height: 60,
-        width: 400,
+        height: height * 0.10,
         decoration: BoxDecoration(
           color: Color.fromRGBO(26, 37, 64, 100),
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Color.fromRGBO(90, 88, 88, 100)),
+          border: Border.all(color: Colors.white),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

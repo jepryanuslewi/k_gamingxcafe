@@ -72,7 +72,7 @@ class _StockScreenState extends State<StockScreen> {
           child: Column(
             children: [
               _buildHeader(username, widget.shiftName),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
               Expanded(
                 child: Container(

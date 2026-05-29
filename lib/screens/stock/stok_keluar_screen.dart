@@ -152,33 +152,51 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
     final prov = context.watch<BahanProvider>();
     final tanggal = DateTime.now();
 
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardOpen = bottomInset > 0;
+
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: const Color.fromRGBO(11, 18, 32, 1),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Column(
-            children: [
-              _buildHeader(authprovider.user?.username ?? "User"),
-              const SizedBox(height: 20),
-              _buildFormInput(tanggal, prov),
-              const SizedBox(height: 25),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "RIWAYAT PENGURANGAN STOK HARI INI",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: "Poppins",
-                  ),
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Padding(
+            padding: EdgeInsets.only(left: 40, right: 40, bottom: bottomInset),
+            child: Column(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: isKeyboardOpen ? 0 : 90,
+                  child: _buildHeader(authprovider.user?.username ?? "User"),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Expanded(child: _buildTableRiwayat(prov)),
-              const SizedBox(height: 20),
-            ],
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: isKeyboardOpen ? 0 : 20,
+                ),
+                _buildFormInput(tanggal, prov),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: isKeyboardOpen ? 0 : 25,
+                ),
+                if (!isKeyboardOpen)
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "RIWAYAT PENGURANGAN STOK HARI INI",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "Poppins",
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                Expanded(child: _buildTableRiwayat(prov)),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),

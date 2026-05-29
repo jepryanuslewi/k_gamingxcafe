@@ -96,11 +96,11 @@ Widget build(BuildContext context) {
                   borderRadius: BorderRadius.circular(25),
                   color: const Color.fromRGBO(20, 28, 47, 100),
                 ),
-                
                 width: isTablet ? 500 : double.infinity,
+               
                 padding: const EdgeInsets.symmetric(
                   horizontal: 40,
-                  vertical: 40,
+                  vertical: 20,
                 ),
                 child: Form(
                   key: _formKey,
@@ -109,9 +109,9 @@ Widget build(BuildContext context) {
                     children: [
                       Image.asset(
                         "assets/images/bgLoginScreen.png",
-                        width: isTablet ? 180 : 150,
+                        width: isTablet ? 150 : 150,
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: size.height * 0.02),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -188,8 +188,7 @@ Widget build(BuildContext context) {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
-
+                      SizedBox(height: size.height * 0.03),
                       // Username
                       TextFormField(
                         style: const TextStyle(color: Colors.white),

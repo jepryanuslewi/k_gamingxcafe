@@ -202,8 +202,9 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 50),
                 _buildHeader(now),
-                const SizedBox(height: 20),
+                const SizedBox(height: 50),
 
                 // ── TOP STATS ──────────────────────────────
                 if (_isLoading)
@@ -410,7 +411,7 @@ class DashboardCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xff1c273d),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: Colors.white),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),

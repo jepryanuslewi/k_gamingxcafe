@@ -44,7 +44,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                   Container(
                     color: Colors.transparent,
                     width: double.infinity,
-                    height: 100,
+                    height: MediaQuery.of(context).size.height * 0.15,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -160,7 +160,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                       border: Border.all(color: Colors.white10),
                     ),
                     padding: EdgeInsets.only(left: 50, right: 50, top: 20),
-                    height: 420,
+                    height: MediaQuery.of(context).size.height * 0.70,
                     width: double.infinity,
                     child: Column(
                       children: [

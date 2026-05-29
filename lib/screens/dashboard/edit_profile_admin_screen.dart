@@ -156,7 +156,6 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
-
     return Scaffold(
       backgroundColor: const Color(0xff0b1220),
       resizeToAvoidBottomInset: false,

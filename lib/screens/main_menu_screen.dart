@@ -52,7 +52,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         );
       },
       child: Scaffold(
-        backgroundColor: const Color.fromRGBO(11, 18, 32, 100),
+        backgroundColor: Color.fromARGB(100, 19, 15, 51),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 16),
@@ -175,15 +175,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 // ── MAIN CARD ───────────────────────────────────
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color.fromRGBO(20, 28, 47, 100),
+                    color: Color.fromARGB(100, 20, 28, 47),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: const Color.fromRGBO(0, 224, 198, 100),
                     ),
                   ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isTablet ? 50 : 20,
-                    vertical: 20,
+                  padding: EdgeInsets.only(
+                    left: isTablet ? 30 : 20,
+                    right: isTablet ? 30 : 20,
+                    top: isTablet ? 30 : 20,
+                    bottom: isTablet ? 30 : 20,
                   ),
                   width: double.infinity,
                   child: Column(
@@ -347,7 +349,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       // ── SIGN OUT ────────────────────────────
                       SizedBox(
                         width: double.infinity,
-                        height: 50,
+                        height: MediaQuery.of(context).size.height * 0.09,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(

@@ -75,7 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: SafeArea(
         child: Row(
           children: [
-            // ✅ Bungkus NavigationRail dengan SingleChildScrollView
+           
             SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -172,7 +172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 2),
                         const Divider(
                           color: Colors.white10,
                           thickness: 1,
@@ -192,7 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
 
-                    // --- MENU UTAMA (✅ 8 item sesuai _pages) ---
+                    // --- MENU UTAMA ---
                     destinations: const [
                       NavigationRailDestination(
                         icon: Icon(Icons.grid_view_rounded),

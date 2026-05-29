@@ -8,15 +8,16 @@ class CardPendapatan extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+    
     return Container(
       margin: EdgeInsets.all(10),
       padding: EdgeInsets.symmetric(horizontal: 15),
-      height: 80,
-      width: 250,
+      height: height * 0.15,
       decoration: BoxDecoration(
         color: Color.fromRGBO(20, 28, 47, 100),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Color.fromRGBO(90, 88, 88, 100)),
+        border: Border.all(color: Colors.white),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

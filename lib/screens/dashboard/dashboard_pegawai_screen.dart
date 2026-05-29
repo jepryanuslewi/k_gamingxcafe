@@ -217,8 +217,8 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
       body: Center(
         child: Container(
           padding: const EdgeInsets.all(25),
-          height: 550,
-          width: 760,
+          height: MediaQuery.of(context).size.height * 0.95,
+          width: MediaQuery.of(context).size.width * 0.75,
           decoration: BoxDecoration(
             color: const Color.fromRGBO(20, 28, 47, 1),
             borderRadius: BorderRadius.circular(20),
