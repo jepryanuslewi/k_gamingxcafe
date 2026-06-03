@@ -40,7 +40,6 @@ class _NotifikasiOverlayState extends State<NotifikasiOverlay> {
     final player = AudioPlayer();
     final source = AssetSource('sounds/notif.mp3');
 
-    // ✅ Loop: ulangi suara setiap kali selesai sampai player di-stop
     Future<void> loopSound() async {
       while (true) {
         try {
