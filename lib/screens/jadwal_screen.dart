@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/models/gaming/ps_unit_model.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
+import 'package:k_gamingxcafe/services/nontifikasi_service.dart';
+import 'package:k_gamingxcafe/widgets/gaming/nontifikasi_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:k_gamingxcafe/providers/gaming/jadwal_provider.dart';
 import 'package:k_gamingxcafe/models/gaming/jadwal_model.dart';
@@ -24,7 +27,14 @@ class _JadwalScreenState extends State<JadwalScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<JadwalProvider>().loadJadwalByView(currentView);
+      NontifikasiService().startWatcher();
     });
+  }
+
+  @override
+  void dispose() {
+    NontifikasiService().stopWatcher();
+    super.dispose();
   }
 
   @override
@@ -33,95 +43,97 @@ class _JadwalScreenState extends State<JadwalScreen> {
 
     return Scaffold(
       backgroundColor: const Color.fromRGBO(11, 18, 32, 1),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50),
-          child: Column(
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 20),
-
-              Expanded(
-                child: Consumer<JadwalProvider>(
-                  builder: (context, provider, child) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(20, 28, 47, 1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white10),
-                      ),
-                      padding: const EdgeInsets.all(25),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'JADWAL $currentView', // ✅ ikut rebuild
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+      body: NotifikasiOverlay(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 50),
+            child: Column(
+              children: [
+                _buildHeader(context),
+                const SizedBox(height: 20),
+        
+                Expanded(
+                  child: Consumer<JadwalProvider>(
+                    builder: (context, provider, child) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(20, 28, 47, 1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white10),
+                        ),
+                        padding: const EdgeInsets.all(25),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'JADWAL $currentView', // ✅ ikut rebuild
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '${tanggal.day}/${tanggal.month}/${tanggal.year}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                                Text(
+                                  '${tanggal.day}/${tanggal.month}/${tanggal.year}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const Divider(color: Colors.white24, height: 30),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  ButtonWidget(
-                                    text: "WALK IN",
-                                    onPressed: () {
-                                      setState(() => currentView = "WALK IN");
-                                      provider.loadJadwalByView("WALK IN");
-                                    },
-                                  ),
-                                  const SizedBox(width: 10),
-                                  ButtonWidget(
-                                    text: "BOOKING",
-                                    onPressed: () {
-                                      setState(() => currentView = "BOOKING");
-                                      provider.loadJadwalByView("BOOKING");
-                                    },
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  ButtonWidget(
-                                    text: "Kembali",
-                                    onPressed: () => Navigator.pop(context),
-                                  ),
-                                  SizedBox(width: 10),
-                                  ButtonWidget(
-                                    text: "Pesan",
-                                    onPressed: () => _showAddDialog(context),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Expanded(child: _buildJadwalList(provider)),
-                        ],
-                      ),
-                    );
-                  },
+                              ],
+                            ),
+                            const Divider(color: Colors.white24, height: 30),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    ButtonWidget(
+                                      text: "WALK IN",
+                                      onPressed: () {
+                                        setState(() => currentView = "WALK IN");
+                                        provider.loadJadwalByView("WALK IN");
+                                      },
+                                    ),
+                                    const SizedBox(width: 10),
+                                    ButtonWidget(
+                                      text: "BOOKING",
+                                      onPressed: () {
+                                        setState(() => currentView = "BOOKING");
+                                        provider.loadJadwalByView("BOOKING");
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    ButtonWidget(
+                                      text: "Kembali",
+                                      onPressed: () => Navigator.pop(context),
+                                    ),
+                                    SizedBox(width: 10),
+                                    ButtonWidget(
+                                      text: "Pesan",
+                                      onPressed: () => _showAddDialog(context),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Expanded(child: _buildJadwalList(provider)),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -171,6 +183,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 ),
               ),
               onPressed: () async {
+                NontifikasiService().resetTracker(item.id!);
                 await context.read<JadwalProvider>().deleteJadwal(
                   item.id!,
                   item.unitId,
@@ -249,6 +262,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 ),
               ),
               onPressed: () async {
+                NontifikasiService().resetTracker(item.id!);
                 final provider = context.read<JadwalProvider>();
                 await provider.completeJadwal(item.id!, item.unitId);
                 if (context.mounted) {

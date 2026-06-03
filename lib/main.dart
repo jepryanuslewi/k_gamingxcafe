@@ -12,6 +12,7 @@ import 'package:k_gamingxcafe/screens/shift_screen.dart';
 import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // await NontifikasiService.init();
   
   final authProvider = AuthProvider();
   final shiftProvider = ShiftProvider();

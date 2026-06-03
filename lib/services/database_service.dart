@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:k_gamingxcafe/models/cafe/bahan_model.dart';
 import 'package:k_gamingxcafe/models/cafe/menu_model.dart';
+import 'package:k_gamingxcafe/models/gaming/jadwal_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -193,6 +194,38 @@ class DatabaseService {
       ''');
       },
     );
+  }
+
+  // Nontifikasi
+  Future<List<JadwalModel>> getActiveJadwal() async {
+    final db = await database;
+    final bufferTime = DateTime.now()
+        .subtract(const Duration(minutes: 10))
+        .toIso8601String();
+  
+    final result = await db.query(
+      'jadwal',
+      where: "status_completed = 'active' AND end_time >= ?",
+      whereArgs: [bufferTime],
+      orderBy: 'end_time ASC',
+    );
+  
+    return result.map((row) => JadwalModel.fromMap(row)).toList();
+  }
+
+  Future<String?> getUnitNameById(int unitId) async {
+    final db = await database;
+    final result = await db.query(
+      'ps_units',
+      columns: ['name'],
+      where: 'id = ?',
+      whereArgs: [unitId],
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return result.first['name'] as String?;
+    }
+    return null;
   }
 
   Future<int> getTotalAdmin() async {
