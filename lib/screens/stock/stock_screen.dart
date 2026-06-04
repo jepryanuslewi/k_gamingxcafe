@@ -15,18 +15,16 @@ class StockScreen extends StatefulWidget {
 }
 
 class _StockScreenState extends State<StockScreen> {
-  // Controller untuk pencarian
   final TextEditingController _searchController = TextEditingController();
 
-  List<Map<String, dynamic>> _allBahan = []; // Data asli dari DB
-  List<Map<String, dynamic>> _filteredBahan = []; // Data yang difilter untuk UI
+  List<Map<String, dynamic>> _allBahan = [];
+  List<Map<String, dynamic>> _filteredBahan = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _refreshBahan();
-
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -36,7 +34,6 @@ class _StockScreenState extends State<StockScreen> {
     super.dispose();
   }
 
-  // Fungsi filtering
   void _onSearchChanged() {
     String query = _searchController.text.toLowerCase();
     setState(() {
@@ -47,7 +44,6 @@ class _StockScreenState extends State<StockScreen> {
     });
   }
 
-  // Ambil data dari Database
   Future<void> _refreshBahan() async {
     setState(() => _isLoading = true);
     final data = await DatabaseService.instance.getBahanSemua();
@@ -73,7 +69,6 @@ class _StockScreenState extends State<StockScreen> {
             children: [
               _buildHeader(username, widget.shiftName),
               const SizedBox(height: 20),
-
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 20),
@@ -88,7 +83,6 @@ class _StockScreenState extends State<StockScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Header Tabel: Judul & Tanggal
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -112,7 +106,6 @@ class _StockScreenState extends State<StockScreen> {
                       ),
                       const SizedBox(height: 15),
 
-                      // Search
                       Container(
                         height: 50,
                         padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -134,7 +127,6 @@ class _StockScreenState extends State<StockScreen> {
                       ),
                       const SizedBox(height: 15),
 
-                      // Tombol Navigasi
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -151,7 +143,7 @@ class _StockScreenState extends State<StockScreen> {
                                       ),
                                     ),
                                   );
-                                  _refreshBahan(); // Refresh setelah kembali
+                                  _refreshBahan();
                                 },
                               ),
                               const SizedBox(width: 10),
@@ -166,7 +158,7 @@ class _StockScreenState extends State<StockScreen> {
                                       ),
                                     ),
                                   );
-                                  _refreshBahan(); // Refresh setelah kembali
+                                  _refreshBahan();
                                 },
                               ),
                             ],
@@ -179,7 +171,6 @@ class _StockScreenState extends State<StockScreen> {
                       ),
                       const SizedBox(height: 15),
 
-                      // Section Data Table
                       Expanded(
                         child: Container(
                           width: double.infinity,
@@ -245,69 +236,161 @@ class _StockScreenState extends State<StockScreen> {
                                           ),
                                         ),
                                       ),
-                                      DataColumn(
-                                        label: Text(
-                                          "SATUAN",
-                                          style: TextStyle(
-                                            color: Color(0xFF00E0C6),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
                                     ],
-                                    rows: List<DataRow>.generate(
-                                      _filteredBahan.length,
-                                      (index) {
-                                        final item = _filteredBahan[index];
-                                        final qty =
-                                            item['stok_saat_ini'] /
-                                            item['isi_per_qty'];
-                                        return DataRow(
-                                          cells: [
-                                            DataCell(
-                                              Text(
-                                                "${index + 1}",
-                                                style: const TextStyle(
-                                                  color: Colors.white70,
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              Text(
-                                                item['nama'] ?? '-',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              Text(
-                                                item['kategori'] ?? '-',
-                                                style: const TextStyle(
-                                                  color: Colors.white70,
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              Text(
-                                                "${qty.toStringAsFixed(0)} PCS",
-                                                style: const TextStyle(
-                                                  color: Colors.white54,
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              Text(
-                                                "${item['stok_saat_ini'].toString()} ${item['satuan'] ?? '-'}",
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                    rows: List<DataRow>.generate(_filteredBahan.length, (
+                                      index,
+                                    ) {
+                                      final item = _filteredBahan[index];
+                                      final qty =
+                                          ((item['stok_saat_ini'] /
+                                                      item['isi_per_qty'])
+                                                  as num)
+                                              .toDouble();
+                                      final isEmpty = qty <= 0;
+                                      final isLow = !isEmpty && qty < 5;
+
+                                      Color? rowColor;
+                                      if (isEmpty) {
+                                        rowColor = Colors.red.withOpacity(
+                                          0.08,
                                         );
-                                      },
-                                    ),
+                                      } else if (isLow) {
+                                        rowColor = Colors.orange.withOpacity(
+                                          0.08,
+                                        );
+                                      }
+
+                                      return DataRow(
+                                        color:
+                                            MaterialStateProperty.resolveWith(
+                                              (states) => rowColor,
+                                            ),
+                                        cells: [
+                                          DataCell(
+                                            Text(
+                                              "${index + 1}",
+                                              style: TextStyle(
+                                                color: isEmpty
+                                                    ? Colors.white30
+                                                    : Colors.white70,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              item['nama'] ?? '-',
+                                              style: TextStyle(
+                                                color: isEmpty
+                                                    ? Colors.redAccent
+                                                          .withOpacity(0.6)
+                                                    : Colors.white,
+                                                decoration: isEmpty
+                                                    ? TextDecoration.lineThrough
+                                                    : null,
+                                                decorationColor: Colors.white30,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              item['kategori'] ?? '-',
+                                              style: TextStyle(
+                                                color: isEmpty
+                                                    ? Colors.white24
+                                                    : Colors.white70,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  isEmpty
+                                                      ? "0 PCS"
+                                                      : "${qty.toStringAsFixed(0)} PCS",
+                                                  style: TextStyle(
+                                                    color: isEmpty
+                                                        ? Colors.redAccent
+                                                        : isLow
+                                                        ? Colors.orange
+                                                        : Colors.white54,
+                                                    fontWeight:
+                                                        (isEmpty || isLow)
+                                                        ? FontWeight.bold
+                                                        : FontWeight.normal,
+                                                  ),
+                                                ),
+
+                                                if (isEmpty) ...[
+                                                  const SizedBox(width: 6),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 6,
+                                                          vertical: 2,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.redAccent
+                                                          .withOpacity(0.15),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            4,
+                                                          ),
+                                                      border: Border.all(
+                                                        color: Colors.redAccent,
+                                                        width: 0.5,
+                                                      ),
+                                                    ),
+                                                    child: const Text(
+                                                      "STOK HABIS",
+                                                      style: TextStyle(
+                                                        color: Colors.redAccent,
+                                                        fontSize: 9,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                                // Badge MENIPIS
+                                                if (isLow) ...[
+                                                  const SizedBox(width: 6),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 6,
+                                                          vertical: 2,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.orange
+                                                          .withOpacity(0.15),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            4,
+                                                          ),
+                                                      border: Border.all(
+                                                        color: Colors.orange,
+                                                        width: 0.5,
+                                                      ),
+                                                    ),
+                                                    child: const Text(
+                                                      "STOK MENIPIS",
+                                                      style: TextStyle(
+                                                        color: Colors.orange,
+                                                        fontSize: 9,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    }),
                                   ),
                                 ),
                         ),
@@ -343,7 +426,7 @@ class _StockScreenState extends State<StockScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
                   Row(
-                    children: const [
+                    children: [
                       Text(
                         "GAMING",
                         style: TextStyle(

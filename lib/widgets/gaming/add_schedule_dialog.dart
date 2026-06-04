@@ -349,15 +349,13 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
                                           'dd/MM/yyyy',
                                         ).format(DateTime.now()),
                                         style: const TextStyle(
-                                          color: Colors
-                                              .white54, 
+                                          color: Colors.white54,
                                           fontSize: 13,
                                         ),
                                       ),
                                       const Icon(
                                         Icons.calendar_month,
-                                        color: Colors
-                                            .white24, 
+                                        color: Colors.white24,
                                         size: 18,
                                       ),
                                     ],
@@ -390,12 +388,21 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
                         children: [
                           _buildLabel("Jam Mulai"),
                           _buildPickerTile(
-                            _selectedTime.format(context),
+                            '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
                             Icons.access_time,
                             () async {
                               final picked = await showTimePicker(
                                 context: context,
                                 initialTime: _selectedTime,
+                                builder: (context, child) {
+                                  return MediaQuery(
+                                    data: MediaQuery.of(context).copyWith(
+                                      alwaysUse24HourFormat:
+                                          true, // ✅ format 24 jam
+                                    ),
+                                    child: child!,
+                                  );
+                                },
                               );
                               if (picked != null)
                                 setState(() => _selectedTime = picked);

@@ -40,6 +40,7 @@ class _NotifikasiOverlayState extends State<NotifikasiOverlay> {
     final player = AudioPlayer();
     final source = AssetSource('sounds/notif.mp3');
 
+    // ✅ Loop: ulangi suara setiap kali selesai sampai player di-stop
     Future<void> loopSound() async {
       while (true) {
         try {
@@ -68,6 +69,8 @@ class _NotifikasiOverlayState extends State<NotifikasiOverlay> {
           await player.dispose();
           entry.remove();
           _entries.remove(entry);
+          // ✅ Jadwalkan notif muncul lagi setelah 5 detik jika belum diselesaikan
+          NontifikasiService().scheduleRenotif(payload.jadwalId);
         },
       ),
     );
@@ -207,13 +210,44 @@ class _NotifCardOverlayState extends State<_NotifCardOverlay>
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            widget.payload.packageOrUnit,
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 11,
-                            ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF00E0C6,
+                                  ).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: const Color(
+                                      0xFF00E0C6,
+                                    ).withOpacity(0.4),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Text(
+                                  widget.payload.category,
+                                  style: const TextStyle(
+                                    color: Color(0xFF00E0C6),
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                widget.payload.packageOrUnit,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

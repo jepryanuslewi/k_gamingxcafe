@@ -75,7 +75,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
           backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
           content: Center(
             child: Text(
-              'Stok tidak cukup! Sisa stok: ${selectedBahan?.stokSaatIni}',
+              'Tidak bisa mengurangi stok lebih dari stok yang tersedia',
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
           ),
@@ -84,38 +84,116 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
       );
       return;
     }
-
-    final authProv = context.read<AuthProvider>();
-    final bahanProv = context.read<BahanProvider>();
-
-    final success = await bahanProv.stokKeluar(
-      bahanId: selectedBahan!.id!,
-      jumlah: qty * (selectedBahan?.isiPerQty ?? 1.0),
-      username: authProv.user?.username ?? "Unknown",
-      namaShift: widget.shiftName,
-      keterangan: _deskripsiController.text,
-    );
-
-    if (!mounted) return;
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Color(0xFF00E0C6),
-          content: Center(
-            child: Text(
-              "Stok ${selectedBahan!.nama} berhasil dikurangi!",
-              style: TextStyle(fontSize: 16, color: Colors.white),
+    final messenger = ScaffoldMessenger.of(context);
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF141C2F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(
+              color: Color.fromRGBO(226, 19, 136, 1.0),
+              width: 1,
             ),
           ),
-        ),
-      );
-      setState(() {
-        selectedBahan = null;
-        _stokController.clear();
-        _deskripsiController.clear();
-      });
-    }
+          title: const Row(
+            children: [
+              Icon(
+                Icons.remove_circle_outline,
+                color: Color.fromRGBO(226, 19, 136, 1.0),
+              ),
+              SizedBox(width: 10),
+              Text(
+                "KURANGI STOK?",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            "Apakah Anda yakin ingin mengurangi stok ${selectedBahan!.nama} sebanyak ${qty.toStringAsFixed(0)}?",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "BATAL",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () async {
+                final authProv = context.read<AuthProvider>();
+                final bahanProv = context.read<BahanProvider>();
+                Navigator.pop(dialogContext);
+
+                final success = await bahanProv.stokKeluar(
+                  bahanId: selectedBahan!.id!,
+                  jumlah: qty * selectedBahan!.isiPerQty,
+                  username: authProv.user?.username ?? "Unknown",
+                  namaShift: widget.shiftName,
+                  keterangan: _deskripsiController.text,
+                );
+
+                if (!mounted) return;
+
+                if (success) {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      backgroundColor: const Color(0xFF00E0C6),
+                      content: Center(
+                        child: Text(
+                          "Stok ${selectedBahan!.nama} berhasil dikurangi!",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                  setState(() {
+                    selectedBahan = null;
+                    _stokController.clear();
+                    _deskripsiController.clear();
+                  });
+                } else {
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      content: Center(
+                        child: Text(
+                          'Gagal mengurangi stok. Coba lagi.',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              child: const Text(
+                "KURANGI",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildStyledTextField({
@@ -468,7 +546,7 @@ class _StockKeluarScreenState extends State<StockKeluarScreen> {
                       ),
                       DataCell(
                         Text(
-                          "${qty.toStringAsFixed(0)} / ${r.jumlah} ${r.satuan}",
+                          "${qty.toStringAsFixed(0)}",
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),

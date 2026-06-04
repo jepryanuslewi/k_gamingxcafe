@@ -41,6 +41,17 @@ class NontifikasiService {
     _notifTracker.clear();
   }
 
+  /// Dipanggil saat user dismiss notif — reset tracker setelah 5 detik
+  /// agar notif muncul lagi jika jadwal belum diselesaikan
+  void scheduleRenotif(int jadwalId) {
+    Future.delayed(const Duration(seconds: 5), () {
+      // Hanya reset jika jadwal belum di-complete/delete
+      _notifTracker[jadwalId]?.expiredSent = false;
+      // Cek ulang langsung setelah reset
+      _checkAllJadwal();
+    });
+  }
+
   Future<void> _checkAllJadwal() async {
     try {
       final db = DatabaseService.instance;
@@ -78,6 +89,7 @@ class NontifikasiService {
               unitId: jadwal.unitId,
               customerName: jadwal.customerName ?? 'Guest',
               packageOrUnit: unitLabel,
+              category: jadwal.category ?? '-',
               endTime: endTime,
             ),
           );
@@ -94,6 +106,7 @@ class NotifPayload {
   final int? unitId;
   final String customerName;
   final String packageOrUnit;
+  final String category;
   final DateTime endTime;
 
   const NotifPayload({
@@ -101,6 +114,7 @@ class NotifPayload {
     required this.unitId,
     required this.customerName,
     required this.packageOrUnit,
+    required this.category,
     required this.endTime,
   });
 }

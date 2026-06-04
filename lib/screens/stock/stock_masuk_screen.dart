@@ -69,62 +69,108 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
       );
       return;
     }
+    final messenger = ScaffoldMessenger.of(context);
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF141C2F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFF00E0C6), width: 1),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.add_circle_outline, color: Color(0xFF00E0C6)),
+              SizedBox(width: 10),
+              Text(
+                "TAMBAH STOK?",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            "Apakah anda yakin ingin menambah stok ${selectedBahan?.nama} sebanyak ${qty.toStringAsFixed(0)}?",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "BATAL",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00E0C6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () async {
+                final authProv = context.read<AuthProvider>();
+                final bahanProv = context.read<BahanProvider>();
+                final String username = authProv.user?.username ?? "Unknown";
+                Navigator.pop(dialogContext);
+                final success = await bahanProv.stokMasuk(
+                  bahanId: selectedBahan!.id!,
+                  jumlah: qty * selectedBahan!.isiPerQty,
+                  username: username,
+                  namaShift: widget.shiftName,
+                  keterangan: _deskripsiController.text,
+                );
 
-    final authProv = context.read<AuthProvider>();
-    final bahanProv = context.read<BahanProvider>();
-    final String username = authProv.user?.username ?? "Unknown";
+                if (!mounted) return;
+                if (success) {
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Color(0xFF00E0C6),
+                      content: Center(
+                        child: Text(
+                          'Stok berhasil ditambahkan!',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
 
-    debugPrint("=== HANDLE SIMPAN STOK MASUK ===");
-    debugPrint("username: $username");
-    debugPrint("shiftName: ${widget.shiftName}");
-    debugPrint("bahanId: ${selectedBahan!.id}");
-    debugPrint("jumlah: ${qty * selectedBahan!.isiPerQty}");
-
-    final success = await bahanProv.stokMasuk(
-      bahanId: selectedBahan!.id!,
-      jumlah: qty * selectedBahan!.isiPerQty,
-      username: username,
-      namaShift: widget.shiftName,
-      keterangan: _deskripsiController.text,
+                  setState(() {
+                    selectedBahan = null;
+                    _stokController.clear();
+                    _deskripsiController.clear();
+                  });
+                } else {
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
+                      content: Center(
+                        child: Text(
+                          'Gagal menambahkan stok. Coba lagi.',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              child: const Text(
+                "TAMBAH",
+                style: TextStyle(
+                  color: Color(0xFF0B1220),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
-
-    debugPrint("success: $success");
-
-    if (!mounted) return;
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Color(0xFF00E0C6),
-          content: Center(
-            child: Text(
-              'Stok berhasil ditambahkan!',
-              style: TextStyle(fontSize: 16, color: Colors.white),
-            ),
-          ),
-          duration: Duration(seconds: 2),
-        ),
-      );
-
-      setState(() {
-        selectedBahan = null;
-        _stokController.clear();
-        _deskripsiController.clear();
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Color.fromRGBO(226, 19, 136, 1.0),
-          content: Center(
-            child: Text(
-              'Gagal menambahkan stok. Coba lagi.',
-              style: TextStyle(fontSize: 16, color: Colors.white),
-            ),
-          ),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
   }
 
   Widget _buildStyledTextField({
@@ -177,6 +223,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
             padding: EdgeInsets.only(left: 40, right: 40, bottom: bottomInset),
             child: Column(
               children: [
+                // Header animasi mengecil, TIDAK dihapus dari tree
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   height: isKeyboardOpen ? 0 : 90,
@@ -186,11 +233,14 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                   duration: const Duration(milliseconds: 200),
                   height: isKeyboardOpen ? 0 : 20,
                 ),
+
                 _buildFormInput(tanggal, prov),
+
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   height: isKeyboardOpen ? 0 : 25,
                 ),
+
                 if (!isKeyboardOpen)
                   const Align(
                     alignment: Alignment.centerLeft,
@@ -204,6 +254,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                       ),
                     ),
                   ),
+
                 const SizedBox(height: 10),
                 Expanded(child: _buildTableRiwayat(prov)),
                 const SizedBox(height: 20),
@@ -273,85 +324,87 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
   }
 
   Widget _buildFormInput(DateTime tanggal, BahanProvider prov) {
-    return Container(
-      padding: const EdgeInsets.all(25),
-      decoration: BoxDecoration(
-        color: const Color.fromRGBO(20, 28, 47, 1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "STOK MASUK",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      child: Container(
+        padding: const EdgeInsets.all(25),
+        decoration: BoxDecoration(
+          color: const Color.fromRGBO(20, 28, 47, 1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "STOK MASUK",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              ButtonStock(
-                text: "Kembali",
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const Divider(color: Colors.white24, height: 30),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: DropdownBahanWidget(
-                  label: "masuk",
-                  items: prov.listBahan,
-                  selectedItem: selectedBahan,
-                  isLoading: prov.isLoading,
-                  onSelected: (val) => setState(() => selectedBahan = val),
+                ButtonStock(
+                  text: "Kembali",
+                  onPressed: () => Navigator.pop(context),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildStyledTextField(
-                  label: "Qty",
-                  controller: _stokController,
-                  isNumber: true,
+              ],
+            ),
+            const Divider(color: Colors.white24, height: 30),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: DropdownBahanWidget(
+                    label: "masuk",
+                    items: prov.listBahan,
+                    selectedItem: selectedBahan,
+                    isLoading: prov.isLoading,
+                    onSelected: (val) => setState(() => selectedBahan = val),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildStyledTextField(
-                  label: "Ket/Deskripsi",
-                  controller: _deskripsiController,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildStyledTextField(
+                    label: "Qty",
+                    controller: _stokController,
+                    isNumber: true,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromRGBO(0, 224, 198, 1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildStyledTextField(
+                    label: "Ket/Deskripsi",
+                    controller: _deskripsiController,
+                  ),
                 ),
-              ),
-              onPressed: prov.isLoading ? null : _handleSimpan,
-              child: const Text(
-                "TAMBAH STOK",
-                style: TextStyle(
-                  color: Color.fromRGBO(20, 28, 47, 1),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromRGBO(0, 224, 198, 1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: prov.isLoading ? null : _handleSimpan,
+                child: const Text(
+                  "TAMBAH STOK",
+                  style: TextStyle(
+                    color: Color.fromRGBO(20, 28, 47, 1),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -493,7 +546,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                       ),
                       DataCell(
                         Text(
-                          "${qty.toStringAsFixed(0)} / ${r.jumlah} ${r.satuan}",
+                          "${qty.toStringAsFixed(0)}",
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
