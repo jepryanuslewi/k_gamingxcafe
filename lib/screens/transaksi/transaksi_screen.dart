@@ -105,7 +105,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                             ),
                           ],
                         ),
-                        // Profile===========================================================
+
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromRGBO(
@@ -152,7 +152,6 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                   ),
                   SizedBox(height: 40),
 
-                  // menu===================================================
                   Container(
                     decoration: BoxDecoration(
                       color: Color.fromRGBO(20, 28, 47, 100),
@@ -168,7 +167,6 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // username
                             Text(
                               'TRANSAKSI',
                               style: TextStyle(
@@ -177,7 +175,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            // tanggal
+
                             Text(
                               '${tanggal.day}/${tanggal.month}/${tanggal.year}',
                               style: TextStyle(
@@ -189,7 +187,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                           ],
                         ),
                         SizedBox(height: 20),
-                        // Search
+
                         Container(
                           height: 50,
                           padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -232,7 +230,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                             ),
                           ],
                         ),
-                        // Tabel Riwayat Transaksi(No, Nama Menu, oty, Total Harga, Pegawai, jam)
+
                         Expanded(
                           child: Container(
                             width: double.infinity,
@@ -350,13 +348,11 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
     );
   }
 
-  // Style untuk header tabel
   static const _headerStyle = TextStyle(
     color: Color(0xFF00E0C6),
     fontWeight: FontWeight.bold,
     fontSize: 14,
   );
 
-  // Style untuk isi tabel
   static const _cellStyle = TextStyle(color: Colors.white, fontSize: 13);
 }

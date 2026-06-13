@@ -2,14 +2,14 @@ class PackageModel {
   final int? id;
   final String name;
   final int price;
-  final int durationHours; // Tambahkan ini sesuai kolom DB
+  final int durationHours;
   final String category;
 
   PackageModel({
     this.id,
     required this.name,
     required this.price,
-    required this.durationHours, // Tambahkan ini
+    required this.durationHours,
     required this.category,
   });
 

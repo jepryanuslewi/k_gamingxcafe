@@ -138,11 +138,11 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
                 ),
                 const SizedBox(height: 15),
 
-                // --- 2. KATEGORI & UNIT BERDAMPINGAN ---
+                // --- 2. KATEGORI & UNIT ---
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Kategori (kiri)
+                    // Kategori
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +175,7 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
                     ),
                     const SizedBox(width: 10),
 
-                    // Unit / Paket (kanan)
+                    // Unit / Paket
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -328,7 +328,7 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildLabel("Tanggal"),
-                          // ✅ Jika walkin, tanggal hari ini dan tidak bisa diubah
+
                           _selectedStatus == 'walkin'
                               ? Container(
                                   padding: const EdgeInsets.symmetric(
@@ -396,10 +396,9 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
                                 initialTime: _selectedTime,
                                 builder: (context, child) {
                                   return MediaQuery(
-                                    data: MediaQuery.of(context).copyWith(
-                                      alwaysUse24HourFormat:
-                                          true, // ✅ format 24 jam
-                                    ),
+                                    data: MediaQuery.of(
+                                      context,
+                                    ).copyWith(alwaysUse24HourFormat: true),
                                     child: child!,
                                   );
                                 },
@@ -490,7 +489,6 @@ class _AddScheduleDialogState extends State<AddScheduleDialog> {
 
                 const Divider(color: Colors.white24, height: 40),
 
-                // --- 8. TOTAL PEMBAYARAN ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

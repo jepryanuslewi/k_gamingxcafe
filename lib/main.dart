@@ -10,6 +10,7 @@ import 'package:k_gamingxcafe/screens/login_screen.dart';
 import 'package:k_gamingxcafe/screens/main_menu_screen.dart';
 import 'package:k_gamingxcafe/screens/shift_screen.dart';
 import 'package:provider/provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final authProvider = AuthProvider();
@@ -25,7 +26,7 @@ void main() async {
         ChangeNotifierProvider.value(value: shiftProvider),
         ChangeNotifierProvider(create: (_) => JadwalProvider()),
         ChangeNotifierProvider(create: (_) => BahanProvider()),
-        ChangeNotifierProvider(create: (_) => MenuProvider()),    
+        ChangeNotifierProvider(create: (_) => MenuProvider()),
         ChangeNotifierProvider(
           create: (_) => PendapatanProvider()..startRealtime(),
         ),
@@ -40,7 +41,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final auth = context.watch<AuthProvider>();
     final shift = context.watch<ShiftProvider>();
 
@@ -50,14 +50,14 @@ class MyApp extends StatelessWidget {
         home: LoginScreen(),
       );
     }
-    
+
     if (auth.user?.role == 'admin') {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: DashboardScreen(), 
+        home: DashboardScreen(),
       );
     }
-    
+
     if (shift.activeShift == null) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,

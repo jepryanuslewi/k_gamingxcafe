@@ -88,7 +88,7 @@ class BackupService {
   // ─── Restore dari file path (dari list riwayat) ────────────────
   static Future<BackupResult> restoreFromFile(
     String sourcePath, {
-    required Future<void> Function() onBeforeRestore, // ✅ support async
+    required Future<void> Function() onBeforeRestore,
   }) async {
     try {
       final sourceFile = File(sourcePath);
@@ -96,7 +96,7 @@ class BackupService {
         return BackupResult.fail('File backup tidak ditemukan');
       }
 
-      await onBeforeRestore(); // ✅ await
+      await onBeforeRestore();
 
       final dbFile = await _getDbFile();
       await sourceFile.copy(dbFile.path);
@@ -111,7 +111,7 @@ class BackupService {
 
   // ─── Restore dari file picker ──────────────────────────────────
   static Future<BackupResult> restoreFromPicker({
-    required Future<void> Function() onBeforeRestore, // ✅ support async
+    required Future<void> Function() onBeforeRestore,
   }) async {
     try {
       PermissionStatus status = await Permission.manageExternalStorage
@@ -143,7 +143,7 @@ class BackupService {
         return BackupResult.fail('File tidak ditemukan');
       }
 
-      await onBeforeRestore(); // ✅ await
+      await onBeforeRestore();
 
       final dbFile = await _getDbFile();
       await sourceFile.copy(dbFile.path);

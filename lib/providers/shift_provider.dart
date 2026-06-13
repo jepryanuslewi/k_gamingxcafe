@@ -7,29 +7,26 @@ class ShiftProvider extends ChangeNotifier {
   final _repo = ShiftRepository();
   Map<String, dynamic>? activeShift;
 
-  // Getter untuk memudahkan akses
   String? get activeShiftName => activeShift?['shift_name'];
 
-  // Tambahkan parameter username
   Future<void> startShift(int userId, String username, String shiftName) async {
     final shiftId = await _repo.startShift(userId, shiftName);
 
     activeShift = {
       'id': shiftId,
       'user_id': userId,
-      'username': username, // Simpan di variabel local
+      'username': username,
       'shift_name': shiftName,
     };
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('active_shift_id', shiftId);
     await prefs.setString('active_shift_name', shiftName);
-    await prefs.setString('active_username', username); // SIMPAN USERNAME
+    await prefs.setString('active_username', username);
 
     notifyListeners();
   }
 
-  // FUNGSI BARU: Memuat ulang shift yang sedang berjalan saat aplikasi dibuka
   Future<void> loadActiveShift() async {
     final prefs = await SharedPreferences.getInstance();
     final int? shiftId = prefs.getInt('active_shift_id');
@@ -51,7 +48,6 @@ class ShiftProvider extends ChangeNotifier {
         whereArgs: [activeShift!['id']],
       );
 
-      // HAPUS DATA SHIFT DARI MEMORI FISIK
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('active_shift_id');
       await prefs.remove('active_shift_name');

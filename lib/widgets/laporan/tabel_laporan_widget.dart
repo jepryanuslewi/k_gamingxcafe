@@ -29,10 +29,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
   String _totalValue = "0";
   bool _isLoading = true;
 
-  // ─────────────────────────────────────────────
-  // LIFECYCLE
-  // ─────────────────────────────────────────────
-
   @override
   void initState() {
     super.initState();
@@ -75,7 +71,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
   }
 
   // ── JADWAL ──────────────────────────────────
-
   Future<void> _loadJadwal() async {
     final rawData = await DatabaseService.instance.getJadwalLaporan(
       tglAwal: widget.tanggalAwal,
@@ -112,7 +107,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
   }
 
   // ── TRANSAKSI ───────────────────────────────
-
   Future<void> _loadTransaksi() async {
     final rawData = await DatabaseService.instance.getTransaksiLaporan(
       tglAwal: widget.tanggalAwal,
@@ -126,14 +120,14 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
       final harga = _toInt(row['total_harga']);
       total += harga;
       return [
-        row['operator']?.toString() ?? "-", // [0] Operator
-        row['shift_name']?.toString() ?? "-", // [1] Shift
-        _formatTanggal(row['created_at']?.toString()), // [2] Tanggal
-        row['nama_produk']?.toString() ?? "-", // [3] Produk
-        row['kategori']?.toString() ?? "-", // [4] Kategori
-        row['jumlah']?.toString() ?? "0", // [5] Qty
-        "Rp ${_formatRibuan(_toInt(row['harga_satuan']))}", // [6] Harga Satuan
-        "Rp ${_formatRibuan(harga)}", // [7] Total Harga
+        row['operator']?.toString() ?? "-",
+        row['shift_name']?.toString() ?? "-",
+        _formatTanggal(row['created_at']?.toString()),
+        row['nama_produk']?.toString() ?? "-",
+        row['kategori']?.toString() ?? "-",
+        row['jumlah']?.toString() ?? "0",
+        "Rp ${_formatRibuan(_toInt(row['harga_satuan']))}",
+        "Rp ${_formatRibuan(harga)}",
       ];
     }).toList();
 
@@ -159,11 +153,9 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     int totalKeluar = 0;
     final List<List<String>> formatted = [];
 
-    // ✅ Pisahkan masuk dan keluar
     final masukRows = rawData.where((r) => r['tipe'] == 'masuk').toList();
     final keluarRows = rawData.where((r) => r['tipe'] == 'keluar').toList();
 
-    // ── Tampilkan MASUK per row biasa ──────────────
     for (var row in masukRows) {
       final double jumlah = (row['jumlah'] as num?)?.toDouble() ?? 0;
       final double isiPerQty = (row['isi_per_qty'] as num?)?.toDouble() ?? 1;
@@ -186,9 +178,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
       ]);
     }
 
-    // ── Akumulasi KELUAR per bahan ─────────────────
-    // Karena auto-cut per pesanan bisa < isiPerQty,
-    // kita akumulasi dulu totalnya baru hitung qty
     final Map<String, double> akumulasiKeluar = {};
     final Map<String, Map<String, dynamic>> sampleKeluar = {};
 
@@ -196,7 +185,7 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
       final String namaBahan = row['nama_bahan']?.toString() ?? '-';
       final double jumlah = (row['jumlah'] as num?)?.toDouble() ?? 0;
       akumulasiKeluar[namaBahan] = (akumulasiKeluar[namaBahan] ?? 0) + jumlah;
-      sampleKeluar[namaBahan] = row; // ambil data terakhir sebagai referensi
+      sampleKeluar[namaBahan] = row;
     }
 
     akumulasiKeluar.forEach((namaBahan, totalJumlah) {
@@ -206,7 +195,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
           ? (totalJumlah / isiPerQty).floor()
           : totalJumlah.toInt();
 
-      // ✅ Hanya tampilkan jika sudah >= 1 qty
       if (qty <= 0) return;
       totalKeluar += qty;
 
@@ -491,10 +479,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
     }).toList();
   }
 
-  // ─────────────────────────────────────────────
-  // WIDGET PEMBANTU
-  // ─────────────────────────────────────────────
-
   Widget _buildBadge(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -531,10 +515,6 @@ class _TabelLaporanWidgetState extends State<TabelLaporanWidget> {
       ),
     );
   }
-
-  // ─────────────────────────────────────────────
-  // BUILD
-  // ─────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {

@@ -18,17 +18,15 @@ class _LaporanScreenState extends State<LaporanScreen> {
   DateTime? tanggalAwal;
   DateTime? tanggalAkhir;
 
-  String? selectedKategori; // Jadwal, Stock, Transaksi
+  String? selectedKategori;
   String? selectedSubKategori;
   String? selectedKaryawan = "Semua";
 
-  // State untuk mengontrol tampilan tabel
   bool isTableVisible = false;
 
   List<String> listKaryawan = ["Semua"];
   Future<void> _loadKaryawan() async {
-    final names = await DatabaseService.instance
-        .getAllStaffNames(); // Pakai instance
+    final names = await DatabaseService.instance.getAllStaffNames();
     setState(() {
       listKaryawan = names;
     });
@@ -37,7 +35,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
   @override
   void initState() {
     super.initState();
-    _loadKaryawan(); // Panggil fungsi saat screen dibuka
+    _loadKaryawan();
   }
 
   final List<String> listKategori = ["Jadwal", "Stock", "Transaksi"];
@@ -102,7 +100,6 @@ class _LaporanScreenState extends State<LaporanScreen> {
               const SizedBox(height: 30),
               _buildMainForm(tanggal),
 
-              // Tampilkan widget tabel yang dipisah jika tombol sudah ditekan
               if (isTableVisible && selectedKategori != null)
                 TabelLaporanWidget(
                   kategori: selectedKategori!,
@@ -309,7 +306,6 @@ class _LaporanScreenState extends State<LaporanScreen> {
                     ),
                   ),
                   onPressed: () {
-                    // Validasi input sebelum menampilkan
                     if (tanggalAwal == null ||
                         tanggalAkhir == null ||
                         selectedKategori == null) {

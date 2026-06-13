@@ -56,7 +56,7 @@ class _AddMenuRecipeDialogState extends State<AddMenuRecipeDialog> {
         style: TextStyle(color: Colors.white),
       ),
       content: SizedBox(
-        width: 500, // Ukuran lebar untuk Tablet
+        width: 500, 
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -102,7 +102,7 @@ class _AddMenuRecipeDialogState extends State<AddMenuRecipeDialog> {
                 ),
                 const SizedBox(height: 10),
 
-                // List Dinamis Resep
+              
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -186,7 +186,7 @@ class _AddMenuRecipeDialogState extends State<AddMenuRecipeDialog> {
           ),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              // Siapkan data resep untuk dikirim
+             
               List<Map<String, dynamic>> finalRecipe = _recipeRows.map((row) {
                 return {
                   'ingredient_id': row['ingredient_id'],
@@ -200,7 +200,7 @@ class _AddMenuRecipeDialogState extends State<AddMenuRecipeDialog> {
                   'price': int.parse(_priceController.text),
                   'category': _selectedCategory,
                   'stock':
-                      999, // Untuk menu racikan, stok biasanya default tinggi
+                      999, 
                 },
                 'recipe': finalRecipe,
               });
@@ -244,21 +244,3 @@ class _AddMenuRecipeDialogState extends State<AddMenuRecipeDialog> {
     );
   }
 }
-
-// void _openAddMenuDialog(BuildContext context) async {
-//   final ingredientProvider = context.read<IngredientProvider>();
-
-//   final result = await showDialog<Map<String, dynamic>>(
-//     context: context,
-//     builder: (context) =>
-//         AddMenuRecipeDialog(ingredients: ingredientProvider.ingredients),
-//   );
-
-//   if (result != null) {
-//     // Kirim ke CafeProvider untuk simpan Product + Recipes-nya sekaligus
-//     await context.read<CafeProvider>().addProductWithRecipe(
-//       result['product'],
-//       result['recipe'],
-//     );
-//   }
-// }

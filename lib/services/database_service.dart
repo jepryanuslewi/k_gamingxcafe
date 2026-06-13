@@ -202,14 +202,14 @@ class DatabaseService {
     final bufferTime = DateTime.now()
         .subtract(const Duration(minutes: 10))
         .toIso8601String();
-  
+
     final result = await db.query(
       'jadwal',
       where: "status_completed = 'active' AND end_time >= ?",
       whereArgs: [bufferTime],
       orderBy: 'end_time ASC',
     );
-  
+
     return result.map((row) => JadwalModel.fromMap(row)).toList();
   }
 
@@ -279,7 +279,6 @@ class DatabaseService {
         });
       });
 
-      // ✅ Tambah debug setelah insert berhasil
       final cek = await db.rawQuery(
         'SELECT * FROM riwayat_bahan ORDER BY id DESC LIMIT 1',
       );
@@ -294,11 +293,9 @@ class DatabaseService {
   Future<void> debugStockLaporan() async {
     final db = await instance.database;
 
-    // Cek semua users
     final users = await db.query('users');
     debugPrint('=== USERS: $users');
 
-    // Cek semua riwayat masuk
     final masuk = await db.rawQuery('''
     SELECT rb.*, b.nama as nama_bahan 
     FROM riwayat_bahan rb
@@ -422,10 +419,8 @@ class DatabaseService {
       whereArgs: [id],
     );
 
-    // Hapus resep
     await db.delete('resep_menu', where: 'bahan_id = ?', whereArgs: [id]);
 
-    // Hapus bahan
     final result = await db.delete('bahan', where: 'id = ?', whereArgs: [id]);
 
     await db.execute("PRAGMA foreign_keys = ON");
@@ -447,8 +442,6 @@ class DatabaseService {
     });
   }
 
-  // ====================================================================
-
   Future<void> addMenuWithResep(
     MenuModel menu,
     List<Map<String, dynamic>> resep,
@@ -456,10 +449,8 @@ class DatabaseService {
     final db = await database;
 
     await db.transaction((txn) async {
-      // Simpan menu
       int productId = await txn.insert('menu', menu.toMap());
 
-      // Simpan resep
       for (var item in resep) {
         if (item['bahan_id'] != null) {
           // Ambil text dari controller
@@ -637,7 +628,6 @@ class DatabaseService {
     }
   }
 
-  /// Hitung stok menu berdasarkan ketersediaan bahan di resep
   Future<int> hitungStokMenu(int productId) async {
     final db = await instance.database;
 
@@ -653,7 +643,6 @@ class DatabaseService {
       [productId],
     );
 
-    // Jika tidak ada resep, stok = 0
     if (resep.isEmpty) return 0;
 
     int stokMin = 999999;
@@ -671,7 +660,6 @@ class DatabaseService {
     return stokMin == 999999 ? 0 : stokMin;
   }
 
-  /// Ganti readAllMenu yang lama dengan ini
   Future<List<MenuModel>> readAllMenu() async {
     final db = await instance.database;
     final List<Map<String, dynamic>> rows = await db.query(
@@ -688,8 +676,6 @@ class DatabaseService {
     return result;
   }
 
-  /// --- UNTUK LAPORAN JADWAL --------------------------------------------------------------------------------------------------
-
   Future<List<String>> getAllStaffNames() async {
     try {
       final db = await instance.database;
@@ -697,7 +683,7 @@ class DatabaseService {
       final List<Map<String, dynamic>> result = await db.query(
         'users',
         columns: ['username'],
-        // Filter hanya untuk role staff
+
         where: 'role = ?',
         whereArgs: ['staff'],
         orderBy: 'username ASC',
@@ -714,7 +700,6 @@ class DatabaseService {
     }
   }
 
-  // Filter Laporan
   Future<List<Map<String, dynamic>>> getJadwalLaporan({
     DateTime? tglAwal,
     DateTime? tglAkhir,
@@ -727,7 +712,6 @@ class DatabaseService {
       List<String> whereClauses = [];
       List<dynamic> whereArgs = [];
 
-      // 1. Filter Tanggal
       if (tglAwal != null && tglAkhir != null) {
         String start = DateFormat('yyyy-MM-dd').format(tglAwal.toLocal());
         String end = DateFormat('yyyy-MM-dd').format(tglAkhir.toLocal());
@@ -735,9 +719,7 @@ class DatabaseService {
         whereArgs.addAll([start, end]);
       }
 
-      // 2. Filter Sub Kategori (Walk-In / Booking)
       if (subKategori != null && subKategori != "Semua") {
-        // ✅ Konversi nilai UI ke nilai DB
         final statusDB = subKategori.toLowerCase() == "booking"
             ? "booking"
             : "walkin";
@@ -745,7 +727,6 @@ class DatabaseService {
         whereArgs.add(statusDB);
       }
 
-      // 3. Filter Nama Staff
       if (namaKaryawan != null && namaKaryawan != "Semua") {
         whereClauses.add("u.username = ?");
         whereArgs.add(namaKaryawan);
@@ -782,7 +763,6 @@ class DatabaseService {
     }
   }
 
-  // Untuk kategori "Stock" (dari tabel riwayat_bahan)
   Future<List<Map<String, dynamic>>> getStockLaporan({
     DateTime? tglAwal,
     DateTime? tglAkhir,
@@ -814,7 +794,6 @@ class DatabaseService {
         ? "WHERE ${whereClauses.join(' AND ')}"
         : "";
 
-    // ✅ Query yang benar, hapus debug dan '''...'''
     return await db.rawQuery('''
     SELECT 
       b.nama AS nama_bahan,
@@ -834,7 +813,6 @@ class DatabaseService {
   ''', whereArgs);
   }
 
-  // Untuk kategori "Transaksi" (dari tabel cafe_transactions)
   Future<List<Map<String, dynamic>>> getTransaksiLaporan({
     DateTime? tglAwal,
     DateTime? tglAkhir,

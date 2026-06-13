@@ -223,7 +223,6 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
             padding: EdgeInsets.only(left: 40, right: 40, bottom: bottomInset),
             child: Column(
               children: [
-                // Header animasi mengecil, TIDAK dihapus dari tree
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   height: isKeyboardOpen ? 0 : 90,
@@ -518,7 +517,7 @@ class _StockMasukScreenState extends State<StockMasukScreen> {
                     ),
                   ),
                 ],
-                // 3. Gunakan list yang sudah di-filter: riwayatHariIni (bukan prov.listRiwayat)
+
                 rows: riwayatHariIni.asMap().entries.map((entry) {
                   final index = entry.key + 1;
                   final r = entry.value;

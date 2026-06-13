@@ -34,7 +34,7 @@ class _UpdateStockDialogState extends State<UpdateStockDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Pilih Barang yang sudah ada di database
+           
             DropdownButtonFormField<String>(
               dropdownColor: const Color(0xFF141C2F),
               style: const TextStyle(color: Colors.white),
@@ -113,10 +113,10 @@ class _UpdateStockDialogState extends State<UpdateStockDialog> {
 }
 
 void _handleSaveStock(BuildContext context) async {
-  // 1. Ambil data produk yang sudah ada dari Provider
+  
   final cafeProvider = context.read<CafeProvider>();
 
-  // 2. Munculkan UpdateStockDialog (BUKAN AddProductDialog)
+  
   final result = await showDialog<Map<String, dynamic>>(
     context: context,
     builder: (context) =>
@@ -127,9 +127,9 @@ void _handleSaveStock(BuildContext context) async {
     final auth = context.read<AuthProvider>();
     final shift = context.read<ShiftProvider>();
 
-    // 3. Gabungkan data untuk LOG dan UPDATE
+   
     final Map<String, dynamic> completeLog = {
-      'product_id': result['product_id'], // Untuk update stok di tabel products
+      'product_id': result['product_id'],
       'name': result['name'],
       'category': result['category'],
       'qty': result['qty'],
@@ -137,7 +137,7 @@ void _handleSaveStock(BuildContext context) async {
       'shift': shift.activeShiftName ?? "No Shift",
     };
 
-    // 4. Simpan ke Database melalui Provider
+    
     await cafeProvider.addStockLog(completeLog);
 
     if (context.mounted) {

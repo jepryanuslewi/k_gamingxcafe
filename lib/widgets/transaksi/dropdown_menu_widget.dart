@@ -32,14 +32,14 @@ class _DropdownMenuWidgetState extends State<DropdownMenuWidget> {
   @override
   void initState() {
     super.initState();
-    // ✅ Inisialisasi dari parent saat pertama kali
+
     _localSisaStok = Map.from(widget.sisaStokBahan ?? {});
   }
 
   @override
   void didUpdateWidget(covariant DropdownMenuWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // ✅ Update lokal setiap kali parent kirim data baru
+
     if (oldWidget.sisaStokBahan != widget.sisaStokBahan) {
       setState(() {
         _localSisaStok = Map.from(widget.sisaStokBahan ?? {});
@@ -47,7 +47,6 @@ class _DropdownMenuWidgetState extends State<DropdownMenuWidget> {
     }
   }
 
-  // ✅ Hitung stok menu berdasarkan sisa bahan lokal
   int _hitungStokRealtime(MenuModel menu) {
     if (_localSisaStok.isEmpty || widget.resepCache == null) {
       return menu.stok ?? 0;
@@ -70,7 +69,6 @@ class _DropdownMenuWidgetState extends State<DropdownMenuWidget> {
     return stokMin == 999999 ? 0 : stokMin;
   }
 
- 
   Future<void> _handleBeforeOpen() async {
     if (widget.onBeforeOpen != null) await widget.onBeforeOpen!();
 

@@ -47,22 +47,19 @@ class JadwalProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ─────────────────────────────────────────────────────────────
-  //  TAMBAH JADWAL
-  //  Jika kategori Event → otomatis potong stok bahan dari paket
-  // ─────────────────────────────────────────────────────────────
+  // Tambah Jadwal
   Future<void> addJadwal(
     JadwalModel jadwal, {
-    bool isPaketEvent = false, // ← flag dari screen
-    String? shiftName, // ← untuk dicatat di riwayat_bahan
+    bool isPaketEvent = false, 
+    String? shiftName, 
   }) async {
     final db = await DatabaseService.instance.database;
 
     await db.transaction((txn) async {
-      // 1. Insert jadwal
+      
       await txn.insert('jadwal', jadwal.toMap());
 
-      // 2. Update status unit PS (jika bukan event)
+   
       if (jadwal.unitId != null) {
         await txn.update(
           'ps_units',
@@ -76,7 +73,7 @@ class JadwalProvider with ChangeNotifier {
       }
     });
 
-    // 3. Potong stok bahan jika ini order Event
+  
     if (isPaketEvent && jadwal.packageName != null) {
       await potongStokBahanDariPaket(
         packageName: jadwal.packageName!,
@@ -95,7 +92,7 @@ class JadwalProvider with ChangeNotifier {
     try {
       final db = await DatabaseService.instance.database;
 
-      // 1. Cari package_id dari nama paket
+     
       final pkgResult = await db.query(
         'packages',
         columns: ['id'],
@@ -109,7 +106,7 @@ class JadwalProvider with ChangeNotifier {
       }
       final packageId = pkgResult.first['id'] as int;
 
-      // 2. Ambil semua menu dalam paket beserta qty-nya
+     
       final menuDalamPaket = await db.query(
         'package_menus',
         where: 'package_id = ?',
@@ -121,7 +118,7 @@ class JadwalProvider with ChangeNotifier {
         return;
       }
 
-      // 3. Proses tiap menu → ambil resep → potong stok bahan
+      
       for (final item in menuDalamPaket) {
         final menuId = item['menu_id'] as int;
         final qtyMenu = (item['qty'] as int?) ?? 1;
@@ -162,9 +159,7 @@ class JadwalProvider with ChangeNotifier {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────
-  //  HAPUS JADWAL — tandai deleted, data tetap ada di laporan
-  // ─────────────────────────────────────────────────────────────
+  // Hapus jadwal (tandai deleted)
   Future<void> deleteJadwal(int jadwalId, int? unitId) async {
     final db = await DatabaseService.instance.database;
     await db.transaction((txn) async {
@@ -185,9 +180,7 @@ class JadwalProvider with ChangeNotifier {
     });
   }
 
-  // ─────────────────────────────────────────────────────────────
-  //  SELESAIKAN JADWAL — tandai done
-  // ─────────────────────────────────────────────────────────────
+  // tandai jadwal selesai (done)
   Future<void> completeJadwal(int jadwalId, int? unitId) async {
     final db = await DatabaseService.instance.database;
     await db.transaction((txn) async {

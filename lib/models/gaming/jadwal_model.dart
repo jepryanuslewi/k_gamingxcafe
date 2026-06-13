@@ -10,8 +10,8 @@ class JadwalModel {
   final int durationHours;
   final String endTime;
   final int totalPrice;
-  final String status; // 'walkin' / 'booking'
-  final String statusCompleted; // ✅ 'active' / 'done' / 'deleted'
+  final String status;
+  final String statusCompleted;
   final String? createdAt;
 
   JadwalModel({
@@ -27,7 +27,7 @@ class JadwalModel {
     required this.endTime,
     required this.totalPrice,
     required this.status,
-    this.statusCompleted = 'active', // ✅ default active
+    this.statusCompleted = 'active', 
     this.createdAt,
   });
 
@@ -43,7 +43,7 @@ class JadwalModel {
     'end_time': endTime,
     'total_price': totalPrice,
     'status': status,
-    'status_completed': statusCompleted, // ✅
+    'status_completed': statusCompleted, 
     'created_at': createdAt,
   };
 
@@ -60,7 +60,7 @@ class JadwalModel {
     endTime: map['end_time'] ?? '',
     totalPrice: map['total_price'] ?? 0,
     status: map['status'] ?? 'walkin',
-    statusCompleted: map['status_completed'] ?? 'active', // ✅
+    statusCompleted: map['status_completed'] ?? 'active',
     createdAt: map['created_at'],
   );
 }

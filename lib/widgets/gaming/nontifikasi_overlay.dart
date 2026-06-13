@@ -2,8 +2,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/services/nontifikasi_service.dart';
 
-/// Gunakan sebagai wrapper di level tinggi — cukup taruh sekali di JadwalScreen
-/// Notifikasi akan muncul via Flutter Overlay sehingga tampil di atas Dialog sekalipun
 class NotifikasiOverlay extends StatefulWidget {
   final Widget child;
   const NotifikasiOverlay({super.key, required this.child});
@@ -13,7 +11,6 @@ class NotifikasiOverlay extends StatefulWidget {
 }
 
 class _NotifikasiOverlayState extends State<NotifikasiOverlay> {
-  // Simpan semua OverlayEntry yang aktif
   final List<OverlayEntry> _entries = [];
 
   @override
@@ -25,7 +22,7 @@ class _NotifikasiOverlayState extends State<NotifikasiOverlay> {
   @override
   void dispose() {
     NontifikasiService().onNotification = null;
-    // Bersihkan semua overlay yang masih tampil
+
     for (final e in _entries) {
       e.remove();
     }
@@ -36,26 +33,23 @@ class _NotifikasiOverlayState extends State<NotifikasiOverlay> {
   void _showNotif(NotifPayload payload) {
     if (!mounted) return;
 
-    // Buat AudioPlayer terpisah per notifikasi agar stop-nya independen
     final player = AudioPlayer();
     final source = AssetSource('sounds/notif.mp3');
 
-    // ✅ Loop: ulangi suara setiap kali selesai sampai player di-stop
     Future<void> loopSound() async {
       while (true) {
         try {
           await player.play(source);
-          // Tunggu sampai suara selesai diputar
+
           await player.onPlayerComplete.first;
         } catch (_) {
-          break; // Keluar loop jika player sudah di-dispose/stop
+          break;
         }
       }
     }
 
     loopSound();
 
-    // Hitung posisi top berdasarkan jumlah notif yang sedang tampil
     final topOffset = 20.0 + (_entries.length * 100.0);
 
     late OverlayEntry entry;
@@ -64,12 +58,11 @@ class _NotifikasiOverlayState extends State<NotifikasiOverlay> {
         payload: payload,
         topOffset: topOffset,
         onDismiss: () async {
-          // ✅ Stop dan buang player saat notifikasi di-dismiss
           await player.stop();
           await player.dispose();
           entry.remove();
           _entries.remove(entry);
-          // ✅ Jadwalkan notif muncul lagi setelah 5 detik jika belum diselesaikan
+
           NontifikasiService().scheduleRenotif(payload.jadwalId);
         },
       ),
@@ -77,16 +70,12 @@ class _NotifikasiOverlayState extends State<NotifikasiOverlay> {
 
     _entries.add(entry);
     Overlay.of(context).insert(entry);
-    // Hanya hilang jika user klik ✕
   }
 
   @override
   Widget build(BuildContext context) => widget.child;
 }
 
-// ─────────────────────────────────────────────
-//  Widget kartu yang dirender via Overlay
-// ─────────────────────────────────────────────
 class _NotifCardOverlay extends StatefulWidget {
   final NotifPayload payload;
   final double topOffset;
@@ -142,7 +131,6 @@ class _NotifCardOverlayState extends State<_NotifCardOverlay>
     final String sisaText =
         'Sesi ${widget.payload.customerName} telah berakhir.';
 
-    // Pakai Positioned di dalam Stack global milik Overlay Flutter
     return Positioned(
       top: widget.topOffset,
       right: 20,

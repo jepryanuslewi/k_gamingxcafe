@@ -45,18 +45,15 @@ class CafeProvider with ChangeNotifier {
     await loadProducts();
   }
 
-  // add product ke stock
+  // tambah produk ke stock
   Future<void> addProduct(Map<String, dynamic> data) async {
     final db = await DatabaseService.instance.database;
 
-    // Masukkan data (name, price, stock, category) ke tabel products
     await db.insert('products', data);
 
-    // Refresh data list agar UI terupdate otomatis
     await loadProducts();
   }
 
-  // Tambahkan di CafeProvider
   Future<void> addStockLog(Map<String, dynamic> logData) async {
     final db = await DatabaseService.instance.database;
 
@@ -66,10 +63,8 @@ class CafeProvider with ChangeNotifier {
       'qty': logData['qty'],
       'username': logData['username'],
       'shift_name': logData['shift'],
-      'timestamp': DateTime.now().toIso8601String(), // Mencatat jam otomatis
+      'timestamp': DateTime.now().toIso8601String(),
     });
-
-    // Jika ini juga menambah stok di tabel products, tambahkan logika update di sini
     notifyListeners();
   }
 }

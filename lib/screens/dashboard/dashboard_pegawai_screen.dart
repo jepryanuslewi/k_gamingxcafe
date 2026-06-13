@@ -133,7 +133,8 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
                           ),
                         )
                         .toList(),
-                    onChanged: (val) => setModalState(() => selectedRole = val!),
+                    onChanged: (val) =>
+                        setModalState(() => selectedRole = val!),
                   ),
                 ],
               ),
@@ -235,8 +236,7 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
 
                 onChanged: (value) {
                   setState(() {
-                    _searchQuery =
-                        value; // Ini yang akan memfilter list secara otomatis
+                    _searchQuery = value;
                   });
                 },
               ),
@@ -313,7 +313,7 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
-                  onPressed: _refreshUserList, // Tombol refresh manual
+                  onPressed: _refreshUserList,
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton.icon(
@@ -327,8 +327,7 @@ class _DashboardPegawaiScreenState extends State<DashboardPegawaiScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed:
-                      _showAddUserDialog, // TERHUBUNG KE FUNGSI REGISTRASI
+                  onPressed: _showAddUserDialog,
                   icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
                   label: const Text(
                     "Registrasi Baru",

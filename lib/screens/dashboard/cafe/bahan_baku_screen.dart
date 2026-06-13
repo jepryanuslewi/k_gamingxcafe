@@ -172,7 +172,6 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
     final namaController = TextEditingController(text: bahan.nama);
     final kategoriController = TextEditingController(text: bahan.kategori);
     final stokController = TextEditingController(
-      // ✅ Tampilkan qty bukan satuan dasar
       text: qtyAwal % 1 == 0 ? qtyAwal.toInt().toString() : qtyAwal.toString(),
     );
     final isiPerQtyController = TextEditingController(
@@ -271,7 +270,7 @@ class _BahanBakuScreenState extends State<BahanBakuScreen> {
                     nama: namaController.text,
                     kategori: kategoriController.text,
                     satuan: selectedSatuan,
-                    stokSaatIni: qty * isi, // ✅ simpan hasil perkalian
+                    stokSaatIni: qty * isi,
                     isiPerQty: isi,
                   );
 

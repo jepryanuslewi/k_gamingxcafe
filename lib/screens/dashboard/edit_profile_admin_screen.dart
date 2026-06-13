@@ -175,8 +175,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
             const SizedBox(height: 20),
             Expanded(
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment
-                    .stretch, // Menyamakan tinggi kolom kiri & kanan
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // KOLOM KIRI
                   Expanded(
@@ -193,8 +192,8 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                             _isLoadingUsername,
                             _simpanUsername,
                           ),
-                          // Memberi jarak fleksibel antar section
-                          const SizedBox(height: 20), // Jarak tetap sebelum section berikutnya
+
+                          const SizedBox(height: 20),
                           _sectionTitle(Icons.lock, "Ubah Password"),
                           const SizedBox(height: 8),
                           _input(
@@ -223,7 +222,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                             _isLoadingPassword,
                             _simpanPassword,
                           ),
-                          const Spacer(), 
+                          const Spacer(),
                         ],
                       ),
                     ),
@@ -273,10 +272,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          Expanded(
-                            child:
-                                _backupHistoryList(), // ListView akan mengisi sisa tinggi yang tersedia
-                          ),
+                          Expanded(child: _backupHistoryList()),
                         ],
                       ),
                     ),
@@ -336,9 +332,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
         builder: (context, constraints) {
           return SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight, // Menjaga Spacer() tetap bekerja saat normal
-              ),
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
                 child: child, // Menampung isi Form kiri atau Riwayat kanan
               ),

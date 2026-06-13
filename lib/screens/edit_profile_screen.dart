@@ -91,7 +91,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         content: Center(
           child: Text(message, style: const TextStyle(color: Colors.white)),
         ),
-        backgroundColor: isError ? const Color(0xFFE21388) : const Color(0xFF00E0C6),
+        backgroundColor: isError
+            ? const Color(0xFFE21388)
+            : const Color(0xFF00E0C6),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -103,7 +105,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B1220),
-      // Mencegah overflow layout background saat keyboard di layar landscape muncul
+
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: const Color(0xFF141C2F),
@@ -187,7 +189,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             isPassword: true,
                             showPassword: _showConfirmPassword,
                             onToggleVisibility: () => setState(
-                              () => _showConfirmPassword = !_showConfirmPassword,
+                              () =>
+                                  _showConfirmPassword = !_showConfirmPassword,
                             ),
                           ),
                           const Spacer(),
@@ -239,15 +242,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ],
           ),
           const Divider(color: Colors.white10, height: 28),
-          // Menggunakan LayoutBuilder & SingleChildScrollView internal di dalam card.
-          // Ini trik krusial agar Spacer() tetap bekerja saat layar luas, 
-          // namun bisa di-scroll tanpa memicu overflow jika keyboard naik.
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
                     child: IntrinsicHeight(child: child),
                   ),
                 );
@@ -286,11 +288,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF00E0C6).withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF00E0C6), width: 0.5),
+                    border: Border.all(
+                      color: const Color(0xFF00E0C6),
+                      width: 0.5,
+                    ),
                   ),
                   child: Text(
                     (user?.role ?? '-').toUpperCase(),
@@ -321,7 +329,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 13),
+        ),
         const SizedBox(height: 8),
         Container(
           height: 52,
@@ -338,7 +349,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               hintText: hint,
               hintStyle: const TextStyle(color: Colors.white30),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
               prefixIcon: Icon(icon, color: const Color(0xFF00E0C6), size: 20),
               suffixIcon: isPassword
                   ? IconButton(
@@ -368,7 +382,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFE21388),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         onPressed: isLoading ? null : onPressed,
         child: isLoading

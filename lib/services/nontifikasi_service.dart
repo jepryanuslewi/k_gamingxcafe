@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:k_gamingxcafe/models/gaming/jadwal_model.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
 
-/// Menyimpan status notifikasi agar tidak muncul berulang
 class _NotifRecord {
   bool expiredSent;
   _NotifRecord({this.expiredSent = false});
@@ -41,13 +40,10 @@ class NontifikasiService {
     _notifTracker.clear();
   }
 
-  /// Dipanggil saat user dismiss notif — reset tracker setelah 5 detik
-  /// agar notif muncul lagi jika jadwal belum diselesaikan
   void scheduleRenotif(int jadwalId) {
     Future.delayed(const Duration(seconds: 5), () {
-      // Hanya reset jika jadwal belum di-complete/delete
       _notifTracker[jadwalId]?.expiredSent = false;
-      // Cek ulang langsung setelah reset
+
       _checkAllJadwal();
     });
   }
@@ -79,7 +75,6 @@ class NontifikasiService {
           unitLabel = 'Unit tidak diketahui';
         }
 
-        // ✅ Hanya kirim notifikasi saat waktu sudah habis
         if ((sisaDurasi.isNegative || sisaDurasi.inSeconds == 0) &&
             !record.expiredSent) {
           record.expiredSent = true;

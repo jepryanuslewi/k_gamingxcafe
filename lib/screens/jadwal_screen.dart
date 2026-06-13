@@ -4,7 +4,6 @@ import 'package:k_gamingxcafe/models/gaming/ps_unit_model.dart';
 import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/providers/shift_provider.dart';
 import 'package:k_gamingxcafe/services/nontifikasi_service.dart';
-import 'package:k_gamingxcafe/widgets/gaming/nontifikasi_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:k_gamingxcafe/providers/gaming/jadwal_provider.dart';
 import 'package:k_gamingxcafe/models/gaming/jadwal_model.dart';
@@ -333,7 +332,6 @@ class _JadwalScreenState extends State<JadwalScreen> {
 
       await provider.addJadwal(newJadwal);
 
-      // Setelah provider.addJadwal(newJadwal)
       if (result['is_paketan'] == true && result['package_name'] != null) {
         await provider.potongStokBahanDariPaket(
           packageName: result['package_name'],
@@ -468,7 +466,6 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 ],
               ),
 
-              // INFORMASI DATA
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,7 +482,6 @@ class _JadwalScreenState extends State<JadwalScreen> {
                         ),
                         const SizedBox(width: 8),
 
-                        // ✅ Badge WALK IN / BOOKING
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,

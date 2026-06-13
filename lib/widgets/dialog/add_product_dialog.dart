@@ -10,13 +10,11 @@ class AddProductDialog extends StatefulWidget {
 
 class _AddProductDialogState extends State<AddProductDialog> {
   final _formKey = GlobalKey<FormState>();
-  
-  // Controller disesuaikan dengan kolom di tabel 'products'
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _stockController = TextEditingController();
-  
-  // Kategori sesuai komentar di DatabaseService Anda
+
   String? _selectedCategory;
   final List<String> _categories = ['Makanan', 'Minuman'];
 
@@ -43,7 +41,6 @@ class _AddProductDialogState extends State<AddProductDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Input Nama
               _buildTextField(
                 controller: _nameController,
                 label: "Nama Produk",
@@ -51,7 +48,6 @@ class _AddProductDialogState extends State<AddProductDialog> {
               ),
               const SizedBox(height: 15),
 
-              // Input Harga (Integer)
               _buildTextField(
                 controller: _priceController,
                 label: "Harga Jual",
@@ -60,7 +56,6 @@ class _AddProductDialogState extends State<AddProductDialog> {
               ),
               const SizedBox(height: 15),
 
-              // Input Stok (Integer)
               _buildTextField(
                 controller: _stockController,
                 label: "Jumlah Stok",
@@ -69,12 +64,13 @@ class _AddProductDialogState extends State<AddProductDialog> {
               ),
               const SizedBox(height: 15),
 
-              // Dropdown Kategori
               DropdownButtonFormField<String>(
                 dropdownColor: const Color(0xFF141C2F),
                 style: const TextStyle(color: Colors.white),
                 initialValue: _selectedCategory,
-                items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                items: _categories
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
                 onChanged: (val) => setState(() => _selectedCategory = val),
                 decoration: _buildInputDecoration("Kategori", Icons.category),
                 validator: (v) => v == null ? "Pilih kategori" : null,
@@ -91,11 +87,12 @@ class _AddProductDialogState extends State<AddProductDialog> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF00E0C6),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              // Mengembalikan data Map yang siap dimasukkan ke db.insert
               Navigator.pop(context, {
                 'name': _nameController.text,
                 'price': int.parse(_priceController.text),
@@ -104,13 +101,15 @@ class _AddProductDialogState extends State<AddProductDialog> {
               });
             }
           },
-          child: const Text("SIMPAN", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          child: const Text(
+            "SIMPAN",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
   }
 
-  // Helper untuk TextField agar kode lebih bersih
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -143,25 +142,3 @@ class _AddProductDialogState extends State<AddProductDialog> {
     );
   }
 }
-
-//  void _openAddProductDialog(BuildContext context) async {
-//     // 1. Munculkan dialog dan tunggu hasilnya
-//     final result = await showDialog<Map<String, dynamic>>(
-//       context: context,
-//       builder: (context) => const AddProductDialog(),
-//     );
-
-//     // 2. Jika user menekan SIMPAN (result tidak null)
-//     if (result != null) {
-//       // 3. Kirim data ke Provider
-//       // ignore: use_build_context_synchronously
-//       await context.read<CafeProvider>().addProduct(result);
-
-//       // 4. Beri feedback ke user
-//       if (context.mounted) {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(content: Text("Produk baru berhasil ditambahkan!")),
-//         );
-//       }
-//     }
-//   }

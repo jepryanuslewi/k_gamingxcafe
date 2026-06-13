@@ -6,9 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ExcelHelper {
-  // ─────────────────────────────────────────────────────────────────
-  //  EXPORT 3 SHEET SEKALIGUS (Jadwal + Transaksi + Stock)
-  // ─────────────────────────────────────────────────────────────────
   static Future<void> saveAndShareAllSheets({
     required List<List<String>> jadwalData,
     required String jadwalTotal,
@@ -21,9 +18,8 @@ class ExcelHelper {
   }) async {
     try {
       final excel = Excel.createExcel();
-      excel.delete('Sheet1'); // Hapus sheet default
+      excel.delete('Sheet1');
 
-      // ── Sheet 1: Jadwal ──────────────────────
       _writeSheet(
         sheet: excel['Jadwal'],
         kategori: 'Jadwal',
@@ -44,7 +40,6 @@ class ExcelHelper {
         tanggalAkhir: tanggalAkhir,
       );
 
-      // ── Sheet 2: Transaksi ───────────────────
       _writeSheet(
         sheet: excel['Transaksi'],
         kategori: 'Transaksi',
@@ -65,7 +60,6 @@ class ExcelHelper {
         tanggalAkhir: tanggalAkhir,
       );
 
-      // ── Sheet 3: Stock ───────────────────────
       _writeSheet(
         sheet: excel['Stock'],
         kategori: 'Stock',
@@ -86,7 +80,6 @@ class ExcelHelper {
         tanggalAkhir: tanggalAkhir,
       );
 
-      // ── Simpan & Share ───────────────────────
       final dir = await getTemporaryDirectory();
       final tanggalStr = DateFormat('yyyyMMdd_HHmm').format(DateTime.now());
       final filePath = '${dir.path}/Laporan_Lengkap_$tanggalStr.xlsx';
@@ -108,9 +101,6 @@ class ExcelHelper {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
-  //  EXPORT 1 SHEET (tetap tersedia jika masih dibutuhkan)
-  // ─────────────────────────────────────────────────────────────────
   static Future<void> saveAndShareExcel({
     required String kategori,
     required List<List<String>> tableData,
@@ -211,9 +201,6 @@ class ExcelHelper {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
-  //  WRITE SHEET (shared internal)
-  // ─────────────────────────────────────────────────────────────────
   static void _writeSheet({
     required Sheet sheet,
     required String kategori,

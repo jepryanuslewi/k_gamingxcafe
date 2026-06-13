@@ -79,6 +79,7 @@ class BahanProvider extends ChangeNotifier {
     }
   }
 
+ // FUNGSI STOK KELUAR
   Future<bool> stokMasuk({
     required int bahanId,
     required double jumlah,
@@ -113,25 +114,21 @@ class BahanProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // 1. Simpan bahan dengan stok 0 terlebih dahulu
-      // agar saat stokMasuk dipanggil, perhitungannya (0 + jumlah) benar.
       Bahan bahanBaruTanpaStok = Bahan(
         nama: bahan.nama,
         kategori: bahan.kategori,
         satuan: bahan.satuan,
         isiPerQty: bahan.isiPerQty,
-        stokSaatIni: 0, // Set 0 di sini
+        stokSaatIni: 0, 
       );
 
-      // Ambil ID dari bahan yang baru dibuat
       final int newId = await DatabaseService.instance.tambahBahan(
         bahanBaruTanpaStok,
       );
 
-      // 2. Gunakan stokMasuk untuk mengisi stok awal dan mencatat riwayat
       await DatabaseService.instance.stokMasuk(
         bahanId: newId,
-        jumlah: bahan.stokSaatIni, // Jumlah asli yang diinput admin
+        jumlah: bahan.stokSaatIni, 
         username: username,
         namaShift: '-Admin-',
         keterangan: "Stok awal bahan baru",
@@ -153,26 +150,21 @@ class BahanProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // 1. Ambil data lama untuk hitung selisih
       final bahanLama = _listBahan.firstWhere((b) => b.id == bahanBaru.id);
       double selisih = bahanBaru.stokSaatIni - bahanLama.stokSaatIni;
 
-      // 2. JANGAN update stok via fungsi updateBahan biasa.
-      // Kita buat objek baru yang stoknya tetap menggunakan stok LAMA
-      // agar tidak terjadi double update saat memanggil stokMasuk/Keluar.
+      
       Bahan dataUpdateTanpaStok = Bahan(
         id: bahanBaru.id,
         nama: bahanBaru.nama,
         kategori: bahanBaru.kategori,
         satuan: bahanBaru.satuan,
         isiPerQty: bahanBaru.isiPerQty,
-        stokSaatIni: bahanLama.stokSaatIni, // Tetap pakai stok lama
+        stokSaatIni: bahanLama.stokSaatIni, 
       );
-
-      // 3. Update info dasar (nama, dll) dulu
+     
       await DatabaseService.instance.updateBahan(dataUpdateTanpaStok);
 
-      // 4. Jika ada perubahan stok, baru panggil stokMasuk/Keluar
       if (selisih != 0) {
         if (selisih > 0) {
           await DatabaseService.instance.stokMasuk(

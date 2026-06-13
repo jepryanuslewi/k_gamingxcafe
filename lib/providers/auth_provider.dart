@@ -10,7 +10,6 @@ class AuthProvider with ChangeNotifier {
   UserModel? get user => _user;
   int? get currentShiftId => _currentShiftId;
 
-  // ================= LOGIN =================
   Future<bool> login(String username, String password) async {
     final db = await DatabaseService.instance.database;
     final res = await db.query(
@@ -31,7 +30,6 @@ class AuthProvider with ChangeNotifier {
     return false;
   }
 
-  // ================= SET SHIFT =================
   Future<void> setShift(int shiftId) async {
     _currentShiftId = shiftId;
 
@@ -41,7 +39,6 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ================= CHECK LOGIN =================
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final int? savedUserId = prefs.getInt('userId');
@@ -58,7 +55,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // ================= UPDATE USERNAME =================
   Future<String?> updateUsername(String newUsername) async {
     if (_user == null) return "User tidak ditemukan";
 
@@ -68,7 +64,6 @@ class AuthProvider with ChangeNotifier {
     );
 
     if (error == null) {
-      // Refresh data user dari database
       final updatedUser = await DatabaseService.instance.getUserById(
         _user!.id!,
       );
@@ -79,10 +74,9 @@ class AuthProvider with ChangeNotifier {
       }
     }
 
-    return error; // null = sukses
+    return error;
   }
 
-  // ================= UPDATE PASSWORD =================
   Future<String?> updatePassword(String newPassword) async {
     if (_user == null) return "User tidak ditemukan";
 
@@ -91,10 +85,9 @@ class AuthProvider with ChangeNotifier {
       newPassword: newPassword,
     );
 
-    return error; // null = sukses
+    return error;
   }
 
-  // ================= LOGOUT =================
   Future<void> logout() async {
     _user = null;
     _currentShiftId = null;

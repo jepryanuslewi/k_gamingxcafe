@@ -53,12 +53,7 @@ class DropdownBahanWidget extends StatelessWidget {
         ),
         itemBuilder: (context, item, isSelected, isFocused) {
           return ListTile(
-            title: Text(
-              item.nama,
-              style: const TextStyle(
-                color: Colors.white,
-              ), // Teks di dalam list juga putih
-            ),
+            title: Text(item.nama, style: const TextStyle(color: Colors.white)),
             subtitle: Text(
               "Stok: ${item.stokSaatIni} ${item.satuan}",
               style: const TextStyle(color: Colors.white54, fontSize: 11),
@@ -68,7 +63,6 @@ class DropdownBahanWidget extends StatelessWidget {
       ),
       decoratorProps: DropDownDecoratorProps(
         decoration: InputDecoration(
-          // baseStyle di sini terkadang tidak mempan, maka kita gunakan dropdownBuilder di atas
           labelText: isLoading ? "Loading..." : "",
           labelStyle: const TextStyle(color: Colors.white70),
           filled: true,

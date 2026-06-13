@@ -251,9 +251,7 @@ class _StockScreenState extends State<StockScreen> {
 
                                       Color? rowColor;
                                       if (isEmpty) {
-                                        rowColor = Colors.red.withOpacity(
-                                          0.08,
-                                        );
+                                        rowColor = Colors.red.withOpacity(0.08);
                                       } else if (isLow) {
                                         rowColor = Colors.orange.withOpacity(
                                           0.08,
@@ -353,7 +351,7 @@ class _StockScreenState extends State<StockScreen> {
                                                     ),
                                                   ),
                                                 ],
-                                                // Badge MENIPIS
+
                                                 if (isLow) ...[
                                                   const SizedBox(width: 6),
                                                   Container(

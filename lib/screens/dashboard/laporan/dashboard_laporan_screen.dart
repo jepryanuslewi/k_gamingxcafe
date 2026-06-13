@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:k_gamingxcafe/providers/auth_provider.dart';
 import 'package:k_gamingxcafe/screens/generate%20laporan/excel_helper.dart';
 import 'package:k_gamingxcafe/services/database_service.dart';
 import 'package:k_gamingxcafe/widgets/laporan/tabel_laporan_widget.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 class DashboardLaporanScreen extends StatefulWidget {
@@ -23,7 +21,7 @@ class _DashboardLaporanScreenState extends State<DashboardLaporanScreen> {
   String? selectedKaryawan = "Semua";
 
   bool isTableVisible = false;
-  bool isExporting = false; // ← loading state saat export
+  bool isExporting = false;
 
   List<String> listKaryawan = ["Semua"];
 
@@ -79,16 +77,12 @@ class _DashboardLaporanScreenState extends State<DashboardLaporanScreen> {
     }
   }
 
-  // ─────────────────────────────────────────────
-  //  AMBIL DATA DARI DATABASE
-  // ─────────────────────────────────────────────
   Future<Map<String, dynamic>> _fetchAllExportData() async {
     final db = await DatabaseService.instance.database;
     final fmt = DateFormat('yyyy-MM-dd');
     final awal = fmt.format(tanggalAwal!);
     final akhir = fmt.format(tanggalAkhir!);
 
-    // ── Jadwal (tabel: jadwal, shifts, users, ps_units) ──────────
     final jadwalRaw = await db.rawQuery(
       '''
       SELECT
@@ -139,7 +133,6 @@ class _DashboardLaporanScreenState extends State<DashboardLaporanScreen> {
       (sum, r) => sum + ((r['total_price'] as int?) ?? 0),
     );
 
-    // ── Transaksi (tabel: cafe_transactions, shifts, users, menu) ─
     final transaksiRaw = await db.rawQuery(
       '''
       SELECT
@@ -182,7 +175,6 @@ class _DashboardLaporanScreenState extends State<DashboardLaporanScreen> {
       (sum, r) => sum + ((r['total_harga'] as int?) ?? 0),
     );
 
-    // ── Stock (tabel: riwayat_bahan, bahan) ──────────────────────
     final stockRaw = await db.rawQuery(
       '''
       SELECT
@@ -432,7 +424,6 @@ class _DashboardLaporanScreenState extends State<DashboardLaporanScreen> {
 
           const SizedBox(height: 40),
 
-          // ── Tombol ──
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

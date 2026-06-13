@@ -16,7 +16,6 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
   final List<String> kategoriMenu = ["Minuman", "Makanan"];
   List<Map<String, dynamic>> resepInput = [];
 
-  // ✅ SEARCH
   final TextEditingController searchController = TextEditingController();
   String searchQuery = "";
 
@@ -384,7 +383,6 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
   Widget build(BuildContext context) {
     final menuProvider = context.watch<MenuProvider>();
 
-    // ✅ FILTER MENU
     final filteredMenu = menuProvider.listMenu.where((menu) {
       return menu.nama.toLowerCase().contains(searchQuery) ||
           menu.kategori.toLowerCase().contains(searchQuery);
@@ -460,7 +458,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                       ),
                     ),
                   ),
-                  // ✅ SEARCH BAR
+
                   Padding(
                     padding: const EdgeInsets.only(top: 5),
                     child: TextField(
@@ -827,7 +825,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                     }).toList(),
                                     onChanged: (val) => setModalState(() {
                                       resepInput[index]['bahan_id'] = val;
-                                      errorResep = null; // ✅ reset error
+                                      errorResep = null;
                                     }),
                                   ),
                                 ),
@@ -863,7 +861,7 @@ class _MenuCafeScreenState extends State<MenuCafeScreen> {
                                 ),
                                 onPressed: () => setModalState(() {
                                   resepInput.removeAt(index);
-                                  errorResep = null; // ✅ reset error
+                                  errorResep = null;
                                 }),
                               ),
                             ],
