@@ -34,7 +34,16 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     _loadBackupList();
   }
 
-  // --- Logic tetap sama ---
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  // ─── Logic ──────────────────────────────────────────────────────────────────
+
   Future<void> _loadBackupList() async {
     try {
       final files = await BackupService.getBackupList();
@@ -47,6 +56,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
   Future<void> _doBackup() async {
     setState(() => _isLoadingBackup = true);
     final result = await BackupService.backupToLocal();
+    if (!mounted) return;
     setState(() => _isLoadingBackup = false);
     _snack(result.message, !result.isSuccess);
     if (result.isSuccess) await _loadBackupList();
@@ -59,6 +69,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     final result = await BackupService.restoreFromPicker(
       onBeforeRestore: _resetDb,
     );
+    if (!mounted) return;
     setState(() => _isLoadingBackup = false);
     _snack(result.message, !result.isSuccess);
   }
@@ -71,6 +82,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
       filePath,
       onBeforeRestore: _resetDb,
     );
+    if (!mounted) return;
     setState(() => _isLoadingBackup = false);
     _snack(result.message, !result.isSuccess);
   }
@@ -82,6 +94,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
   }
 
   void _snack(String msg, bool error) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
@@ -96,7 +109,8 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     if (parts.length < 5) return name;
     try {
       final date = DateFormat('yyyyMMdd').parse(parts[3]);
-      return "${DateFormat('dd MMM yyyy', 'id').format(date)} ${parts[4].substring(0, 2)}:${parts[4].substring(2, 4)}";
+      return "${DateFormat('dd MMM yyyy', 'id').format(date)} "
+          "${parts[4].substring(0, 2)}:${parts[4].substring(2, 4)}";
     } catch (_) {
       return name;
     }
@@ -107,6 +121,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     final error = await context.read<AuthProvider>().updateUsername(
       _usernameController.text.trim(),
     );
+    if (!mounted) return;
     setState(() => _isLoadingUsername = false);
     _snack(error ?? "Username diubah", error != null);
   }
@@ -114,11 +129,18 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
   Future<void> _simpanPassword() async {
     final userId = context.read<AuthProvider>().user?.id;
     if (userId == null) return;
+
+    if (_newPasswordController.text != _confirmPasswordController.text) {
+      _snack("Password tidak cocok", true);
+      return;
+    }
+
     setState(() => _isLoadingPassword = true);
     final error = await DatabaseService.instance.updatePassword(
       userId: userId,
       newPassword: _newPasswordController.text,
     );
+    if (!mounted) return;
     setState(() => _isLoadingPassword = false);
     _snack(error ?? "Password diubah", error != null);
   }
@@ -153,6 +175,8 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     );
   }
 
+  // ─── Build ───────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
@@ -177,106 +201,11 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // KOLOM KIRI
-                  Expanded(
-                    child: _card(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _sectionTitle(Icons.person, "Ubah Username"),
-                          const SizedBox(height: 8),
-                          _input(_usernameController, "Username"),
-                          const SizedBox(height: 8),
-                          _button(
-                            "SIMPAN USERNAME",
-                            _isLoadingUsername,
-                            _simpanUsername,
-                          ),
-
-                          const SizedBox(height: 20),
-                          _sectionTitle(Icons.lock, "Ubah Password"),
-                          const SizedBox(height: 8),
-                          _input(
-                            _newPasswordController,
-                            "Password Baru",
-                            isPassword: true,
-                            show: _showNewPassword,
-                            toggle: () => setState(
-                              () => _showNewPassword = !_showNewPassword,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          _input(
-                            _confirmPasswordController,
-                            "Konfirmasi Password",
-                            isPassword: true,
-                            show: _showConfirmPassword,
-                            toggle: () => setState(
-                              () =>
-                                  _showConfirmPassword = !_showConfirmPassword,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          _button(
-                            "SIMPAN PASSWORD",
-                            _isLoadingPassword,
-                            _simpanPassword,
-                          ),
-                          const Spacer(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // ── Kolom Kiri: Form ──────────────────────────────────────
+                  Expanded(child: _leftCard()),
                   const SizedBox(width: 20),
-                  // KOLOM KANAN
-                  Expanded(
-                    child: _card(
-                      child: Column(
-                        children: [
-                          _sectionTitle(
-                            Icons.cloud_upload,
-                            "Backup & Restore Database",
-                            center: true,
-                          ),
-                          const SizedBox(height: 15),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _actionBtn(
-                                  "Backup",
-                                  Icons.cloud_upload,
-                                  const Color(0xffe21388),
-                                  _doBackup,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _actionBtn(
-                                  "Restore",
-                                  Icons.folder,
-                                  Colors.transparent,
-                                  _doRestoreFromPicker,
-                                  isOutline: true,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 15),
-                          const Divider(color: Colors.white12),
-                          const Text(
-                            "Riwayat Backup",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Expanded(child: _backupHistoryList()),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // ── Kolom Kanan: Backup & Restore ─────────────────────────
+                  Expanded(child: _rightCard()),
                 ],
               ),
             ),
@@ -285,6 +214,128 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
       ),
     );
   }
+
+  // ─── Kolom Kiri ─────────────────────────────────────────────────────────────
+  // Menggunakan SingleChildScrollView saja — tidak perlu IntrinsicHeight.
+
+  Widget _leftCard() {
+    return _cardShell(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionTitle(Icons.person, "Ubah Username"),
+            const SizedBox(height: 8),
+            _input(_usernameController, "Username"),
+            const SizedBox(height: 8),
+            _button("SIMPAN USERNAME", _isLoadingUsername, _simpanUsername),
+            const SizedBox(height: 24),
+            _sectionTitle(Icons.lock, "Ubah Password"),
+            const SizedBox(height: 8),
+            _input(
+              _newPasswordController,
+              "Password Baru",
+              isPassword: true,
+              show: _showNewPassword,
+              toggle: () =>
+                  setState(() => _showNewPassword = !_showNewPassword),
+            ),
+            const SizedBox(height: 8),
+            _input(
+              _confirmPasswordController,
+              "Konfirmasi Password",
+              isPassword: true,
+              show: _showConfirmPassword,
+              toggle: () =>
+                  setState(() => _showConfirmPassword = !_showConfirmPassword),
+            ),
+            const SizedBox(height: 8),
+            _button("SIMPAN PASSWORD", _isLoadingPassword, _simpanPassword),
+            // Padding bawah agar konten tidak mepet saat keyboard muncul
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Kolom Kanan ─────────────────────────────────────────────────────────────
+  // Column + Expanded untuk ListView — tidak perlu IntrinsicHeight.
+
+  Widget _rightCard() {
+    return _cardShell(
+      child: Column(
+        children: [
+          _sectionTitle(
+            Icons.cloud_upload,
+            "Backup & Restore Database",
+            center: true,
+          ),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              Expanded(
+                child: _actionBtn(
+                  "Backup",
+                  Icons.cloud_upload,
+                  const Color(0xffe21388),
+                  _isLoadingBackup ? null : _doBackup,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _actionBtn(
+                  "Restore",
+                  Icons.folder,
+                  Colors.transparent,
+                  _isLoadingBackup ? null : _doRestoreFromPicker,
+                  isOutline: true,
+                ),
+              ),
+            ],
+          ),
+          // Loading indicator saat backup/restore berjalan
+          if (_isLoadingBackup) ...[
+            const SizedBox(height: 10),
+            const LinearProgressIndicator(
+              color: Color(0xffe21388),
+              backgroundColor: Colors.white10,
+            ),
+          ],
+          const SizedBox(height: 15),
+          const Divider(color: Colors.white12),
+          const Text(
+            "Riwayat Backup",
+            style: TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Expanded di sini aman karena parent adalah Column di dalam
+          // _cardShell yang sudah punya tinggi terdefinisi (CrossAxisAlignment.stretch).
+          Expanded(child: _backupHistoryList()),
+        ],
+      ),
+    );
+  }
+
+  // ─── Shared Card Shell ───────────────────────────────────────────────────────
+
+  Widget _cardShell({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xff141c2f),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: child,
+    );
+  }
+
+  // ─── Widgets ─────────────────────────────────────────────────────────────────
 
   Widget _profileHeader(user) {
     return Container(
@@ -316,29 +367,6 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _card({required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xff141c2f),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: child, // Menampung isi Form kiri atau Riwayat kanan
-              ),
-            ),
-          );
-        },
       ),
     );
   }
@@ -442,36 +470,41 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
     String text,
     IconData icon,
     Color color,
-    VoidCallback onTap, {
+    VoidCallback? onTap, {
     bool isOutline = false,
   }) {
+    final disabled = onTap == null;
     return InkWell(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(15),
-          border: isOutline ? Border.all(color: Colors.orangeAccent) : null,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isOutline ? Colors.orangeAccent : Colors.white,
-              size: 16,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              text,
-              style: TextStyle(
+      borderRadius: BorderRadius.circular(15),
+      child: Opacity(
+        opacity: disabled ? 0.5 : 1.0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(15),
+            border: isOutline ? Border.all(color: Colors.orangeAccent) : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
                 color: isOutline ? Colors.orangeAccent : Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+                size: 16,
               ),
-            ),
-          ],
+              const SizedBox(width: 5),
+              Text(
+                text,
+                style: TextStyle(
+                  color: isOutline ? Colors.orangeAccent : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -486,7 +519,7 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
       child: _backupFiles.isEmpty
           ? const Center(
               child: Text(
-                "Kosong",
+                "Belum ada backup",
                 style: TextStyle(color: Colors.white24, fontSize: 12),
               ),
             )
@@ -510,7 +543,9 @@ class _EditProfileAdminScreenState extends State<EditProfileAdminScreen> {
                       color: Color(0xffe21388),
                       size: 18,
                     ),
-                    onPressed: () => _doRestore(file.path),
+                    onPressed: _isLoadingBackup
+                        ? null
+                        : () => _doRestore(file.path),
                   ),
                 );
               },
